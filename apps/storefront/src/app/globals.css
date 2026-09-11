@@ -4,53 +4,75 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.5rem;
+
+  --brand-hue: 24;
+  --brand-chroma: 0.13;
+
+  --background: oklch(0.99 0.003 var(--brand-hue));
+  --foreground: oklch(0.18 0.012 var(--brand-hue));
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.52 var(--brand-chroma) var(--brand-hue));
+  --primary-foreground: oklch(0.99 0.005 var(--brand-hue));
+
+  --secondary: oklch(0.96 0.008 var(--brand-hue));
+  --secondary-foreground: oklch(0.25 0.02 var(--brand-hue));
+
+  --muted: oklch(0.965 0.005 var(--brand-hue));
+  --muted-foreground: oklch(0.52 0.015 var(--brand-hue));
+
+  --accent: oklch(0.95 0.02 var(--brand-hue));
+  --accent-foreground: oklch(0.25 0.03 var(--brand-hue));
+
+  --destructive: oklch(0.58 0.21 25);
+  --success: oklch(0.58 0.13 155);
+
+  --border: oklch(0.91 0.006 var(--brand-hue));
+  --input: oklch(0.91 0.006 var(--brand-hue));
+  --ring: var(--primary);
+
+  --font-display: ui-serif, Georgia, "Times New Roman", serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: oklch(0.16 0.01 var(--brand-hue));
+  --foreground: oklch(0.96 0.005 var(--brand-hue));
+  --card: oklch(0.21 0.012 var(--brand-hue));
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.21 0.012 var(--brand-hue));
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.68 var(--brand-chroma) var(--brand-hue));
+  --primary-foreground: oklch(0.18 0.02 var(--brand-hue));
+
+  --secondary: oklch(0.27 0.015 var(--brand-hue));
+  --secondary-foreground: oklch(0.96 0.005 var(--brand-hue));
+
+  --muted: oklch(0.27 0.012 var(--brand-hue));
+  --muted-foreground: oklch(0.70 0.015 var(--brand-hue));
+
+  --accent: oklch(0.30 0.03 var(--brand-hue));
+  --accent-foreground: oklch(0.96 0.005 var(--brand-hue));
+
+  --destructive: oklch(0.70 0.19 25);
+  --success: oklch(0.70 0.13 155);
+
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: var(--primary);
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -66,16 +88,33 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
   }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}
+
+@utility container-page {
+  @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8;
 }

@@ -16,3 +16,6 @@ export type { LoginInput } from "./auth";
 export { createAdminApi } from "./admin/endpoints";
 export type { AdminApi, AdminProductQuery } from "./admin/endpoints";
 export type * from "./admin/types";
+export { createStorefrontApi } from "./storefront/endpoints";
+export type { StorefrontApi } from "./storefront/endpoints";
+export type * from "./storefront/types";

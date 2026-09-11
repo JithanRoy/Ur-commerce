@@ -96,6 +96,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.102.8
         version: 5.102.8(react@19.2.0)
+      '@urcommerce/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
