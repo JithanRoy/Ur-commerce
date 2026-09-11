@@ -27,9 +27,11 @@ pnpm install
 pnpm dev
 ```
 
-The storefront runs on `http://localhost:3000`. The backend is expected on
-`http://localhost:3002`; copy `apps/storefront/.env.example` to `.env.local`
-and adjust if yours differs.
+Storefront on `http://localhost:3000`, admin on `http://localhost:5173`. The
+backend must be running separately on `http://localhost:3002`.
+
+See **[RUNNING.md](RUNNING.md)** for ports, env files, theming and
+troubleshooting.
 
 ## Documentation
 
