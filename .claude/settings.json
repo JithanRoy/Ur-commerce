@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm -r:*)",
+      "Bash(pnpm --filter:*)",
+      "Bash(pnpm turbo:*)",
+      "Bash(npx openapi-typescript:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl -s http://localhost:3002/:*)",
+      "Bash(curl -s -i http://localhost:3002/:*)",
+      "Bash(curl -s -X POST http://localhost:3002/:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Read(//home/technonext/Projects/Frontend-dev/Ur-commerce/**)"
+    ],
+    "deny": [
+      "Read(./**/.env)",
+      "Read(./**/.env.*)"
+    ]
+  }
+}
