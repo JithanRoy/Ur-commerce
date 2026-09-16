@@ -40,7 +40,7 @@ export function SiteHeader({ storeName }: { storeName: string }) {
           </Link>
           <Link
             href="/account/orders"
-            aria-label="Account"
+            aria-label="Your orders"
             className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <User className="size-[18px]" />

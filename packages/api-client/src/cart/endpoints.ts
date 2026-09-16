@@ -1,4 +1,5 @@
 import type { ApiClient } from "../client";
+import type { Paginated } from "../types";
 import type {
   Address,
   Cart,
@@ -40,6 +41,8 @@ export function createCheckoutApi(client: ApiClient) {
       client.post<CheckoutQuote>("/checkout/quote", { addressId }),
     place: (addressId: string, paymentMethod: PaymentMethod) =>
       client.post<Order>("/checkout", { addressId, paymentMethod }),
-    orders: () => client.get<{ items: Order[] }>("/orders"),
+    orders: (query: { page?: number; limit?: number } = {}) =>
+      client.get<Paginated<Order>>("/orders", { query }),
+    order: (id: string) => client.get<Order>(`/orders/${id}`),
   };
 }

@@ -23,12 +23,20 @@ export default async function OrderConfirmationPage({
           <span className="font-medium text-foreground">{orderNumber}</span> has
           been placed. You will pay in cash when it arrives.
         </p>
-        <Link
-          href="/shop"
-          className="mt-8 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-        >
-          Continue shopping
-        </Link>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/account/orders"
+            className="inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
+          >
+            View your orders
+          </Link>
+          <Link
+            href="/shop"
+            className="inline-flex h-11 items-center rounded-full border px-6 text-sm font-medium"
+          >
+            Continue shopping
+          </Link>
+        </div>
       </div>
     </div>
   );

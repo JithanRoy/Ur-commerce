@@ -105,6 +105,19 @@ export type ShippingAddressSnapshot = {
   landmark: string | null;
 };
 
+export type OrderItem = {
+  id: string;
+  productName: string;
+  variantSku: string;
+  optionSummary: string | null;
+  unitPrice: Paisa;
+  compareAtPrice: Paisa | null;
+  quantity: number;
+  lineTotal: Paisa;
+  productId: string | null;
+  variantId: string | null;
+};
+
 export type Order = {
   id: string;
   orderNumber: string;
@@ -119,5 +132,11 @@ export type Order = {
   grandTotal: Paisa;
   currency: string;
   placedAt: string;
+  confirmedAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  items: OrderItem[];
   shippingAddress: ShippingAddressSnapshot;
 };
