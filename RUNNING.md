@@ -129,6 +129,10 @@ Or in one step:
 pnpm dev:clean
 ```
 
+**Random 500s, blank pages, or `Cannot find module './823.js'`** — the Next.js
+build cache is corrupted, usually after killing the dev server mid-compile.
+`pnpm dev:clean` clears it; nothing is lost, the next start just recompiles.
+
 **Types not resolving across packages** — `packages/api-client` is consumed as
 source, so a stale install is usually the cause:
 

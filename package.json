@@ -12,7 +12,8 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "stop": "fuser -k 3100/tcp 5273/tcp 2>/dev/null || true",
-    "dev:clean": "pnpm stop && pnpm dev"
+    "dev:clean": "pnpm stop && pnpm clean && pnpm dev",
+    "clean": "rm -rf apps/*/.next apps/*/dist .turbo apps/*/.turbo"
   },
   "devDependencies": {
     "playwright": "1.56.0",
