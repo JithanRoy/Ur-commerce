@@ -41,10 +41,14 @@ Nothing works without a tenant — every request resolves one from the host.
 ```bash
 SEED_SUBDOMAIN=demo \
 SEED_TENANT_NAME="Demo Clothing" \
-SEED_ADMIN_EMAIL=admin@demo.com \
+SEED_ADMIN_EMAIL=admin@demo.local \
 SEED_ADMIN_PASSWORD=password123 \
 npm run db:seed-tenant
 ```
+
+The seed script's defaults are `admin@demo.local` / `password123` — note the
+`.local`, not `.com`. If you seed without `SEED_ADMIN_EMAIL`, that is the
+account you get.
 
 That store now answers to `demo.localhost`. Seed a second (`SEED_SUBDOMAIN=two`)
 early — cross-tenant bugs only show up with two stores.
@@ -60,7 +64,7 @@ curl -s http://localhost:3002/api/v1/home \
 curl -s -X POST http://localhost:3002/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -H 'X-Tenant-Host: demo.localhost' \
-  -d '{"email":"admin@demo.com","password":"password123"}' | jq
+  -d '{"email":"admin@demo.local","password":"password123"}' | jq
 
 # authenticated admin call
 TOKEN=<accessToken from above>

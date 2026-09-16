@@ -149,7 +149,7 @@ before you start, and tell me if it hasn't.
 
 Seed a store first if one does not exist:
   SEED_SUBDOMAIN=demo SEED_TENANT_NAME="Demo Clothing" \
-  SEED_ADMIN_EMAIL=admin@demo.com SEED_ADMIN_PASSWORD=password123 \
+  SEED_ADMIN_EMAIL=admin@demo.local SEED_ADMIN_PASSWORD=password123 \
   npm run db:seed-tenant
 
 ## Deliverable

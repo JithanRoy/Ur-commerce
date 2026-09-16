@@ -30,10 +30,18 @@ Neither app works without it. It lives in a separate repository and must be
 running on port 3002:
 
 ```bash
+cd /home/technonext/Projects/Backend-dev/shopno-puron-ecommerce
+npm run start:dev
+```
+
+Verify it is up:
+
+```bash
 curl -s http://localhost:3002/api/v1/health
 ```
 
-No response means the backend is down — start it in its own repo, then reload.
+No response means the backend is down. The storefront will show *"We could not
+load the store"* until it is running.
 
 ## What you will see today
 
@@ -44,10 +52,16 @@ homepage sections appear in place of that card.
 
 If it instead says *"We could not load the store"*, the backend is unreachable.
 
-**Admin** opens the login form. Validation, error handling and the route guard
-all work. Signing in does not yet succeed — the credentials in
-`docs/frontend/07-getting-started.md` (`admin@demo.com` / `password123`) are
-rejected by the running backend. Real credentials are still needed.
+**Admin** opens the login form. Sign in with the seeded store owner:
+
+```
+admin@demo.local
+password123
+```
+
+Note `.local`, not `.com` — earlier revisions of the docs had the wrong TLD.
+After signing in you land on `/products`, which lists an empty catalogue until
+products exist.
 
 ## Checks
 
