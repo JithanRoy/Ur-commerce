@@ -23,7 +23,10 @@ export const useAuth = create<AuthState>()(
       session: null,
       user: null,
       signIn: (session) => set({ session }),
-      signOut: () => set({ session: null, user: null }),
+      signOut: () => {
+        set({ session: null, user: null });
+        useAuth.persist.clearStorage();
+      },
       setTokens: (accessToken, refreshToken) =>
         set((state) =>
           state.session

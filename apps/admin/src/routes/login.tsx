@@ -18,8 +18,15 @@ export function LoginRoute() {
   const navigate = useNavigate();
   const location = useLocation();
   const signIn = useAuth((state) => state.signIn);
-  const from = (location.state as { from?: { pathname: string } } | null)?.from
-    ?.pathname;
+  const routerState = location.state as {
+    from?: { pathname: string };
+    reason?: string;
+  } | null;
+  const from = routerState?.from?.pathname;
+  const bounceMessage =
+    routerState?.reason === "not-staff"
+      ? "That account cannot access the admin panel."
+      : null;
   const [formError, setFormError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -100,9 +107,9 @@ export function LoginRoute() {
           ) : null}
         </div>
 
-        {formError ? (
+        {formError ?? bounceMessage ? (
           <p role="alert" className="text-sm text-destructive">
-            {formError}
+            {formError ?? bounceMessage}
           </p>
         ) : null}
 

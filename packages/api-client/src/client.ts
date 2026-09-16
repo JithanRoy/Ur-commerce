@@ -45,6 +45,14 @@ function buildPath(
   return qs ? `${path}?${qs}` : path;
 }
 
+const AUTH_ENDPOINTS_WITHOUT_REFRESH = ["/auth/login", "/auth/refresh", "/auth/logout"];
+
+function isAuthEndpoint(path: string): boolean {
+  return AUTH_ENDPOINTS_WITHOUT_REFRESH.some((endpoint) =>
+    path.startsWith(endpoint),
+  );
+}
+
 export function createApiClient(config: ClientConfig) {
   let refreshInFlight: Promise<boolean> | null = null;
 
@@ -115,15 +123,16 @@ export function createApiClient(config: ClientConfig) {
     if (!response.ok) {
       const body = (raw ?? {}) as ErrorBody;
 
-      if (response.status === 401 && !isRetry && !path.startsWith("/auth/")) {
-        refreshInFlight ??= refreshSession().finally(() => {
-          refreshInFlight = null;
-        });
-        if (await refreshInFlight) {
-          return request<T>(path, options, true);
+      if (response.status === 401) {
+        const canRefresh = !isRetry && !isAuthEndpoint(path);
+        if (canRefresh) {
+          refreshInFlight ??= refreshSession().finally(() => {
+            refreshInFlight = null;
+          });
+          if (await refreshInFlight) {
+            return request<T>(path, options, true);
+          }
         }
-        config.onUnauthenticated?.();
-      } else if (response.status === 401) {
         config.onUnauthenticated?.();
       }
 

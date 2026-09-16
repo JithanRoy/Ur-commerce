@@ -16,9 +16,6 @@ const client = createApiClient({
     useAuth.getState().setTokens(accessToken, refreshToken),
   onUnauthenticated: () => {
     useAuth.getState().signOut();
-    if (window.location.pathname !== "/login") {
-      window.location.assign("/login");
-    }
   },
 });
 
