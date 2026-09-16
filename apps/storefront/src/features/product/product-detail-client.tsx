@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { isApiError } from "@urcommerce/api-client";
+import { useCartMutations } from "@/features/cart/use-cart";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
 import type { ProductDetail } from "@urcommerce/api-client";
 import { VariantPicker } from "./variant-picker";
@@ -17,8 +20,11 @@ function discountPercent(price: number, compareAtPrice: number): number {
 }
 
 export function ProductDetailClient({ product }: { product: ProductDetail }) {
+  const router = useRouter();
+  const { addItem } = useCartMutations();
   const [selection, setSelection] = useState<Selection>({});
   const [quantity, setQuantity] = useState(1);
+  const [cartError, setCartError] = useState<string | null>(null);
 
   const variant = useMemo(
     () => findVariant(product, selection),
@@ -37,7 +43,25 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
 
   function onSelect(optionName: string, value: string) {
     setQuantity(1);
+    setCartError(null);
     setSelection((current) => ({ ...current, [optionName]: value }));
+  }
+
+  function onAddToCart() {
+    if (!variant) return;
+    setCartError(null);
+    addItem.mutate(
+      { variantId: variant.id, quantity },
+      {
+        onSuccess: () => router.push("/cart"),
+        onError: (error) =>
+          setCartError(
+            isApiError(error)
+              ? error.message
+              : "Could not add this to your cart.",
+          ),
+      },
+    );
   }
 
   const price = variant
@@ -153,18 +177,27 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
 
           <button
             type="button"
-            disabled={!isComplete || isSoldOut}
+            onClick={onAddToCart}
+            disabled={!isComplete || isSoldOut || addItem.isPending}
             className="h-11 flex-1 rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isSoldOut
-              ? "Sold out"
-              : isComplete
+            {addItem.isPending
+              ? "Adding…"
+              : isSoldOut
+                ? "Sold out"
+                : isComplete
                 ? "Add to cart"
-                : `Select ${optionNamesInOrder(product)
-                    .filter((name) => !selection[name])
-                    .join(" and ")}`}
+                  : `Select ${optionNamesInOrder(product)
+                      .filter((name) => !selection[name])
+                      .join(" and ")}`}
           </button>
         </div>
+
+        {cartError ? (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {cartError}
+          </p>
+        ) : null}
 
         {isComplete && !isSoldOut && variant.stock <= 5 ? (
           <p className="mt-3 text-sm text-destructive">

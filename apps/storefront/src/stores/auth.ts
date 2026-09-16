@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-export type Role = "CUSTOMER" | "TENANT_STAFF" | "TENANT_OWNER";
+import type { Role } from "@urcommerce/api-client";
 
 type Session = {
   accessToken: string;
@@ -13,6 +12,7 @@ type AuthState = {
   session: Session | null;
   signIn: (session: Session) => void;
   signOut: () => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
 };
 
 export const useAuth = create<AuthState>()(
@@ -20,10 +20,17 @@ export const useAuth = create<AuthState>()(
     (set) => ({
       session: null,
       signIn: (session) => set({ session }),
-      signOut: () => set({ session: null }),
+      signOut: () => {
+        set({ session: null });
+        useAuth.persist.clearStorage();
+      },
+      setTokens: (accessToken, refreshToken) =>
+        set((state) =>
+          state.session
+            ? { session: { ...state.session, accessToken, refreshToken } }
+            : state,
+        ),
     }),
-    { name: "auth" },
+    { name: "storefront-auth" },
   ),
 );
-
-export const getAccessToken = () => useAuth.getState().session?.accessToken;

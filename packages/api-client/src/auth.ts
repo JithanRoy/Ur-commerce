@@ -6,6 +6,12 @@ export type LoginInput = {
   password: string;
 };
 
+export type RegisterInput = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export type CurrentUser = {
   id: string;
   name: string;
@@ -17,6 +23,11 @@ export type CurrentUser = {
 
 export function createAuthApi(client: ApiClient) {
   return {
+    register: (input: RegisterInput) =>
+      client.post<{ id: string; name: string; email: string }>(
+        "/auth/register",
+        input,
+      ),
     login: (input: LoginInput) =>
       client.post<LoginResponse>("/auth/login", input, {
         withCartSession: true,

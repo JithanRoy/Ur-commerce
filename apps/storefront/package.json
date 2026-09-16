@@ -8,7 +8,7 @@
     "start": "next start --port 3100",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "e2e": "npx tsx e2e/variant-resolution.mjs && node e2e/shop.mjs"
+    "e2e": "npx tsx e2e/variant-resolution.mjs && node e2e/shop.mjs && node e2e/purchase.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

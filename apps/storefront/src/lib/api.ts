@@ -1,4 +1,9 @@
-import { createApiClient, createStorefrontApi } from "@urcommerce/api-client";
+import {
+  createApiClient,
+  createCartApi,
+  createCheckoutApi,
+  createStorefrontApi,
+} from "@urcommerce/api-client";
 
 export const api = createApiClient({
   baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002/api/v1",
