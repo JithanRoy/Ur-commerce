@@ -1,6 +1,9 @@
 import { NavLink } from "react-router";
-import { Package, Layers, Tag, FolderTree, Receipt } from "lucide-react";
+import { Package, Layers, Tag, FolderTree, Receipt, Users } from "lucide-react";
+import { useAuth } from "@/stores/auth";
 import { cn } from "@/lib/utils";
+
+const ownerOnly = [{ label: "Team", to: "/team", icon: Users }];
 
 const modules = [
   { label: "Orders", to: "/orders", icon: Receipt },
@@ -11,13 +14,17 @@ const modules = [
 ];
 
 export function Sidebar({ storeName }: { storeName: string }) {
+  const role = useAuth((state) => state.user?.role);
+  const items =
+    role === "TENANT_OWNER" ? [...modules, ...ownerOnly] : modules;
+
   return (
     <aside className="hidden w-60 shrink-0 border-r bg-muted/20 md:block">
       <div className="flex h-14 items-center border-b px-5">
         <span className="truncate text-sm font-semibold">{storeName}</span>
       </div>
       <nav className="space-y-0.5 p-3">
-        {modules.map((item) => (
+        {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
