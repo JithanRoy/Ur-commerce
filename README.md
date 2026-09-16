@@ -27,11 +27,29 @@ pnpm install
 pnpm dev
 ```
 
-Storefront on `http://localhost:3100`, admin on `http://localhost:5273`. The
-backend must be running separately on `http://localhost:3002`.
+| App | URL |
+|---|---|
+| Storefront | http://localhost:3100 |
+| Admin | http://localhost:5273 |
+| Backend API | http://localhost:3002 — run separately |
 
-See **[RUNNING.md](RUNNING.md)** for ports, env files, theming and
-troubleshooting.
+### Admin sign-in
+
+The seeded development store owner:
+
+```
+Email     admin@demo.local
+Password  password123
+```
+
+These are the local seed-script defaults for the `demo` store, not production
+credentials. Re-seed with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` set to
+change them.
+
+If `pnpm dev` exits immediately, a dev server from an earlier session is still
+holding a port — run `pnpm dev:clean`.
+
+See **[RUNNING.md](RUNNING.md)** for env files, theming and troubleshooting.
 
 ## Documentation
 
