@@ -28,3 +28,5 @@ export {
   ORDER_STATUS_LABELS,
 } from "./admin/orders";
 export type * from "./admin/orders";
+export { STAFF_ROLE_LABELS } from "./admin/users";
+export type * from "./admin/users";

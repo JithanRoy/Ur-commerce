@@ -144,6 +144,18 @@ admin. Storefront filter state lives in the URL query string, not React state.
 Resist a shared `packages/ui` until a second real use case appears. The
 storefront is a branded consumer experience; the admin is a dense tool.
 
+## Git — do not commit
+
+**Never run `git commit`, `git push`, or `git add` in this repository.** The
+owner commits and pushes everything personally.
+
+Finish the work, run the checks, then report what changed and which files were
+touched. Leave it in the working tree. If a commit message would be useful,
+write it in the reply rather than applying it.
+
+Staging is included in this: `git add` mutates the index the owner is working
+in. Read-only git (`status`, `diff`, `log`, `show`) is fine.
+
 ## Code style
 
 - **Do not add explanatory comments.** Express intent through naming and
