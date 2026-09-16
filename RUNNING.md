@@ -115,11 +115,18 @@ exists — `apps/storefront/src/lib/theme.ts`.
 this machine already use those. If you open 3000 expecting this storefront you
 will see a different app entirely.
 
-**Port already in use** — something is still running:
+**"Port already in use", or `pnpm dev` exits immediately** — a dev server from
+an earlier session is still holding a port. Clear both and start again:
 
 ```bash
-fuser -k 3100/tcp    # storefront
-fuser -k 5273/tcp    # admin
+pnpm stop      # frees 3100 and 5273
+pnpm dev
+```
+
+Or in one step:
+
+```bash
+pnpm dev:clean
 ```
 
 **Types not resolving across packages** — `packages/api-client` is consumed as
