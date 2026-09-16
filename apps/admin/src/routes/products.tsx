@@ -122,7 +122,12 @@ export function ProductsRoute() {
                 {data.items.map((product) => (
                   <tr key={product.id} className="border-b last:border-0">
                     <td className="px-4 py-3">
-                      <span className="font-medium">{product.name}</span>
+                      <Link
+                        to={`/products/${product.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {product.name}
+                      </Link>
                       <span className="block text-xs text-muted-foreground">
                         {product.slug}
                       </span>

@@ -17,7 +17,10 @@ import type {
 } from "./orders";
 import type {
   AdminProduct,
+  AdminVariant,
+  BulkVariantUpdate,
   CreateProductInput,
+  CreateVariantInput,
   ProductStatus,
   UpdateProductInput,
 } from "./types";
@@ -41,6 +44,14 @@ export function createAdminApi(client: ApiClient) {
       update: (id: string, input: UpdateProductInput) =>
         client.patch<AdminProduct>(`/admin/products/${id}`, input),
       archive: (id: string) => client.delete<void>(`/admin/products/${id}`),
+      updateVariants: (id: string, variants: BulkVariantUpdate[]) =>
+        client.patch<AdminProduct>(`/admin/products/${id}/variants`, {
+          variants,
+        }),
+      addVariant: (id: string, input: CreateVariantInput) =>
+        client.post<AdminVariant>(`/admin/products/${id}/variants`, input),
+      removeVariant: (id: string, variantId: string) =>
+        client.delete<void>(`/admin/products/${id}/variants/${variantId}`),
     },
     categories: {
       list: () => client.get<AdminCategory[]>("/admin/categories"),

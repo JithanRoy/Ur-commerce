@@ -7,6 +7,7 @@ import { CategoriesRoute } from "@/routes/categories";
 import { CollectionsRoute } from "@/routes/collections";
 import { LoginRoute } from "@/routes/login";
 import { NotFoundRoute } from "@/routes/not-found";
+import { ProductEditRoute } from "@/routes/product-edit";
 import { ProductNewRoute } from "@/routes/product-new";
 import { OrderDetailRoute } from "@/routes/order-detail";
 import { OrdersRoute } from "@/routes/orders";
@@ -40,6 +41,7 @@ export function App() {
               <Route index element={<Navigate to="/products" replace />} />
               <Route path="products" element={<ProductsRoute />} />
               <Route path="products/new" element={<ProductNewRoute />} />
+              <Route path="products/:productId" element={<ProductEditRoute />} />
               <Route path="orders" element={<OrdersRoute />} />
               <Route path="orders/:orderId" element={<OrderDetailRoute />} />
               <Route path="categories" element={<CategoriesRoute />} />

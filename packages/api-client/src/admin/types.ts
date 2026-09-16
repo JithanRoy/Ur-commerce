@@ -133,3 +133,28 @@ export type UpdateProductInput = Partial<
     | "metaDescription"
   >
 >;
+
+export type BulkVariantUpdate = {
+  id: string;
+  sku?: string;
+  price?: number;
+  compareAtPrice?: number;
+  costPrice?: number;
+  stock?: number;
+  lowStockThreshold?: number;
+  barcode?: string;
+  weight?: number;
+  optionValues?: string[];
+};
+
+export type CreateVariantInput = {
+  sku: string;
+  price: number;
+  compareAtPrice?: number;
+  costPrice?: number;
+  stock?: number;
+  lowStockThreshold?: number;
+  barcode?: string;
+  weight?: number;
+  optionValues?: string[];
+};
