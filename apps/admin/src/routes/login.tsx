@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { isApiError, isStaffRole } from "@urcommerce/api-client";
 import { authApi } from "@/lib/api";
 import { useAuth } from "@/stores/auth";
@@ -16,7 +16,10 @@ type FormValues = z.infer<typeof schema>;
 
 export function LoginRoute() {
   const navigate = useNavigate();
+  const location = useLocation();
   const signIn = useAuth((state) => state.signIn);
+  const from = (location.state as { from?: { pathname: string } } | null)?.from
+    ?.pathname;
   const [formError, setFormError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -33,7 +36,7 @@ export function LoginRoute() {
         return;
       }
       signIn(session);
-      navigate("/products", { replace: true });
+      navigate(from ?? "/products", { replace: true });
     } catch (error) {
       if (isApiError(error)) {
         setFormError(
@@ -50,14 +53,14 @@ export function LoginRoute() {
   const { errors, isSubmitting } = form.formState;
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-6">
+    <main className="flex min-h-dvh items-center justify-center bg-muted/20 px-6">
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full max-w-sm space-y-5"
+        className="w-full max-w-sm space-y-5 rounded-xl border bg-background p-8 shadow-sm"
         noValidate
       >
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Store admin</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Store admin</h1>
           <p className="text-sm text-muted-foreground">
             Sign in to manage your store.
           </p>
@@ -106,7 +109,7 @@ export function LoginRoute() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="h-10 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50"
+          className="h-10 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {isSubmitting ? "Signing in…" : "Sign in"}
         </button>

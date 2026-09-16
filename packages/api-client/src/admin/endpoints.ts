@@ -3,6 +3,12 @@ import type { Paginated } from "../types";
 import type {
   AdminBrand,
   AdminCategory,
+  AdminCollection,
+  CreateBrandInput,
+  CreateCategoryInput,
+  CreateCollectionInput,
+} from "./taxonomy";
+import type {
   AdminProduct,
   CreateProductInput,
   ProductStatus,
@@ -31,10 +37,29 @@ export function createAdminApi(client: ApiClient) {
     },
     categories: {
       list: () => client.get<AdminCategory[]>("/admin/categories"),
+      create: (input: CreateCategoryInput) =>
+        client.post<AdminCategory>("/admin/categories", input),
+      update: (id: string, input: Partial<CreateCategoryInput>) =>
+        client.patch<AdminCategory>(`/admin/categories/${id}`, input),
+      remove: (id: string) => client.delete<void>(`/admin/categories/${id}`),
     },
     brands: {
       list: (query: { page?: number; limit?: number } = {}) =>
         client.get<Paginated<AdminBrand>>("/admin/brands", { query }),
+      create: (input: CreateBrandInput) =>
+        client.post<AdminBrand>("/admin/brands", input),
+      update: (id: string, input: Partial<CreateBrandInput>) =>
+        client.patch<AdminBrand>(`/admin/brands/${id}`, input),
+      remove: (id: string) => client.delete<void>(`/admin/brands/${id}`),
+    },
+    collections: {
+      list: (query: { page?: number; limit?: number } = {}) =>
+        client.get<Paginated<AdminCollection>>("/admin/collections", { query }),
+      create: (input: CreateCollectionInput) =>
+        client.post<AdminCollection>("/admin/collections", input),
+      update: (id: string, input: Partial<CreateCollectionInput>) =>
+        client.patch<AdminCollection>(`/admin/collections/${id}`, input),
+      remove: (id: string) => client.delete<void>(`/admin/collections/${id}`),
     },
   };
 }

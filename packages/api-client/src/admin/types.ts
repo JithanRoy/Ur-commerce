@@ -84,22 +84,6 @@ export type AdminProduct = {
   images: AdminProductImage[];
 };
 
-export type AdminCategory = {
-  id: string;
-  name: string;
-  slug: string;
-  parentId: string | null;
-  position: number;
-  productCount?: number;
-};
-
-export type AdminBrand = {
-  id: string;
-  name: string;
-  slug: string;
-  logoUrl: string | null;
-};
-
 export type ProductOptionInput = {
   name: string;
   values: string[];
