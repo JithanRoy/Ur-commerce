@@ -22,3 +22,9 @@ export type { StorefrontApi } from "./storefront/endpoints";
 export type * from "./storefront/types";
 export { createCartApi, createCheckoutApi } from "./cart/endpoints";
 export type * from "./cart/types";
+export {
+  nextStatuses,
+  ORDER_STATUSES,
+  ORDER_STATUS_LABELS,
+} from "./admin/orders";
+export type * from "./admin/orders";

@@ -77,19 +77,19 @@ Pagination is flat: `{ items, page, limit, total, totalPages }`. There is no
 No backend exists for them. Do not mock them, do not stub screens for them.
 See `docs/frontend/08-backend-gaps.md`.
 
-- Admin orders (list, view, status change, refund) — staff cannot fulfil
 - Admin dashboard, customer management, settings/branding, image upload
 - Reviews and star ratings — `avgRating` is never recomputed; suppress ratings
   entirely rather than render a stale 0
 - Online payment — COD only; build the payment step as a data-driven radio
   group so a gateway is configuration later
-- Order cancellation, coupons/promo codes, refresh-token flow
+- Customer-facing order cancellation, coupons/promo codes
 - "Best sellers" sort — `soldCount` is never recomputed, order is arbitrary
 - Size/colour facets — `/products/facets` returns categories and brands only
 - Platform console — zero endpoints exist
 
-Build the 401 interceptor now (treat 401 as session-over → clear → redirect),
-but no refresh interceptor: nothing consumes the refresh token yet.
+**Verify against `http://localhost:3002/api/docs-json` before trusting this
+list** — the backend moves independently and several entries above have since
+shipped. Admin orders and the refresh-token flow both exist and are built.
 
 ## Known blocker — CORS (unresolved as of 2026-09-11)
 

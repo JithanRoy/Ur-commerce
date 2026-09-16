@@ -1,8 +1,9 @@
 import { NavLink } from "react-router";
-import { Package, Layers, Tag, FolderTree } from "lucide-react";
+import { Package, Layers, Tag, FolderTree, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const modules = [
+  { label: "Orders", to: "/orders", icon: Receipt },
   { label: "Products", to: "/products", icon: Package },
   { label: "Categories", to: "/categories", icon: FolderTree },
   { label: "Brands", to: "/brands", icon: Tag },

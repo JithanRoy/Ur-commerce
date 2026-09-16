@@ -21,7 +21,15 @@ row is created per order — but **nothing talks to a provider**. Only
 radio group so adding methods later is configuration, not a rewrite. Expect a
 redirect-or-iframe flow plus a callback route when it lands.
 
-### 2. No admin order management
+### 2. ~~No admin order management~~ — RESOLVED 2026-09-16
+
+> These endpoints now exist and the admin Orders module is built against them:
+> `GET /admin/orders`, `GET /admin/orders/counts`, `GET /admin/orders/:id`,
+> `PATCH /admin/orders/:id/status`. The backend enforces the transition graph
+> and rejects invalid jumps with a clear message. The text below is retained
+> for history.
+
+### 2. No admin order management (historical)
 
 Customers can place and read **their own** orders. Staff **cannot**:
 
@@ -42,7 +50,12 @@ No endpoint. Do not render a Cancel button.
 
 ## 🟠 Shapes the UI, needed soon
 
-### 4. No refresh-token flow
+### 4. ~~No refresh-token flow~~ — RESOLVED 2026-09-16
+
+> `POST /auth/refresh` and `POST /auth/logout` exist and are wired into the
+> admin client. The text below is retained for history.
+
+### 4. No refresh-token flow (historical)
 
 `refreshToken` is issued and signed; **no endpoint consumes it**. No rotation,
 no revocation, no logout-everywhere.

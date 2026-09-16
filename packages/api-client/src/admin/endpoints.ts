@@ -9,6 +9,13 @@ import type {
   CreateCollectionInput,
 } from "./taxonomy";
 import type {
+  AdminOrder,
+  AdminOrderListItem,
+  AdminOrderQuery,
+  ChangeOrderStatusInput,
+  OrderCounts,
+} from "./orders";
+import type {
   AdminProduct,
   CreateProductInput,
   ProductStatus,
@@ -60,6 +67,14 @@ export function createAdminApi(client: ApiClient) {
       update: (id: string, input: Partial<CreateCollectionInput>) =>
         client.patch<AdminCollection>(`/admin/collections/${id}`, input),
       remove: (id: string) => client.delete<void>(`/admin/collections/${id}`),
+    },
+    orders: {
+      list: (query: AdminOrderQuery = {}) =>
+        client.get<Paginated<AdminOrderListItem>>("/admin/orders", { query }),
+      counts: () => client.get<OrderCounts>("/admin/orders/counts"),
+      get: (id: string) => client.get<AdminOrder>(`/admin/orders/${id}`),
+      changeStatus: (id: string, input: ChangeOrderStatusInput) =>
+        client.patch<AdminOrder>(`/admin/orders/${id}/status`, input),
     },
   };
 }

@@ -8,6 +8,8 @@ import { CollectionsRoute } from "@/routes/collections";
 import { LoginRoute } from "@/routes/login";
 import { NotFoundRoute } from "@/routes/not-found";
 import { ProductNewRoute } from "@/routes/product-new";
+import { OrderDetailRoute } from "@/routes/order-detail";
+import { OrdersRoute } from "@/routes/orders";
 import { ProductsRoute } from "@/routes/products";
 import { RedirectIfAuthenticated } from "@/routes/redirect-if-authenticated";
 import { RequireStaff } from "@/routes/require-staff";
@@ -38,6 +40,8 @@ export function App() {
               <Route index element={<Navigate to="/products" replace />} />
               <Route path="products" element={<ProductsRoute />} />
               <Route path="products/new" element={<ProductNewRoute />} />
+              <Route path="orders" element={<OrdersRoute />} />
+              <Route path="orders/:orderId" element={<OrderDetailRoute />} />
               <Route path="categories" element={<CategoriesRoute />} />
               <Route path="brands" element={<BrandsRoute />} />
               <Route path="collections" element={<CollectionsRoute />} />
