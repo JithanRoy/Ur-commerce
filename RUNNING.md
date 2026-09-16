@@ -10,8 +10,8 @@ pnpm dev         # starts both apps
 
 | App | URL | Notes |
 |---|---|---|
-| Storefront | http://localhost:3000 | Customer shop. Public, no login. |
-| Admin | http://localhost:5173 | Redirects to `/login`. |
+| Storefront | http://localhost:3100 | Customer shop. Public, no login. |
+| Admin | http://localhost:5273 | Redirects to `/login`. |
 | Backend | http://localhost:3002 | Must be started separately. |
 | Swagger | http://localhost:3002/api/docs | Live API explorer. |
 
@@ -20,8 +20,8 @@ Stop everything with `Ctrl+C`.
 ## Running one app at a time
 
 ```bash
-pnpm --filter @urcommerce/storefront dev    # :3000
-pnpm --filter @urcommerce/admin dev         # :5173
+pnpm --filter @urcommerce/storefront dev    # :3100
+pnpm --filter @urcommerce/admin dev         # :5273
 ```
 
 ## The backend comes first
@@ -96,11 +96,16 @@ exists — `apps/storefront/src/lib/theme.ts`.
 
 ## Troubleshooting
 
+**Ports are pinned deliberately.** The storefront uses **3100** and the admin
+**5273**, not the framework defaults (3000 / 5173), because other projects on
+this machine already use those. If you open 3000 expecting this storefront you
+will see a different app entirely.
+
 **Port already in use** — something is still running:
 
 ```bash
-fuser -k 3000/tcp    # storefront
-fuser -k 5173/tcp    # admin
+fuser -k 3100/tcp    # storefront
+fuser -k 5273/tcp    # admin
 ```
 
 **Types not resolving across packages** — `packages/api-client` is consumed as

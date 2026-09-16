@@ -27,7 +27,7 @@ pnpm install
 pnpm dev
 ```
 
-Storefront on `http://localhost:3000`, admin on `http://localhost:5173`. The
+Storefront on `http://localhost:3100`, admin on `http://localhost:5273`. The
 backend must be running separately on `http://localhost:3002`.
 
 See **[RUNNING.md](RUNNING.md)** for ports, env files, theming and
