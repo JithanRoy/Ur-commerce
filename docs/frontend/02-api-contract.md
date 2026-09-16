@@ -479,6 +479,11 @@ them.
 
 ### The option/variant rule — the one that breaks naive forms
 
+> **Verified 2026-09-16 against a live 201.** `options[].values` is an array of
+> **plain strings**, and `position` is **rejected** on options and images —
+> order is implied by array order. An earlier revision of this doc showed
+> `{ value, position }` objects, which returns 400.
+
 When a product declares `options`, **every variant must carry exactly one
 `optionValues` entry per declared option, in declaration order.** Two options
 (Size, Colour) with 3 sizes × 2 colours means 6 variants, each with exactly 2
@@ -494,8 +499,8 @@ option values.
   "brandId": "…uuid…",
   "status": "ACTIVE",
   "options": [
-    { "name": "Size",   "position": 0, "values": [{ "value": "40", "position": 0 }, { "value": "42", "position": 1 }] },
-    { "name": "Colour", "position": 1, "values": [{ "value": "Black", "position": 0 }] }
+    { "name": "Size",   "values": ["40", "42"] },
+    { "name": "Colour", "values": ["Black"] }
   ],
   "variants": [
     { "sku": "PANJ-BLK-40", "price": 189900, "compareAtPrice": 249900, "costPrice": 120000,
@@ -503,7 +508,7 @@ option values.
     { "sku": "PANJ-BLK-42", "price": 199900, "compareAtPrice": 259900, "costPrice": 130000,
       "stock": 4,  "optionValues": ["42", "Black"] }
   ],
-  "images": [{ "url": "https://…", "alt": "…", "position": 0 }]
+  "images": [{ "url": "https://…", "alt": "…" }]
 }
 ```
 

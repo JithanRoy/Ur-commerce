@@ -4,7 +4,6 @@ import type {
   AdminBrand,
   AdminCategory,
   AdminProduct,
-  AdminProductListItem,
   CreateProductInput,
   ProductStatus,
   UpdateProductInput,
@@ -22,7 +21,7 @@ export function createAdminApi(client: ApiClient) {
   return {
     products: {
       list: (query: AdminProductQuery = {}) =>
-        client.get<Paginated<AdminProductListItem>>("/admin/products", { query }),
+        client.get<Paginated<AdminProduct>>("/admin/products", { query }),
       get: (id: string) => client.get<AdminProduct>(`/admin/products/${id}`),
       create: (input: CreateProductInput) =>
         client.post<AdminProduct>("/admin/products", input),
@@ -32,10 +31,10 @@ export function createAdminApi(client: ApiClient) {
     },
     categories: {
       list: () => client.get<AdminCategory[]>("/admin/categories"),
-      tree: () => client.get<AdminCategory[]>("/admin/categories/tree"),
     },
     brands: {
-      list: () => client.get<AdminBrand[]>("/admin/brands"),
+      list: (query: { page?: number; limit?: number } = {}) =>
+        client.get<Paginated<AdminBrand>>("/admin/brands", { query }),
     },
   };
 }

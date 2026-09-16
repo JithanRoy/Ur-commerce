@@ -1,16 +1,28 @@
 import Link from "next/link";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
-import type { ProductCard as ProductCardData } from "@urcommerce/api-client";
+import type {
+  Paisa,
+  ProductCard as ProductCardData,
+} from "@urcommerce/api-client";
 
 function priceLabel(product: ProductCardData): string {
-  return formatPriceRange(product.minPrice, product.maxPrice, product.currency);
+  return formatPriceRange(product.minPrice, product.maxPrice);
+}
+
+function highestCompareAtPrice(product: ProductCardData): Paisa | null {
+  return product.variants.reduce<Paisa | null>((highest, variant) => {
+    if (variant.compareAtPrice === null) return highest;
+    return highest === null || variant.compareAtPrice > highest
+      ? variant.compareAtPrice
+      : highest;
+  }, null);
 }
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const image = product.images[0];
   const isSoldOut = product.totalStock === 0;
-  const hasDiscount =
-    product.maxDiscountPct > 0 && product.compareAtPrice !== null;
+  const compareAtPrice = highestCompareAtPrice(product);
+  const hasDiscount = product.maxDiscountPct > 0 && compareAtPrice !== null;
 
   return (
     <Link
@@ -59,9 +71,9 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
         <div className="flex items-baseline gap-2 pt-0.5">
           <span className="text-sm font-semibold">{priceLabel(product)}</span>
-          {hasDiscount && product.compareAtPrice !== null ? (
+          {hasDiscount && compareAtPrice !== null ? (
             <span className="text-xs text-muted-foreground line-through">
-              {formatBDT(product.compareAtPrice, product.currency)}
+              {formatBDT(compareAtPrice)}
             </span>
           ) : null}
         </div>

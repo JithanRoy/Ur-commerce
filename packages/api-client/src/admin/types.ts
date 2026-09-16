@@ -4,51 +4,81 @@ export type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 export type AdminOptionValue = {
   id: string;
+  optionId: string;
   value: string;
   position: number;
 };
 
 export type AdminProductOption = {
   id: string;
+  productId: string;
   name: string;
   position: number;
   values: AdminOptionValue[];
 };
 
+export type AdminVariantOptionValue = {
+  variantId: string;
+  optionValueId: string;
+  optionValue: AdminOptionValue;
+};
+
 export type AdminVariant = {
   id: string;
+  tenantId: string;
+  productId: string;
   sku: string;
   price: Paisa;
   compareAtPrice: Paisa | null;
   costPrice: Paisa | null;
+  currency: string;
   stock: number;
-  optionValues: { optionValue: AdminOptionValue & { option: { name: string; position: number } } }[];
+  lowStockThreshold: number;
+  barcode: string | null;
+  weight: number | null;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+  optionValues: AdminVariantOptionValue[];
 };
 
 export type AdminProductImage = {
   id: string;
+  productId: string;
+  variantId: string | null;
   url: string;
   alt: string | null;
   position: number;
 };
 
-export type AdminProductListItem = {
+export type AdminProductCategory = {
   id: string;
   name: string;
   slug: string;
-  status: ProductStatus;
-  minPrice: Paisa | null;
-  maxPrice: Paisa | null;
-  totalStock: number;
-  createdAt: string;
-  updatedAt: string;
 };
 
-export type AdminProduct = AdminProductListItem & {
-  description: string | null;
-  categoryId: string | null;
-  brandId: string | null;
+export type AdminProduct = {
+  id: string;
   tenantId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  brand: string | null;
+  brandId: string | null;
+  status: ProductStatus;
+  categoryId: string | null;
+  category: AdminProductCategory | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  minPrice: Paisa | null;
+  maxPrice: Paisa | null;
+  maxDiscountPct: number;
+  totalStock: number;
+  avgRating: number;
+  ratingCount: number;
+  soldCount: number;
+  createdAt: string;
+  updatedAt: string;
   options: AdminProductOption[];
   variants: AdminVariant[];
   images: AdminProductImage[];
@@ -70,29 +100,52 @@ export type AdminBrand = {
   logoUrl: string | null;
 };
 
+export type ProductOptionInput = {
+  name: string;
+  values: string[];
+};
+
+export type ProductVariantInput = {
+  sku: string;
+  price: number;
+  compareAtPrice?: number;
+  costPrice?: number;
+  stock?: number;
+  lowStockThreshold?: number;
+  barcode?: string;
+  weight?: number;
+  optionValues?: string[];
+};
+
+export type ProductImageInput = {
+  url: string;
+  alt?: string;
+};
+
 export type CreateProductInput = {
   name: string;
   slug: string;
   description?: string;
-  categoryId?: string;
   brandId?: string;
-  status: ProductStatus;
-  options: {
-    name: string;
-    position: number;
-    values: { value: string; position: number }[];
-  }[];
-  variants: {
-    sku: string;
-    price: number;
-    compareAtPrice?: number;
-    costPrice?: number;
-    stock: number;
-    optionValues: string[];
-  }[];
-  images?: { url: string; alt?: string; position: number }[];
+  categoryId?: string;
+  status?: ProductStatus;
+  metaTitle?: string;
+  metaDescription?: string;
+  options?: ProductOptionInput[];
+  variants: ProductVariantInput[];
+  images?: ProductImageInput[];
 };
 
 export type UpdateProductInput = Partial<
-  Pick<CreateProductInput, "name" | "slug" | "description" | "categoryId" | "brandId" | "status">
+  Pick<
+    CreateProductInput,
+    | "name"
+    | "slug"
+    | "description"
+    | "brandId"
+    | "categoryId"
+    | "status"
+    | "metaTitle"
+    | "metaDescription"
+  >
 >;

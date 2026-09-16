@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { isApiError } from "@urcommerce/api-client";
 import { LoginRoute } from "@/routes/login";
 import { ProductsRoute } from "@/routes/products";
+import { ProductNewRoute } from "@/routes/product-new";
 import { RequireStaff } from "@/routes/require-staff";
 
 const queryClient = new QueryClient({
@@ -25,6 +26,7 @@ export function App() {
           <Route path="/login" element={<LoginRoute />} />
           <Route element={<RequireStaff />}>
             <Route path="/products" element={<ProductsRoute />} />
+            <Route path="/products/new" element={<ProductNewRoute />} />
           </Route>
           <Route path="*" element={<Navigate to="/products" replace />} />
         </Routes>

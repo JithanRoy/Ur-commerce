@@ -1,10 +1,11 @@
+import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { formatPriceRange, paisa } from "@urcommerce/api-client";
-import type { AdminProductListItem } from "@urcommerce/api-client";
+import type { AdminProduct } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { useAuth } from "@/stores/auth";
 
-function priceLabel(product: AdminProductListItem): string {
+function priceLabel(product: AdminProduct): string {
   if (product.minPrice === null || product.maxPrice === null) return "—";
   return formatPriceRange(paisa(product.minPrice), paisa(product.maxPrice));
 }
@@ -28,13 +29,21 @@ export function ProductsRoute() {
             </p>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={signOut}
-          className="h-9 rounded-md border border-input px-3 text-sm"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/products/new"
+            className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+          >
+            New product
+          </Link>
+          <button
+            type="button"
+            onClick={signOut}
+            className="h-9 rounded-md border border-input px-3 text-sm"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       {isPending ? <p className="text-muted-foreground">Loading…</p> : null}
@@ -51,6 +60,12 @@ export function ProductsRoute() {
           <p className="mt-1 text-sm text-muted-foreground">
             Products you create will appear here.
           </p>
+          <Link
+            to="/products/new"
+            className="mt-5 inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+          >
+            Create your first product
+          </Link>
         </div>
       ) : null}
 

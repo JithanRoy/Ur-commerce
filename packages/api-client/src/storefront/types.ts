@@ -11,6 +11,13 @@ export type ProductCardImage = {
   alt: string | null;
 };
 
+export type ProductCardVariantPreview = {
+  id: string;
+  price: Paisa;
+  compareAtPrice: Paisa | null;
+  stock: number;
+};
+
 export type ProductCard = {
   id: string;
   name: string;
@@ -19,10 +26,11 @@ export type ProductCard = {
   images: ProductCardImage[];
   minPrice: Paisa;
   maxPrice: Paisa;
-  compareAtPrice: Paisa | null;
   maxDiscountPct: number;
   totalStock: number;
-  currency: string;
+  avgRating: number;
+  ratingCount: number;
+  variants: ProductCardVariantPreview[];
 };
 
 export type HomeCategory = {
