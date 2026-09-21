@@ -72,6 +72,10 @@ export type CreateAddressInput = {
   isDefault?: boolean;
 };
 
+export type UpdateAddressInput = Partial<CreateAddressInput>;
+
+export type DeletedAddress = { id: string };
+
 export type CheckoutQuote = {
   subtotal: Paisa;
   shippingTotal: Paisa;

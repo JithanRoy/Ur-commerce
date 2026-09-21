@@ -168,3 +168,11 @@ export type StorefrontCategory = {
   parentId: string | null;
   children?: StorefrontCategory[];
 };
+
+export type StorefrontBrand = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  productCount: number;
+};

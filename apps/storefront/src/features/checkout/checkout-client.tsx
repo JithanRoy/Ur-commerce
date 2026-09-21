@@ -3,54 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
 import type { Address } from "@urcommerce/api-client";
 import { checkoutApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { useCart, cartQueryKey } from "@/features/cart/use-cart";
+import { AddressForm, toCreateInput } from "@/features/account/address-form";
+import type { AddressValues } from "@/features/account/address-form";
 import { cn } from "@/lib/utils";
-
-const addressSchema = z.object({
-  fullName: z.string().min(1, "Required"),
-  phone: z.string().min(11, "Enter a valid Bangladeshi number"),
-  division: z.string().min(1, "Required"),
-  district: z.string().min(1, "Required"),
-  thana: z.string().min(1, "Required"),
-  addressLine: z.string().min(1, "Required"),
-  area: z.string().optional(),
-  postCode: z.string().optional(),
-});
-
-type AddressValues = z.infer<typeof addressSchema>;
-
-function Field({
-  id,
-  label,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-      </label>
-      {children}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-    </div>
-  );
-}
-
-const inputClass =
-  "h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm";
 
 export function CheckoutClient() {
   const router = useRouter();
@@ -80,21 +41,12 @@ export function CheckoutClient() {
     retry: false,
   });
 
-  const form = useForm<AddressValues>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      fullName: "",
-      phone: "",
-      division: "Dhaka",
-      district: "Dhaka",
-      thana: "",
-      addressLine: "",
-    },
-  });
-
   const createAddress = useMutation({
     mutationFn: (values: AddressValues) =>
-      checkoutApi.addresses.create({ ...values, isDefault: true }),
+      checkoutApi.addresses.create({
+        ...toCreateInput(values),
+        isDefault: true,
+      }),
     onSuccess: (address: Address) => {
       setAddressId(address.id);
       queryClient.invalidateQueries({ queryKey: ["addresses"] });
@@ -190,98 +142,22 @@ export function CheckoutClient() {
             </ul>
           ) : null}
 
-          {!addresses || addresses.length === 0 ? (
-            <form
-              onSubmit={form.handleSubmit((values) =>
-                createAddress.mutate(values),
-              )}
-              className="space-y-4"
-              noValidate
+          {addresses && addresses.length > 0 ? (
+            <Link
+              href="/account/addresses"
+              className="text-sm text-muted-foreground underline underline-offset-4"
             >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  id="fullName"
-                  label="Full name"
-                  error={form.formState.errors.fullName?.message}
-                >
-                  <input
-                    id="fullName"
-                    className={inputClass}
-                    {...form.register("fullName")}
-                  />
-                </Field>
-                <Field
-                  id="phone"
-                  label="Phone"
-                  error={form.formState.errors.phone?.message}
-                >
-                  <input
-                    id="phone"
-                    inputMode="tel"
-                    placeholder="01XXXXXXXXX"
-                    className={inputClass}
-                    {...form.register("phone")}
-                  />
-                </Field>
-              </div>
+              Manage addresses
+            </Link>
+          ) : null}
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field
-                  id="division"
-                  label="Division"
-                  error={form.formState.errors.division?.message}
-                >
-                  <input
-                    id="division"
-                    className={inputClass}
-                    {...form.register("division")}
-                  />
-                </Field>
-                <Field
-                  id="district"
-                  label="District"
-                  error={form.formState.errors.district?.message}
-                >
-                  <input
-                    id="district"
-                    className={inputClass}
-                    {...form.register("district")}
-                  />
-                </Field>
-                <Field
-                  id="thana"
-                  label="Thana"
-                  error={form.formState.errors.thana?.message}
-                >
-                  <input
-                    id="thana"
-                    className={inputClass}
-                    {...form.register("thana")}
-                  />
-                </Field>
-              </div>
-
-              <Field
-                id="addressLine"
-                label="Address"
-                error={form.formState.errors.addressLine?.message}
-              >
-                <input
-                  id="addressLine"
-                  placeholder="House, road, area"
-                  className={inputClass}
-                  {...form.register("addressLine")}
-                />
-              </Field>
-
-              <button
-                type="submit"
-                disabled={createAddress.isPending}
-                className="h-10 rounded-md border border-input px-4 text-sm font-medium disabled:opacity-50"
-              >
-                {createAddress.isPending ? "Saving…" : "Save address"}
-              </button>
-            </form>
+          {!addresses || addresses.length === 0 ? (
+            <AddressForm
+              submitLabel="Save address"
+              pending={createAddress.isPending}
+              showOptionalFields={false}
+              onSubmit={(values) => createAddress.mutate(values)}
+            />
           ) : null}
         </section>
 

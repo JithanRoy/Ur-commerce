@@ -1,6 +1,6 @@
 import {
   findVariant, isValueAvailable, hasStockFor, optionNamesInOrder, maxQuantityFor,
-} from "./src/features/product/variant-resolution.ts";
+} from "../src/features/product/variant-resolution.ts";
 
 const res = await fetch("http://localhost:3002/api/v1/products/slim-fit-denim-shirt", {
   headers: { "X-Tenant-Host": "demo.localhost" },

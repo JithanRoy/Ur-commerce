@@ -6,6 +6,7 @@ import type {
   ProductDetail,
   ProductFacets,
   ProductQuery,
+  StorefrontBrand,
   StorefrontCategory,
 } from "./types";
 
@@ -27,6 +28,7 @@ export function createStorefrontApi(client: ApiClient) {
       client.get<ProductFacets>("/products/facets", { query: toQuery(query) }),
     product: (slug: string) => client.get<ProductDetail>(`/products/${slug}`),
     categories: () => client.get<StorefrontCategory[]>("/categories"),
+    brands: () => client.get<StorefrontBrand[]>("/brands"),
   };
 }
 

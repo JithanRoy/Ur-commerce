@@ -15,6 +15,7 @@ type Props = {
   facets: ProductFacets;
   categories: StorefrontCategory[];
   showCategoryFilter?: boolean;
+  showBrandFilter?: boolean;
   basePath?: string;
   emptyTitle?: string;
   emptyDescription?: string;
@@ -26,6 +27,7 @@ export function ProductGridPage({
   facets,
   categories,
   showCategoryFilter = true,
+  showBrandFilter = true,
   basePath = "/shop",
   emptyTitle = "No products match those filters",
   emptyDescription = "Try removing a filter or searching for something else.",
@@ -37,6 +39,7 @@ export function ProductGridPage({
         facets={facets}
         categories={categories}
         showCategories={showCategoryFilter}
+        showBrands={showBrandFilter}
         basePath={basePath}
       />
 

@@ -5,8 +5,10 @@ import type {
   Cart,
   CheckoutQuote,
   CreateAddressInput,
+  DeletedAddress,
   Order,
   PaymentMethod,
+  UpdateAddressInput,
 } from "./types";
 
 export function createCartApi(client: ApiClient) {
@@ -34,8 +36,14 @@ export function createCheckoutApi(client: ApiClient) {
   return {
     addresses: {
       list: () => client.get<Address[]>("/addresses"),
+      get: (id: string) => client.get<Address>(`/addresses/${id}`),
       create: (input: CreateAddressInput) =>
         client.post<Address>("/addresses", input),
+      update: (id: string, input: UpdateAddressInput) =>
+        client.patch<Address>(`/addresses/${id}`, input),
+      remove: (id: string) => client.delete<DeletedAddress>(`/addresses/${id}`),
+      setDefault: (id: string) =>
+        client.put<Address>(`/addresses/${id}/default`),
     },
     quote: (addressId: string) =>
       client.post<CheckoutQuote>("/checkout/quote", { addressId }),

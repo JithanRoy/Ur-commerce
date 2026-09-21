@@ -13,6 +13,7 @@ type Props = {
   facets: ProductFacets;
   categories: StorefrontCategory[];
   showCategories?: boolean;
+  showBrands?: boolean;
 };
 
 function FilterGroup({
@@ -35,6 +36,7 @@ export function FilterSidebar({
   facets,
   categories,
   showCategories = true,
+  showBrands = true,
   basePath = "/shop",
 }: Props) {
   const categoryNames = new Map(
@@ -98,7 +100,7 @@ export function FilterSidebar({
         </FilterGroup>
       ) : null}
 
-      {facets.brands.length > 0 ? (
+      {showBrands && facets.brands.length > 0 ? (
         <FilterGroup heading="Brand">
           <ul className="space-y-1.5">
             {facets.brands.map((brand) => {
