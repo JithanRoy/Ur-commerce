@@ -4,11 +4,17 @@ import { buildShopHref } from "./search-params";
 
 type Props = {
   query: ProductQuery;
+  basePath?: string;
   page: number;
   totalPages: number;
 };
 
-export function Pagination({ query, page, totalPages }: Props) {
+export function Pagination({
+  query,
+  page,
+  totalPages,
+  basePath = "/shop",
+}: Props) {
   if (totalPages <= 1) return null;
 
   return (
@@ -18,7 +24,7 @@ export function Pagination({ query, page, totalPages }: Props) {
     >
       {page > 1 ? (
         <Link
-          href={buildShopHref(query, { page: page - 1 })}
+          href={buildShopHref(query, { page: page - 1 }, basePath)}
           rel="prev"
           className="inline-flex h-10 items-center rounded-md border px-4 text-sm transition-colors hover:bg-muted"
         >
@@ -34,7 +40,7 @@ export function Pagination({ query, page, totalPages }: Props) {
 
       {page < totalPages ? (
         <Link
-          href={buildShopHref(query, { page: page + 1 })}
+          href={buildShopHref(query, { page: page + 1 }, basePath)}
           rel="next"
           className="inline-flex h-10 items-center rounded-md border px-4 text-sm transition-colors hover:bg-muted"
         >

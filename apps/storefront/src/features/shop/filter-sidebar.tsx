@@ -9,8 +9,10 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   query: ProductQuery;
+  basePath?: string;
   facets: ProductFacets;
   categories: StorefrontCategory[];
+  showCategories?: boolean;
 };
 
 function FilterGroup({
@@ -28,7 +30,13 @@ function FilterGroup({
   );
 }
 
-export function FilterSidebar({ query, facets, categories }: Props) {
+export function FilterSidebar({
+  query,
+  facets,
+  categories,
+  showCategories = true,
+  basePath = "/shop",
+}: Props) {
   const categoryNames = new Map(
     categories.map((category) => [category.id, category]),
   );
@@ -50,14 +58,14 @@ export function FilterSidebar({ query, facets, categories }: Props) {
     <aside className="space-y-5">
       {hasFilters ? (
         <Link
-          href="/shop"
+          href={basePath}
           className="inline-block text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
         >
           Clear filters
         </Link>
       ) : null}
 
-      {namedCategories.length > 0 ? (
+      {showCategories && namedCategories.length > 0 ? (
         <FilterGroup heading="Category">
           <ul className="space-y-1.5">
             {namedCategories.map(({ facet, category }) => {
@@ -65,10 +73,14 @@ export function FilterSidebar({ query, facets, categories }: Props) {
               return (
                 <li key={facet.categoryId}>
                   <Link
-                    href={buildShopHref(query, {
-                      category: isActive ? undefined : category?.slug,
-                      page: 1,
-                    })}
+                    href={buildShopHref(
+                      query,
+                      {
+                        category: isActive ? undefined : category?.slug,
+                        page: 1,
+                      },
+                      basePath,
+                    )}
                     className={cn(
                       "flex items-center justify-between text-sm transition-colors",
                       isActive
@@ -98,10 +110,11 @@ export function FilterSidebar({ query, facets, categories }: Props) {
               return (
                 <li key={brand.id}>
                   <Link
-                    href={buildShopHref(query, {
-                      brands: nextBrands,
-                      page: 1,
-                    })}
+                    href={buildShopHref(
+                      query,
+                      { brands: nextBrands, page: 1 },
+                      basePath,
+                    )}
                     className={cn(
                       "flex items-center justify-between text-sm transition-colors",
                       isActive
@@ -121,10 +134,11 @@ export function FilterSidebar({ query, facets, categories }: Props) {
 
       <FilterGroup heading="Availability">
         <Link
-          href={buildShopHref(query, {
-            inStock: query.inStock ? undefined : true,
-            page: 1,
-          })}
+          href={buildShopHref(
+            query,
+            { inStock: query.inStock ? undefined : true, page: 1 },
+            basePath,
+          )}
           className={cn(
             "text-sm transition-colors",
             query.inStock

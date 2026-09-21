@@ -47,13 +47,18 @@ export function parseShopQuery(params: ShopSearchParams): ProductQuery {
 export function buildShopHref(
   current: ProductQuery,
   patch: Partial<ProductQuery> & { page?: number },
+  basePath = "/shop",
 ): string {
   const next = { ...current, ...patch };
   const params = new URLSearchParams();
+  const categoryIsInPath = basePath.startsWith("/category/");
+  const brandIsInPath = basePath.startsWith("/brand/");
 
   if (next.search) params.set("search", next.search);
-  if (next.category) params.set("category", next.category);
-  if (next.brands?.length) params.set("brands", next.brands.join(","));
+  if (next.category && !categoryIsInPath) params.set("category", next.category);
+  if (brandIsInPath) params.delete("brands");
+  if (next.brands?.length && !brandIsInPath)
+    params.set("brands", next.brands.join(","));
   if (next.minPrice) params.set("minPrice", String(next.minPrice));
   if (next.maxPrice) params.set("maxPrice", String(next.maxPrice));
   if (next.sort) params.set("sort", next.sort);
@@ -61,5 +66,5 @@ export function buildShopHref(
   if (next.page && next.page > 1) params.set("page", String(next.page));
 
   const qs = params.toString();
-  return qs ? `/shop?${qs}` : "/shop";
+  return qs ? `${basePath}?${qs}` : basePath;
 }

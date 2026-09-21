@@ -10,7 +10,13 @@ const options: { value: ProductSort; label: string }[] = [
   { value: "discount", label: "Biggest discount" },
 ];
 
-export function SortLinks({ query }: { query: ProductQuery }) {
+export function SortLinks({
+  query,
+  basePath = "/shop",
+}: {
+  query: ProductQuery;
+  basePath?: string;
+}) {
   const active = query.sort ?? "newest";
 
   return (
@@ -18,7 +24,7 @@ export function SortLinks({ query }: { query: ProductQuery }) {
       {options.map((option) => (
         <Link
           key={option.value}
-          href={buildShopHref(query, { sort: option.value, page: 1 })}
+          href={buildShopHref(query, { sort: option.value, page: 1 }, basePath)}
           className={cn(
             "rounded-full px-3 py-1.5 text-sm transition-colors",
             active === option.value
