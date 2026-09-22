@@ -7,6 +7,7 @@ import type { CreateProductInput, ProductStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { OptionsEditor } from "@/features/products/options-editor";
 import { VariantTable } from "@/features/products/variant-table";
+import { TaxonomyFields } from "@/features/products/taxonomy-fields";
 import {
   reconcileVariants,
   slugify,
@@ -41,6 +42,8 @@ export function ProductNewRoute() {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<ProductStatus>("DRAFT");
   const [imageUrl, setImageUrl] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [options, setOptions] = useState<OptionDraft[]>([]);
   const [variants, setVariants] = useState<VariantDraft[]>([singleVariant]);
   const [formError, setFormError] = useState<string | null>(null);
@@ -93,6 +96,8 @@ export function ProductNewRoute() {
     };
 
     if (description.trim()) payload.description = description.trim();
+    if (categoryId) payload.categoryId = categoryId;
+    if (brandId) payload.brandId = brandId;
     if (usable.length > 0) payload.options = usable;
     if (imageUrl.trim()) payload.images = [{ url: imageUrl.trim() }];
 
@@ -155,6 +160,14 @@ export function ProductNewRoute() {
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
             />
           </div>
+
+          <TaxonomyFields
+            categoryId={categoryId}
+            brandId={brandId}
+            onCategoryChange={setCategoryId}
+            onBrandChange={setBrandId}
+            disabled={mutation.isPending}
+          />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

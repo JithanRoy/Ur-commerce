@@ -1,28 +1,75 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Truck, BadgeCheck, RotateCcw } from "lucide-react";
+
+const assurances = [
+  { icon: Truck, label: "Cash on delivery" },
+  { icon: BadgeCheck, label: "Free over ৳2,000" },
+  { icon: RotateCcw, label: "7-day exchange" },
+];
 
 export function Hero({ storeName }: { storeName: string }) {
   return (
-    <section className="border-b bg-linear-to-b from-accent/40 to-background">
-      <div className="container-page py-20 sm:py-28">
+    <section className="relative overflow-hidden border-b">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_15%_0%,var(--color-accent),transparent_65%)] opacity-70"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 top-1/2 hidden size-[32rem] -translate-y-1/2 rounded-full border border-foreground/[0.07] lg:block"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-8 top-1/2 hidden size-[22rem] -translate-y-1/2 rounded-full border border-foreground/[0.05] lg:block"
+      />
+
+      <div className="container-page relative py-20 sm:py-28 lg:py-32">
         <div className="max-w-2xl">
-          <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-muted-foreground">
+            <span className="h-px w-8 bg-foreground/25" aria-hidden />
             {storeName}
           </p>
-          <h1 className="mt-4 text-balance font-display text-4xl font-semibold leading-[1.1] sm:text-5xl lg:text-6xl">
-            Everyday pieces, made to be worn.
+
+          <h1 className="mt-6 text-balance font-display text-5xl font-semibold leading-[0.95] tracking-[-0.02em] sm:text-6xl lg:text-7xl">
+            Everyday pieces,
+            <span className="block italic text-primary">made to be worn.</span>
           </h1>
-          <p className="mt-5 max-w-md text-pretty text-muted-foreground">
-            Cash on delivery across Bangladesh. Free shipping on orders over
-            ৳2,000.
+
+          <p className="mt-6 max-w-md text-pretty text-lg leading-relaxed text-muted-foreground">
+            Cotton that breathes through a Dhaka summer. Cut once, properly,
+            and built to outlast the season.
           </p>
-          <Link
-            href="/shop"
-            className="group mt-8 inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            Shop the collection
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
+
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <Link
+              href="/shop"
+              className="group inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-medium text-primary-foreground transition-all hover:gap-3 hover:shadow-lg hover:shadow-primary/20"
+            >
+              Shop the collection
+              <ArrowRight
+                className="size-4 transition-transform group-hover:translate-x-0.5"
+                aria-hidden
+              />
+            </Link>
+            <Link
+              href="/brand"
+              className="inline-flex h-12 items-center rounded-full border border-foreground/15 px-7 text-sm font-medium transition-colors hover:border-foreground/40"
+            >
+              Browse brands
+            </Link>
+          </div>
+
+          <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-foreground/10 pt-6">
+            {assurances.map((item) => (
+              <li
+                key={item.label}
+                className="flex items-center gap-2 text-sm text-muted-foreground"
+              >
+                <item.icon className="size-4 text-primary/70" aria-hidden />
+                {item.label}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

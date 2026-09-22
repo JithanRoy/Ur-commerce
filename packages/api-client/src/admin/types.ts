@@ -150,13 +150,14 @@ export type UpdateProductInput = Partial<
     | "name"
     | "slug"
     | "description"
-    | "brandId"
-    | "categoryId"
     | "status"
     | "metaTitle"
     | "metaDescription"
   >
->;
+> & {
+  brandId?: string | null;
+  categoryId?: string | null;
+};
 
 export type BulkVariantUpdate = {
   id: string;

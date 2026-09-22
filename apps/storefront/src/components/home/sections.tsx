@@ -76,7 +76,7 @@ export function ProductCarousel({
         {section.products.map((product) => (
           <div
             key={product.id}
-            className="w-[62%] shrink-0 snap-start sm:w-auto"
+            className="flex w-[62%] shrink-0 snap-start sm:w-auto"
           >
             <ProductCard product={product} />
           </div>

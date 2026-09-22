@@ -17,6 +17,7 @@ import {
 } from "@/features/products/edit-variant-table";
 import { AddVariantForm } from "@/features/products/add-variant-form";
 import { ImageManager } from "@/features/products/image-manager";
+import { TaxonomyFields } from "@/features/products/taxonomy-fields";
 
 function toRow(product: AdminProduct): VariantEdit[] {
   return product.variants.map((variant) => ({
@@ -50,6 +51,8 @@ export function ProductEditRoute() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<ProductStatus>("DRAFT");
+  const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [rows, setRows] = useState<VariantEdit[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +70,8 @@ export function ProductEditRoute() {
     setSlug(product.slug);
     setDescription(product.description ?? "");
     setStatus(product.status);
+    setCategoryId(product.categoryId ?? "");
+    setBrandId(product.brandId ?? "");
     setRows(toRow(product));
   }, [product]);
 
@@ -86,6 +91,8 @@ export function ProductEditRoute() {
         slug: slug.trim(),
         description: description.trim(),
         status,
+        categoryId: categoryId || null,
+        brandId: brandId || null,
       }),
     onSuccess: () => {
       setError(null);
@@ -227,6 +234,14 @@ export function ProductEditRoute() {
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
             />
           </div>
+
+          <TaxonomyFields
+            categoryId={categoryId}
+            brandId={brandId}
+            onCategoryChange={setCategoryId}
+            onBrandChange={setBrandId}
+            disabled={saveDetails.isPending}
+          />
 
           <div className="space-y-1.5">
             <label htmlFor="status" className="text-sm font-medium">
