@@ -17,6 +17,13 @@ export { createAdminApi } from "./admin/endpoints";
 export type { AdminApi, AdminProductQuery } from "./admin/endpoints";
 export type * from "./admin/types";
 export type * from "./admin/taxonomy";
+export {
+  ACCEPTED_IMAGE_TYPES,
+  MAX_IMAGE_BYTES,
+  UploadError,
+  describeFileRejection,
+  putToStorage,
+} from "./admin/upload";
 export { createStorefrontApi } from "./storefront/endpoints";
 export type { StorefrontApi } from "./storefront/endpoints";
 export type * from "./storefront/types";

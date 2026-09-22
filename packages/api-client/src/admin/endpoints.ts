@@ -23,11 +23,16 @@ import type {
 } from "./orders";
 import type {
   AdminProduct,
+  AdminProductImage,
   AdminVariant,
+  AttachImageInput,
   BulkVariantUpdate,
   CreateProductInput,
   CreateVariantInput,
   ProductStatus,
+  UpdateImageInput,
+  UploadTicket,
+  UploadTicketInput,
   UpdateProductInput,
 } from "./types";
 
@@ -58,6 +63,31 @@ export function createAdminApi(client: ApiClient) {
         client.post<AdminVariant>(`/admin/products/${id}/variants`, input),
       removeVariant: (id: string, variantId: string) =>
         client.delete<void>(`/admin/products/${id}/variants/${variantId}`),
+      images: {
+        list: (id: string) =>
+          client.get<AdminProductImage[]>(`/admin/products/${id}/images`),
+        attach: (id: string, input: AttachImageInput) =>
+          client.post<AdminProductImage>(
+            `/admin/products/${id}/images`,
+            input,
+          ),
+        reorder: (id: string, imageIds: string[]) =>
+          client.put<AdminProductImage[]>(
+            `/admin/products/${id}/images/order`,
+            { imageIds },
+          ),
+        update: (id: string, imageId: string, input: UpdateImageInput) =>
+          client.patch<AdminProductImage>(
+            `/admin/products/${id}/images/${imageId}`,
+            input,
+          ),
+        remove: (id: string, imageId: string) =>
+          client.delete<void>(`/admin/products/${id}/images/${imageId}`),
+      },
+    },
+    uploads: {
+      productImageTicket: (input: UploadTicketInput) =>
+        client.post<UploadTicket>("/admin/uploads/product-images", input),
     },
     categories: {
       list: () => client.get<AdminCategory[]>("/admin/categories"),

@@ -118,7 +118,15 @@ export function createApiClient(config: ClientConfig) {
       },
     );
 
-    const raw: unknown = await response.json().catch(() => null);
+    const rawText = await response.text();
+    let raw: unknown = null;
+    if (rawText !== "") {
+      try {
+        raw = JSON.parse(rawText) as unknown;
+      } catch {
+        raw = null;
+      }
+    }
 
     if (!response.ok) {
       const body = (raw ?? {}) as ErrorBody;
@@ -142,6 +150,10 @@ export function createApiClient(config: ClientConfig) {
         body.errors,
         body.path,
       );
+    }
+
+    if (response.status === 204 || rawText === "") {
+      return undefined as T;
     }
 
     const envelope = raw as Envelope<T>;

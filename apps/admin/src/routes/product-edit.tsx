@@ -16,6 +16,7 @@ import {
   type VariantEdit,
 } from "@/features/products/edit-variant-table";
 import { AddVariantForm } from "@/features/products/add-variant-form";
+import { ImageManager } from "@/features/products/image-manager";
 
 function toRow(product: AdminProduct): VariantEdit[] {
   return product.variants.map((variant) => ({
@@ -256,6 +257,10 @@ export function ProductEditRoute() {
             </button>
           </div>
         </div>
+      </section>
+
+      <section className="mt-10">
+        <ImageManager productId={product.id} variants={product.variants} />
       </section>
 
       <section className="mt-10">

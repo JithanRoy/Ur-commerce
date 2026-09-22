@@ -51,6 +51,30 @@ export type AdminProductImage = {
   position: number;
 };
 
+export type UploadTicketInput = {
+  fileName: string;
+  contentType: string;
+  contentLength: number;
+};
+
+export type UploadTicket = {
+  objectKey: string;
+  uploadUrl: string;
+  expiresAt: string;
+  requiredHeaders: Record<string, string>;
+};
+
+export type AttachImageInput = {
+  objectKey: string;
+  alt?: string;
+  variantId?: string | null;
+};
+
+export type UpdateImageInput = {
+  alt?: string | null;
+  variantId?: string | null;
+};
+
 export type AdminProductCategory = {
   id: string;
   name: string;
