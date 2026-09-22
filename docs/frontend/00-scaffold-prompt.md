@@ -1,7 +1,7 @@
 # Scaffold Prompt
 
 Paste the block below into a fresh Claude Code session **in the new frontend
-repository**. Copy `docs/frontend/` from the backend repo into it first, or
+repository**. Copy `docs/` from the backend repo into it first, or
 point the session at the backend checkout so it can read those docs.
 
 ---
@@ -24,11 +24,11 @@ Ur-commerce is the platform underneath, not the storefront brand.
 Read these, in order. They are the contract — everything below assumes you
 have read them, and they override any default you would otherwise reach for:
 
-1. docs/frontend/README.md
-2. docs/frontend/03-conventions.md   ← the invariants. Non-negotiable.
-3. docs/frontend/02-api-contract.md  ← real endpoint shapes
-4. docs/frontend/01-architecture.md  ← why two apps, and the layout
-5. docs/frontend/08-backend-gaps.md  ← what does NOT exist
+1. docs/README.md
+2. docs/conventions.md      ← the invariants. Non-negotiable.
+3. docs/api-contract.md     ← real endpoint shapes
+4. docs/01-architecture.md  ← why two apps, and the layout
+5. docs/gaps.md             ← what does NOT exist
 
 If anything I ask for below contradicts those docs, follow the docs and tell
 me.
@@ -46,8 +46,7 @@ BUILD:
 
 DO NOT BUILD:
 - product listing, detail, cart, checkout, admin product editor
-- anything in 08-backend-gaps.md (admin orders, dashboard, reviews,
-  settings, image upload, payment gateway)
+- anything in gaps.md (dashboard, reviews, settings, payment gateway)
 - a shared UI component library — resist it until a second real use case
   appears
 
@@ -77,15 +76,17 @@ envelope, headers, money or tenancy. It owns exactly these:
 4. `X-Cart-Session` for guest carts, on /cart* and POST /auth/login.
 5. A typed ApiError carrying status, message, and errors[] for validation
    failures.
-6. 401 → clear session + redirect via an injected callback. There is NO
-   refresh endpoint; do not write a refresh interceptor, but leave the seam.
+6. 401 → refresh once via POST /auth/refresh, then retry the original
+   request. Refresh tokens ROTATE: store the new pair, discard the old. If
+   the refresh itself 401s, clear the session and redirect via an injected
+   callback. Never retry more than once.
 
 Generate types from the live OpenAPI document:
   npx openapi-typescript http://localhost:3002/api/docs-json -o src/schema.d.ts
 
 Request DTOs generate well. Response shapes often come out as `unknown`
 because Nest infers them from Prisma selects — where that happens, hand-write
-the type from the real shape in 02-api-contract.md and mark it
+the type from the real shape in api-contract.md and mark it
 hand-maintained.
 
 Also export:
@@ -133,24 +134,16 @@ Both must work against the live backend. Verify them and show me the output.
   structure; if a block seems to need a comment, extract a named function.
 - 2-space indent, double quotes, semicolons, trailing commas.
 
-## Known backend bug — check this first
-
-The backend's CORS `allowedHeaders` is ["Content-Type", "Authorization"],
-which omits X-Cart-Session and X-Tenant-Host. The browser preflight rejects
-both, so every local request fails tenant resolution while curl works fine.
-The fix is one line in the backend's src/main.ts. Check whether it has landed
-before you start, and tell me if it hasn't.
-
 ## Environment
 
   Backend   http://localhost:3002/api/v1
   Swagger   http://localhost:3002/api/docs
   Dev store demo.localhost  (send as X-Tenant-Host in development)
 
-Seed a store first if one does not exist:
-  SEED_SUBDOMAIN=demo SEED_TENANT_NAME="Demo Clothing" \
-  SEED_ADMIN_EMAIL=admin@demo.local SEED_ADMIN_PASSWORD=password123 \
-  npm run db:seed-tenant
+Working credentials (already seeded):
+  admin@demo.local / password123   on demo.localhost   TENANT_OWNER
+  staff@demo.local / password123   on demo.localhost   TENANT_STAFF
+  admin@two.local  / password123   on two.localhost    (cross-tenant tests)
 
 ## Deliverable
 
@@ -165,19 +158,16 @@ live backend. Then tell me:
 
 ## Notes on using this
 
-**Run it in the frontend repo, not this one.** The backend repo's `CLAUDE.md`
+**Run it in the frontend repo, not the backend.** The backend's `CLAUDE.md`
 carries backend conventions that would confuse a frontend scaffold.
 
-**The docs must be reachable.** Either copy `docs/frontend/` into the new repo
-(recommended — they become that repo's contract) or give the session the path
-to this checkout.
+**The docs must be reachable.** Copy this folder's `docs/` into the new repo,
+plus the three contract docs from the backend's `docs/api/` — see the handoff
+README one level up.
 
 **Start the backend first.** The prompt asks for verification against a live
 API; without it you get a scaffold that compiles and has never made a request,
 which is exactly the thing that hides integration bugs.
-
-**Expect the CORS question back.** If the fix has not landed, the agent should
-tell you rather than working around it.
 
 After the scaffold lands, switch to the specialist agents — `storefront-ui`,
 `admin-ui`, `api-client`, `frontend-reviewer` — for feature work.

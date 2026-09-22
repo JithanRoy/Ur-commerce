@@ -75,7 +75,7 @@ for uncategorised products. Fetch `GET /categories` and join on id to get
 labels. Cache the category tree aggressively; it changes rarely.
 
 There is **no size, colour or price-range facet** yet. Do not design the
-sidebar around them — see [08-backend-gaps.md](08-backend-gaps.md).
+sidebar around them — see [gaps.md](gaps.md).
 
 ### Product card
 
@@ -136,6 +136,10 @@ different from the flattened `variant.options` the cart returns.
 4. **Swap the gallery on colour change.** `images[].variantId` is `null` for
    shared images or a variant id for a colour-specific shot. Filter to the
    selected variant's images, falling back to the `null` ones.
+
+   Admins can now pin images to variants, so this field is genuinely
+   populated — but most products will still be all-`null` until someone does
+   the pinning. **The `null` fallback is the common path, not the edge case.**
 5. **Add to cart sends `variantId`**, never `productId`. Disable the button
    until a full combination is selected.
 6. **Cap quantity at `variant.stock`**, and at 100 (the API's max).
@@ -183,7 +187,7 @@ Generate an `X-Cart-Session` token, persist it, send it on every cart call
 [04-auth-and-tenancy.md](04-auth-and-tenancy.md#guest-carts-and-the-login-merge).
 Clear it after login and refetch the cart.
 
-Requires the CORS fix in [03-conventions.md](03-conventions.md#10-guest-carts-need-a-header--and-a-cors-fix).
+Requires the CORS fix in [conventions.md](conventions.md#10-guest-carts-need-a-header--and-a-cors-fix).
 
 ---
 

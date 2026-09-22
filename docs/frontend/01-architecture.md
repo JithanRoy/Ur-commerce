@@ -90,7 +90,7 @@ shop.aarong.com.bd       → tenant with that custom domain
 In Next.js, read the host in middleware or a server component and pass it down.
 You never send a tenant id — the backend derives it. In **local development
 only**, set the `X-Tenant-Host` header because browsers cannot set `Host`; see
-[03-conventions.md](03-conventions.md).
+[conventions.md](conventions.md).
 
 ## Admin panel hosting
 

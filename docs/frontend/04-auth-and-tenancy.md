@@ -79,19 +79,27 @@ For the **storefront**, if you server-render authenticated pages, an
 better than `localStorage` — it survives SSR and resists XSS. For the **admin
 SPA**, `localStorage` with an in-memory mirror is acceptable.
 
-### ⚠️ There is no refresh flow
+### Refresh and logout
 
-`refreshToken` is issued and signed, but **no endpoint consumes it**. No
-rotation, no revocation, no `POST /auth/refresh`.
+`POST /auth/refresh` exchanges a refresh token for a new pair. **It rotates**:
+the presented token is revoked and replaced, so store the new pair and discard
+the old — replaying a spent token returns 401.
 
-Plan accordingly:
+`POST /auth/logout` revokes server-side. The access token remains valid until
+it expires (up to 15 minutes) because it is stateless, so clear it locally too.
 
-- Treat a **401** as "session over" → clear tokens → redirect to login.
-- Do **not** build a refresh interceptor yet; there is nothing to call.
-- Do build a **401 interceptor**, so the day refresh lands you change one
-  function.
+Access tokens live 15 minutes, refresh tokens 7 days.
 
-Store the `refreshToken` anyway so it is there when the endpoint arrives.
+In the client:
+
+- On **401**, refresh once and retry the original request once.
+- If the **refresh itself** 401s, the session is over — clear and redirect.
+- **Serialise concurrent refreshes.** Three parallel 401s must trigger one
+  refresh, not three: the second and third would present an already-rotated
+  token and fail, logging the user out mid-session.
+- Never attempt a refresh on the refresh call itself.
+
+Not yet: logout-everywhere, and device/session listing.
 
 ## Choosing where to land after login
 
@@ -142,7 +150,7 @@ localStorage.removeItem("cart-session");   // merged; the token is spent
 A failed merge never fails the login — you will be authenticated either way.
 Refetch `GET /cart` after login rather than trusting local state.
 
-> ⚠️ See [03-conventions.md](03-conventions.md#10-guest-carts-need-a-header--and-a-cors-fix):
+> ⚠️ See [conventions.md](conventions.md#10-guest-carts-need-a-header--and-a-cors-fix):
 > `X-Cart-Session` is currently **missing from the backend's CORS
 > `allowedHeaders`**, so this fails the preflight in a browser. One-line fix in
 > `src/main.ts`.

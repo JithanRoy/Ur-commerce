@@ -9,13 +9,18 @@ status code here exists in the running API today.
 | Doc | What it answers |
 |---|---|
 | [01-architecture.md](01-architecture.md) | How many apps do we build, and why |
-| [02-api-contract.md](02-api-contract.md) | Every endpoint, request and response shape |
-| [03-conventions.md](03-conventions.md) | Envelope, money, tenancy, errors — the rules that bite |
+| [api-contract.md](api-contract.md) † | Every endpoint, request and response shape |
+| [conventions.md](conventions.md) † | Envelope, money, tenancy, errors — the rules that bite |
 | [04-auth-and-tenancy.md](04-auth-and-tenancy.md) | Login, roles, token scope, guest carts |
 | [05-storefront-spec.md](05-storefront-spec.md) | Page-by-page spec for the customer shop |
 | [06-admin-spec.md](06-admin-spec.md) | Page-by-page spec for the tenant admin panel |
 | [07-getting-started.md](07-getting-started.md) | Run the backend, seed a store, make your first call |
-| [08-backend-gaps.md](08-backend-gaps.md) | What does NOT exist yet — plan around these |
+| [08-build-plan.md](08-build-plan.md) | **What to build, in what order** — phases, sizes, milestones |
+| [gaps.md](gaps.md) † | What does NOT exist yet — plan around these |
+| [CHANGELOG.md](CHANGELOG.md) † | What moved since you last pulled |
+
+† Owned by the **backend** repo (`docs/api/`) and copied here. Re-copy them
+when the backend API changes; do not edit them in place, or the two drift.
 
 ## The 60-second version
 
