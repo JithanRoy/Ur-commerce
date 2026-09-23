@@ -1,13 +1,18 @@
+"use client";
+
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag, User } from "lucide-react";
+import { Search, ShoppingBag, User, X } from "lucide-react";
+import { SearchField } from "@/features/shop/search-field";
 
 const navigation = [
   { label: "Shop", href: "/shop" },
-  { label: "Categories", href: "/shop" },
   { label: "Brands", href: "/brand" },
 ];
 
 export function SiteHeader({ storeName }: { storeName: string }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
       <div className="container-page flex h-16 items-center gap-6">
@@ -30,14 +35,26 @@ export function SiteHeader({ storeName }: { storeName: string }) {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1">
-          <Link
-            href="/shop"
-            aria-label="Search"
-            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        <div className="ml-auto hidden w-full max-w-xs lg:block">
+          <Suspense fallback={null}>
+            <SearchField />
+          </Suspense>
+        </div>
+
+        <div className="ml-auto flex items-center gap-1 lg:ml-2">
+          <button
+            type="button"
+            aria-label={searchOpen ? "Close search" : "Search"}
+            aria-expanded={searchOpen}
+            onClick={() => setSearchOpen((open) => !open)}
+            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
           >
-            <Search className="size-[18px]" />
-          </Link>
+            {searchOpen ? (
+              <X className="size-[18px]" />
+            ) : (
+              <Search className="size-[18px]" />
+            )}
+          </button>
           <Link
             href="/account/orders"
             aria-label="Your orders"
@@ -47,13 +64,23 @@ export function SiteHeader({ storeName }: { storeName: string }) {
           </Link>
           <Link
             href="/cart"
-            aria-label="Cart"
+            aria-label="Your cart"
             className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <ShoppingBag className="size-[18px]" />
           </Link>
         </div>
       </div>
+
+      {searchOpen ? (
+        <div className="border-t px-4 py-3 lg:hidden">
+          <div className="container-page px-0">
+            <Suspense fallback={null}>
+              <SearchField autoFocus onDone={() => setSearchOpen(false)} />
+            </Suspense>
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }
