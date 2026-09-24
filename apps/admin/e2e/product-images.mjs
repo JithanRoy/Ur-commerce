@@ -37,6 +37,45 @@ ok(
 
 let body = await page.textContent("body");
 ok(body.includes("Images"), "Images section renders on the product editor");
+
+const ticket = await fetch(
+  "http://localhost:3002/api/v1/admin/uploads/product-images",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Tenant-Host": "demo.localhost",
+      Authorization: `Bearer ${
+        (
+          await fetch("http://localhost:3002/api/v1/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Tenant-Host": "demo.localhost",
+            },
+            body: JSON.stringify({
+              email: "admin@demo.local",
+              password: "password123",
+            }),
+          }).then((r) => r.json())
+        ).data.accessToken
+      }`,
+    },
+    body: JSON.stringify({
+      fileName: "probe.png",
+      contentType: "image/png",
+      contentLength: 69,
+    }),
+  },
+).then((r) => r.json());
+
+if (!ticket.success) {
+  console.log(
+    `- skipped: object storage is disabled on the backend (${ticket.message})`,
+  );
+  await browser.close();
+  process.exit(0);
+}
 ok(
   body.includes("JPEG, PNG, WebP or AVIF"),
   "accepted formats stated up front",

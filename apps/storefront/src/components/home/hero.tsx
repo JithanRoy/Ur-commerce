@@ -7,12 +7,18 @@ const assurances = [
   { icon: RotateCcw, label: "7-day exchange" },
 ];
 
-export function Hero({ storeName }: { storeName: string }) {
+export function Hero({
+  storeName,
+  tagline,
+}: {
+  storeName: string;
+  tagline?: string | null;
+}) {
   return (
     <section className="relative overflow-hidden border-b">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_15%_0%,var(--color-accent),transparent_65%)] opacity-70"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_12%_0%,var(--color-accent),transparent_60%)] opacity-40"
       />
       <div
         aria-hidden
@@ -36,8 +42,8 @@ export function Hero({ storeName }: { storeName: string }) {
           </h1>
 
           <p className="mt-6 max-w-md text-pretty text-lg leading-relaxed text-muted-foreground">
-            Cotton that breathes through a Dhaka summer. Cut once, properly,
-            and built to outlast the season.
+            {tagline ??
+              "Cotton that breathes through a Dhaka summer. Cut once, properly, and built to outlast the season."}
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">

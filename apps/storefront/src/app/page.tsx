@@ -3,7 +3,7 @@ import { EmptyStorefront } from "@/components/home/empty-storefront";
 import { StorefrontUnavailable } from "@/components/home/storefront-unavailable";
 import { SectionRenderer } from "@/components/home/section-renderer";
 import { api } from "@/lib/api";
-import { defaultTheme } from "@/lib/theme";
+import { loadStoreTheme } from "@/lib/load-store";
 import type { HomeResponse } from "@urcommerce/api-client";
 
 export const revalidate = 60;
@@ -22,11 +22,11 @@ async function loadHome(): Promise<HomeState> {
 }
 
 export default async function HomePage() {
-  const state = await loadHome();
+  const [state, { theme }] = await Promise.all([loadHome(), loadStoreTheme()]);
 
   return (
     <main>
-      <Hero storeName={defaultTheme.name} />
+      <Hero storeName={theme.name} tagline={theme.tagline} />
       {state.status === "unavailable" ? (
         <StorefrontUnavailable />
       ) : state.home.sections.length === 0 ? (

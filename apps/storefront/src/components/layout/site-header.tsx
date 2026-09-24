@@ -10,7 +10,13 @@ const navigation = [
   { label: "Brands", href: "/brand" },
 ];
 
-export function SiteHeader({ storeName }: { storeName: string }) {
+export function SiteHeader({
+  storeName,
+  logoUrl,
+}: {
+  storeName: string;
+  logoUrl?: string | null;
+}) {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
@@ -18,9 +24,17 @@ export function SiteHeader({ storeName }: { storeName: string }) {
       <div className="container-page flex h-16 items-center gap-6">
         <Link
           href="/"
-          className="font-display text-xl font-semibold tracking-tight"
+          className="flex shrink-0 items-center gap-2 font-display text-xl font-semibold tracking-tight"
         >
-          {storeName}
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={storeName}
+              className="h-7 w-auto object-contain"
+            />
+          ) : (
+            storeName
+          )}
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">

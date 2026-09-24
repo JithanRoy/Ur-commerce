@@ -15,6 +15,7 @@ import { ProductsRoute } from "@/routes/products";
 import { RedirectIfAuthenticated } from "@/routes/redirect-if-authenticated";
 import { RequireStaff } from "@/routes/require-staff";
 import { TeamRoute } from "@/routes/team";
+import { BrandingRoute } from "@/routes/branding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +50,7 @@ export function App() {
               <Route path="brands" element={<BrandsRoute />} />
               <Route path="collections" element={<CollectionsRoute />} />
               <Route path="team" element={<TeamRoute />} />
+              <Route path="branding" element={<BrandingRoute />} />
               <Route path="*" element={<NotFoundRoute />} />
             </Route>
           </Route>

@@ -183,3 +183,31 @@ export type CreateVariantInput = {
   weight?: number;
   optionValues?: string[];
 };
+
+export type StoreSettings = {
+  storeName: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  currency: string;
+  locale: string;
+  supportEmail: string | null;
+  supportPhone: string | null;
+  theme: {
+    primaryColor: string;
+    accentColor: string;
+    onPrimary: "light" | "dark";
+    onAccent: "light" | "dark";
+  };
+};
+
+export type UpdateStoreSettingsInput = {
+  displayName?: string;
+  tagline?: string | null;
+  logoUrl?: string | null;
+  faviconUrl?: string | null;
+  primaryColor?: string;
+  accentColor?: string;
+  supportEmail?: string | null;
+  supportPhone?: string | null;
+};

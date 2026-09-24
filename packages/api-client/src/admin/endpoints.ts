@@ -30,7 +30,9 @@ import type {
   CreateProductInput,
   CreateVariantInput,
   ProductStatus,
+  StoreSettings,
   UpdateImageInput,
+  UpdateStoreSettingsInput,
   UploadTicket,
   UploadTicketInput,
   UpdateProductInput,
@@ -84,6 +86,11 @@ export function createAdminApi(client: ApiClient) {
         remove: (id: string, imageId: string) =>
           client.delete<void>(`/admin/products/${id}/images/${imageId}`),
       },
+    },
+    settings: {
+      get: () => client.get<StoreSettings>("/admin/settings"),
+      update: (input: UpdateStoreSettingsInput) =>
+        client.patch<StoreSettings>("/admin/settings", input),
     },
     uploads: {
       productImageTicket: (input: UploadTicketInput) =>

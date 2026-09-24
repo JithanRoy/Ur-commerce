@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Fraunces, Outfit } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { defaultTheme, themeStyle } from "@/lib/theme";
+import { themeStyle } from "@/lib/theme";
+import { loadStoreTheme } from "@/lib/load-store";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -19,25 +20,31 @@ const body = Outfit({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: defaultTheme.name,
-  description: "Shop the latest collection.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { store, theme } = await loadStoreTheme();
+  return {
+    title: { default: theme.name, template: `%s · ${theme.name}` },
+    description: theme.tagline ?? "Shop the latest collection.",
+    ...(store?.faviconUrl ? { icons: { icon: store.faviconUrl } } : {}),
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const { store, theme } = await loadStoreTheme();
+
   return (
     <html
       lang="en"
       className={`${display.variable} ${body.variable}`}
-      style={themeStyle(defaultTheme)}
+      style={themeStyle(theme)}
     >
       <body className="flex min-h-dvh flex-col">
         <Providers>
-          <SiteHeader storeName={defaultTheme.name} />
+          <SiteHeader storeName={theme.name} logoUrl={store?.logoUrl ?? null} />
           <div className="flex-1">{children}</div>
-          <SiteFooter storeName={defaultTheme.name} />
+          <SiteFooter storeName={theme.name} store={store} />
         </Providers>
       </body>
     </html>

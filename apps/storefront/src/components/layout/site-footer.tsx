@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Mail, Phone } from "lucide-react";
+import type { StoreProfile } from "@urcommerce/api-client";
 
 const columns = [
   {
@@ -17,24 +19,25 @@ const columns = [
       { label: "Addresses", href: "/account/addresses" },
     ],
   },
-  {
-    heading: "Help",
-    links: [
-      { label: "Shipping", href: "/shipping" },
-      { label: "Returns", href: "/returns" },
-      { label: "Contact", href: "/contact" },
-    ],
-  },
 ];
 
-export function SiteFooter({ storeName }: { storeName: string }) {
+export function SiteFooter({
+  storeName,
+  store,
+}: {
+  storeName: string;
+  store?: StoreProfile | null;
+}) {
+  const hasContact = Boolean(store?.supportEmail || store?.supportPhone);
+
   return (
     <footer className="mt-24 border-t bg-muted/30">
       <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="font-display text-lg font-semibold">{storeName}</p>
           <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-            Cash on delivery across Bangladesh. Free shipping over ৳2,000.
+            {store?.tagline ??
+              "Cash on delivery across Bangladesh. Free shipping over ৳2,000."}
           </p>
         </div>
 
@@ -55,6 +58,36 @@ export function SiteFooter({ storeName }: { storeName: string }) {
             </ul>
           </div>
         ))}
+
+        {hasContact ? (
+          <div>
+            <h2 className="text-sm font-medium">Help</h2>
+            <ul className="mt-3 space-y-2">
+              {store?.supportEmail ? (
+                <li>
+                  <a
+                    href={`mailto:${store.supportEmail}`}
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Mail className="size-3.5" aria-hidden />
+                    {store.supportEmail}
+                  </a>
+                </li>
+              ) : null}
+              {store?.supportPhone ? (
+                <li>
+                  <a
+                    href={`tel:${store.supportPhone}`}
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Phone className="size-3.5" aria-hidden />
+                    {store.supportPhone}
+                  </a>
+                </li>
+              ) : null}
+            </ul>
+          </div>
+        ) : null}
       </div>
 
       <div className="border-t">

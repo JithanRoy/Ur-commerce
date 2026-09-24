@@ -7,6 +7,7 @@ import {
   Receipt,
   Users,
   Store,
+  Palette,
 } from "lucide-react";
 import { useAuth } from "@/stores/auth";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,10 @@ const catalogue: NavItem[] = [
   { label: "Collections", to: "/collections", icon: Layers },
 ];
 
-const manage: NavItem[] = [{ label: "Team", to: "/team", icon: Users }];
+const manage: NavItem[] = [
+  { label: "Branding", to: "/branding", icon: Palette },
+  { label: "Team", to: "/team", icon: Users },
+];
 
 function NavGroup({ title, items }: { title: string; items: NavItem[] }) {
   return (

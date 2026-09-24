@@ -176,3 +176,22 @@ export type StorefrontBrand = {
   logoUrl: string | null;
   productCount: number;
 };
+
+export type StoreThemeColours = {
+  primaryColor: string;
+  accentColor: string;
+  onPrimary: "light" | "dark";
+  onAccent: "light" | "dark";
+};
+
+export type StoreProfile = {
+  storeName: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  currency: string;
+  locale: string;
+  supportEmail: string | null;
+  supportPhone: string | null;
+  theme: StoreThemeColours;
+};

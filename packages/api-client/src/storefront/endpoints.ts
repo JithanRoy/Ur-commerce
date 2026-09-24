@@ -6,6 +6,7 @@ import type {
   ProductDetail,
   ProductFacets,
   ProductQuery,
+  StoreProfile,
   StorefrontBrand,
   StorefrontCategory,
 } from "./types";
@@ -22,6 +23,7 @@ function toQuery(query: ProductQuery): Record<string, string | number | undefine
 export function createStorefrontApi(client: ApiClient) {
   return {
     home: () => client.get<HomeResponse>("/home"),
+    store: () => client.get<StoreProfile>("/store"),
     products: (query: ProductQuery = {}) =>
       client.get<Paginated<ProductCard>>("/products", { query: toQuery(query) }),
     facets: (query: ProductQuery = {}) =>
