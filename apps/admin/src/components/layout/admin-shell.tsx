@@ -33,12 +33,12 @@ export function AdminShell() {
             onClick={() => setNavOpen(false)}
             className="absolute inset-0 bg-foreground/40"
           />
-          <div className="relative h-full w-64 border-r bg-background">
+          <div className="relative h-full w-64 bg-sidebar">
             <button
               type="button"
               onClick={() => setNavOpen(false)}
               aria-label="Close navigation"
-              className="absolute right-3 top-3.5 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="absolute right-3 top-3.5 inline-flex size-8 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground"
             >
               <X className="size-4" aria-hidden />
             </button>

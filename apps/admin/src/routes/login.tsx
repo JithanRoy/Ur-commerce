@@ -62,7 +62,7 @@ export function LoginRoute() {
 
   return (
     <main className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-foreground p-12 text-background lg:flex">
+      <section className="relative hidden flex-col justify-between overflow-hidden bg-sidebar p-12 text-sidebar-foreground lg:flex">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:44px_44px]"
@@ -73,7 +73,7 @@ export function LoginRoute() {
         />
 
         <div className="relative">
-          <div className="inline-flex size-10 items-center justify-center rounded-lg bg-background/10">
+          <div className="inline-flex size-10 items-center justify-center rounded-lg bg-white/12">
             <ShieldCheck className="size-5" aria-hidden />
           </div>
         </div>
@@ -82,13 +82,13 @@ export function LoginRoute() {
           <h2 className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight">
             Run your store from one place.
           </h2>
-          <p className="mt-4 text-pretty leading-relaxed text-background/60">
+          <p className="mt-4 text-pretty leading-relaxed text-sidebar-muted">
             Products and stock, orders from placed to delivered, and the people
             who help you run it.
           </p>
         </div>
 
-        <p className="relative text-xs text-background/40">
+        <p className="relative text-xs text-sidebar-muted/70">
           Staff access only. Every action is attributed to your account.
         </p>
       </section>
@@ -100,7 +100,7 @@ export function LoginRoute() {
           noValidate
         >
           <div className="mb-8">
-            <div className="mb-6 inline-flex size-10 items-center justify-center rounded-lg bg-foreground text-background lg:hidden">
+            <div className="mb-6 inline-flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground lg:hidden">
               <ShieldCheck className="size-5" aria-hidden />
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">

@@ -25,7 +25,7 @@ export function Topbar({ onOpenNav }: { onOpenNav?: () => void }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-sm sm:px-6">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b bg-card/80 px-4 backdrop-blur-md sm:px-6">
       {onOpenNav ? (
         <button
           type="button"
@@ -42,7 +42,7 @@ export function Topbar({ onOpenNav }: { onOpenNav?: () => void }) {
           <div className="flex items-center gap-2.5">
             <span
               aria-hidden
-              className="inline-flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium"
+              className="inline-flex size-8 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground"
             >
               {initials(user.name)}
             </span>

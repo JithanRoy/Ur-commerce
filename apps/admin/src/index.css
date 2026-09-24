@@ -5,25 +5,43 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+
+  --admin-hue: 275;
+
+  --background: oklch(0.985 0.003 var(--admin-hue));
+  --foreground: oklch(0.21 0.02 var(--admin-hue));
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.44 0.17 var(--admin-hue));
+  --primary-foreground: oklch(0.99 0.005 var(--admin-hue));
+
+  --secondary: oklch(0.96 0.012 var(--admin-hue));
+  --secondary-foreground: oklch(0.33 0.09 var(--admin-hue));
+
+  --muted: oklch(0.965 0.008 var(--admin-hue));
+  --muted-foreground: oklch(0.52 0.025 var(--admin-hue));
+
+  --accent: oklch(0.95 0.025 var(--admin-hue));
+  --accent-foreground: oklch(0.36 0.12 var(--admin-hue));
+
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --success: oklch(0.56 0.13 155);
+  --warning: oklch(0.72 0.15 75);
+
+  --sidebar: oklch(0.29 0.075 var(--admin-hue));
+  --sidebar-foreground: oklch(0.97 0.01 var(--admin-hue));
+  --sidebar-muted: oklch(0.72 0.04 var(--admin-hue));
+  --sidebar-active: oklch(0.99 0.008 var(--admin-hue));
+  --sidebar-active-foreground: oklch(0.32 0.13 var(--admin-hue));
+
+  --border: oklch(0.905 0.008 var(--admin-hue));
+  --input: oklch(0.9 0.01 var(--admin-hue));
+  --ring: oklch(0.55 0.13 var(--admin-hue));
 }
+
 
 .dark {
   --background: oklch(0.145 0 0);
@@ -67,6 +85,13 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --color-input: var(--input);
   --color-ring: var(--ring);
 }

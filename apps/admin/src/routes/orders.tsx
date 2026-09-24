@@ -7,6 +7,7 @@ import { adminApi } from "@/lib/api";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { StatusBadge } from "@/features/orders/status-badge";
+import { OrderStats } from "@/features/orders/order-stats";
 import { cn } from "@/lib/utils";
 
 function formatDate(iso: string): string {
@@ -49,6 +50,10 @@ export function OrdersRoute() {
         description="Every order placed in your store."
       />
 
+      <div className="mb-6">
+        <OrderStats counts={counts} orders={data} />
+      </div>
+
       <div className="mb-5 flex flex-wrap gap-2">
         <button
           type="button"
@@ -57,10 +62,10 @@ export function OrdersRoute() {
             setStatus("");
           }}
           className={cn(
-            "h-9 rounded-full px-3.5 text-sm transition-colors",
+            "h-9 rounded-full px-3.5 text-sm font-medium transition-colors",
             status === ""
-              ? "bg-foreground text-background"
-              : "border text-muted-foreground hover:text-foreground",
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
           )}
         >
           All
@@ -75,10 +80,10 @@ export function OrdersRoute() {
                 setStatus(entry);
               }}
               className={cn(
-                "h-9 rounded-full px-3.5 text-sm transition-colors",
+                "h-9 rounded-full px-3.5 text-sm font-medium transition-colors",
                 status === entry
-                  ? "bg-foreground text-background"
-                  : "border text-muted-foreground hover:text-foreground",
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
               )}
             >
               {ORDER_STATUS_LABELS[entry]}
@@ -124,9 +129,9 @@ export function OrdersRoute() {
 
       {data && data.items.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="overflow-x-auto rounded-xl border bg-card shadow-xs">
             <table className="w-full text-sm">
-              <thead className="border-b bg-muted/50 text-left">
+              <thead className="border-b bg-muted/60 text-left">
                 <tr>
                   <th className="px-4 py-3 font-medium">Order</th>
                   <th className="px-4 py-3 font-medium">Customer</th>

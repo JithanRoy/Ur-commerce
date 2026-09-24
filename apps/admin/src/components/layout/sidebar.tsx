@@ -31,7 +31,7 @@ const manage: NavItem[] = [
 function NavGroup({ title, items }: { title: string; items: NavItem[] }) {
   return (
     <div>
-      <p className="px-3 pb-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-muted-foreground/70">
+      <p className="px-3 pb-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-sidebar-muted">
         {title}
       </p>
       <div className="space-y-0.5">
@@ -41,28 +41,21 @@ function NavGroup({ title, items }: { title: string; items: NavItem[] }) {
             to={item.to}
             className={({ isActive }) =>
               cn(
-                "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                "group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
                 isActive
-                  ? "bg-background font-medium text-foreground shadow-xs"
-                  : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
+                  ? "bg-sidebar-active font-medium text-sidebar-active-foreground shadow-sm"
+                  : "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground",
               )
             }
           >
             {({ isActive }) => (
               <>
-                <span
-                  aria-hidden
-                  className={cn(
-                    "absolute left-0 h-4 w-0.5 rounded-r-full bg-foreground transition-opacity",
-                    isActive ? "opacity-100" : "opacity-0",
-                  )}
-                />
                 <item.icon
                   className={cn(
                     "size-4 shrink-0 transition-colors",
                     isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground/70 group-hover:text-foreground",
+                      ? "text-sidebar-active-foreground"
+                      : "text-sidebar-muted group-hover:text-sidebar-foreground",
                   )}
                 />
                 {item.label}
@@ -80,11 +73,13 @@ export function SidebarContent({ storeName }: { storeName: string }) {
 
   return (
     <>
-      <div className="flex h-14 items-center gap-2.5 border-b px-5">
-        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-foreground text-background">
+      <div className="flex h-14 items-center gap-2.5 border-b border-white/10 px-5">
+        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-white/15 text-sidebar-foreground">
           <Store className="size-3.5" aria-hidden />
         </span>
-        <span className="truncate text-sm font-semibold">{storeName}</span>
+        <span className="truncate text-sm font-semibold text-sidebar-foreground">
+          {storeName}
+        </span>
       </div>
 
       <nav className="space-y-5 p-3">
@@ -100,7 +95,7 @@ export function SidebarContent({ storeName }: { storeName: string }) {
 
 export function Sidebar({ storeName }: { storeName: string }) {
   return (
-    <aside className="hidden w-60 shrink-0 border-r bg-muted/20 md:block">
+    <aside className="hidden w-60 shrink-0 bg-sidebar md:block">
       <SidebarContent storeName={storeName} />
     </aside>
   );
