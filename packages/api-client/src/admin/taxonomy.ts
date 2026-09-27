@@ -10,6 +10,10 @@ export type AdminCategory = {
   productCount?: number;
 };
 
+export type AdminCategoryNode = AdminCategory & {
+  children: AdminCategoryNode[];
+};
+
 export type AdminBrand = {
   id: string;
   name: string;

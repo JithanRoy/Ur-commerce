@@ -101,6 +101,23 @@ page.
 
 ---
 
+### Add to cart from the card
+
+The card payload includes full `variants[]` with `id`, `price` and `stock`, so
+a direct add is technically possible. **For a clothing store, do not do it.**
+
+| Product shape | Card CTA |
+|---|---|
+| One variant | "Add to cart" — post `variants[0].id` |
+| Multiple variants | "Select options" — link to the detail page |
+
+A shirt in three sizes cannot be added from a grid without guessing which size
+the shopper wants, and guessing drives returns. Route them to the detail page
+where they pick, then add.
+
+Detect it with `variants.length > 1`. Also check `totalStock === 0` and render
+"Out of stock" disabled rather than a CTA that will fail.
+
 ## Product detail page
 
 The most intricate screen. The customer picks option values; you resolve them
@@ -187,7 +204,7 @@ Generate an `X-Cart-Session` token, persist it, send it on every cart call
 [04-auth-and-tenancy.md](04-auth-and-tenancy.md#guest-carts-and-the-login-merge).
 Clear it after login and refetch the cart.
 
-Requires the CORS fix in [conventions.md](conventions.md#10-guest-carts-need-a-header--and-a-cors-fix).
+`X-Cart-Session` is already allowed by the backend's CORS configuration, so the preflight passes.
 
 ---
 
@@ -253,6 +270,59 @@ Show a status timeline from `placedAt` / `confirmedAt` / `shippedAt` /
 > There is **no order cancellation endpoint**. Do not render a Cancel button.
 
 ---
+
+## Store branding
+
+`GET /store` is public, cached, and unauthenticated. Fetch it once per page
+load (or at the layout level in Next.js) and drive the theme from it.
+
+```jsonc
+{
+  "storeName": "Ur Clothing",
+  "tagline": "Everyday wear, made in Bangladesh",
+  "logoUrl": null,
+  "faviconUrl": null,
+  "currency": "BDT",
+  "locale": "en",
+  "supportEmail": "help@urclothing.test",
+  "supportPhone": "+8801712345678",
+  "theme": {
+    "primaryColor": "#0F766E",
+    "accentColor": "#F59E0B",
+    "onPrimary": "light",
+    "onAccent": "dark"
+  }
+}
+```
+
+**Use `onPrimary` / `onAccent` for text on those backgrounds.** They are
+`"light"` or `"dark"`, computed server-side at WCAG AA (4.5:1). The example
+above is the reason they exist: amber `#F59E0B` needs dark text, so a
+hardcoded white label would be unreadable on the accent button.
+
+Write them into CSS custom properties at the layout level rather than passing
+a theme object through props:
+
+```css
+:root {
+  --brand-primary: #0F766E;
+  --brand-on-primary: #FFFFFF;   /* from onPrimary: "light" */
+  --brand-accent: #F59E0B;
+  --brand-on-accent: #111827;    /* from onAccent: "dark" */
+}
+```
+
+`storeName` is **never null** — it falls back to the internal tenant name. All
+of `tagline`, `logoUrl`, `faviconUrl`, `supportEmail` and `supportPhone`
+**are** nullable: render nothing, not an empty element. A store that has not
+been branded yet still returns valid defaults (`#111827` / `#2563EB`), so the
+page always has a working theme.
+
+The owner edits these in the admin panel; a save invalidates the cache
+immediately, so a refresh shows the new colours.
+
+**Not configurable:** homepage section order, arbitrary copy, shipping rates.
+Those remain frontend-owned — see [gaps.md](gaps.md) §4.
 
 ## Bangladesh-specific details
 

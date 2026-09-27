@@ -29,6 +29,7 @@ export function LoginRoute() {
       ? "That account cannot access the admin panel."
       : null;
   const [formError, setFormError] = useState<string | null>(null);
+  const [remember, setRemember] = useState(true);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -43,7 +44,7 @@ export function LoginRoute() {
         setFormError("This account cannot access the admin panel.");
         return;
       }
-      signIn(session);
+      signIn(session, remember);
       navigate(from ?? "/products", { replace: true });
     } catch (error) {
       if (isApiError(error)) {
@@ -164,10 +165,22 @@ export function LoginRoute() {
             </p>
           ) : null}
 
+          <label className="mt-5 flex cursor-pointer select-none items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+              className="size-4 rounded border-input accent-primary"
+            />
+            <span className="text-muted-foreground">
+              Keep me signed in on this device
+            </span>
+          </label>
+
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {isSubmitting ? (
               <>

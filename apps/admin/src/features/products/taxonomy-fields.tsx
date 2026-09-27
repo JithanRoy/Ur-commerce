@@ -1,27 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import type { AdminBrand, AdminCategory } from "@urcommerce/api-client";
+import type { AdminBrand, AdminCategoryNode } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 
 type CategoryOption = { id: string; label: string };
 
 function flattenCategories(
-  categories: AdminCategory[],
-  parentId: string | null = null,
+  nodes: AdminCategoryNode[],
   depth = 0,
 ): CategoryOption[] {
-  return categories
-    .filter((category) => category.parentId === parentId)
+  return [...nodes]
     .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
-    .flatMap((category) => [
-      { id: category.id, label: `${"— ".repeat(depth)}${category.name}` },
-      ...flattenCategories(categories, category.id, depth + 1),
+    .flatMap((node) => [
+      { id: node.id, label: `${"— ".repeat(depth)}${node.name}` },
+      ...flattenCategories(node.children ?? [], depth + 1),
     ]);
 }
 
 export function useTaxonomy() {
   const categories = useQuery({
-    queryKey: ["admin", "categories"],
-    queryFn: () => adminApi.categories.list(),
+    queryKey: ["admin", "categories", "tree"],
+    queryFn: () => adminApi.categories.tree(),
     staleTime: 60_000,
   });
 

@@ -88,7 +88,35 @@ the old — replaying a spent token returns 401.
 `POST /auth/logout` revokes server-side. The access token remains valid until
 it expires (up to 15 minutes) because it is stateless, so clear it locally too.
 
-Access tokens live 15 minutes, refresh tokens 7 days.
+**Refresh lifetime depends on the role**, and the admin SPA gets the shorter
+one:
+
+| Role | Access token | Refresh token |
+|---|---|---|
+| `CUSTOMER` | 15 minutes | **7 days** |
+| `TENANT_OWNER`, `TENANT_STAFF` | 15 minutes | **12 hours** |
+
+A shopper stays signed in for a week; an admin is signed out roughly twice a
+day. That is deliberate — an account that can change prices, orders and staff
+is a different risk class from a shopper. Do not treat a failed admin refresh
+as an error worth surfacing loudly; route to login exactly as for any other
+expiry.
+
+### Sign out of all devices
+
+`POST /auth/logout-all` (Bearer token, no body) revokes **every** session for
+the signed-in user, including the one making the call:
+
+```jsonc
+// 200 data
+{ "revokedSessions": 3 }
+```
+
+Worth putting in account settings as *"Sign out of all devices"* — show the
+count back as *"Signed out of N devices."* It is the only remedy a customer
+has if they think their account is compromised, since there is no session
+list yet. Same 15-minute caveat: access tokens already issued stay valid
+until they expire.
 
 In the client:
 
@@ -150,10 +178,15 @@ localStorage.removeItem("cart-session");   // merged; the token is spent
 A failed merge never fails the login — you will be authenticated either way.
 Refetch `GET /cart` after login rather than trusting local state.
 
-> ⚠️ See [conventions.md](conventions.md#10-guest-carts-need-a-header--and-a-cors-fix):
-> `X-Cart-Session` is currently **missing from the backend's CORS
-> `allowedHeaders`**, so this fails the preflight in a browser. One-line fix in
-> `src/main.ts`.
+> `X-Cart-Session` and `X-Tenant-Host` are both in the backend's CORS
+> `allowedHeaders`, so the preflight passes. (An older note here said
+> otherwise — that was fixed.)
+>
+> ⚠️ **At deploy time**, the API needs `CORS_ALLOWED_ORIGINS` set to your
+> storefront and admin origins, comma-separated. It refuses to boot in
+> production without it, and an origin not on the list gets no
+> `Access-Control-Allow-Origin` header — every call fails in the browser
+> while curl still works. Local development is unaffected.
 
 ## Tenancy in practice
 

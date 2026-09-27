@@ -1,6 +1,9 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { CurrentUser, Role } from "@urcommerce/api-client";
+import { claimStorageFor, rememberingStorage } from "./session-storage";
+
+const STORAGE_KEY = "admin-auth";
 
 type Session = {
   accessToken: string;
@@ -11,7 +14,7 @@ type Session = {
 type AuthState = {
   session: Session | null;
   user: CurrentUser | null;
-  signIn: (session: Session) => void;
+  signIn: (session: Session, remember: boolean) => void;
   signOut: () => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: CurrentUser | null) => void;
@@ -22,7 +25,10 @@ export const useAuth = create<AuthState>()(
     (set) => ({
       session: null,
       user: null,
-      signIn: (session) => set({ session }),
+      signIn: (session, remember) => {
+        claimStorageFor(STORAGE_KEY, remember);
+        set({ session });
+      },
       signOut: () => {
         set({ session: null, user: null });
         useAuth.persist.clearStorage();
@@ -36,7 +42,8 @@ export const useAuth = create<AuthState>()(
       setUser: (user) => set({ user }),
     }),
     {
-      name: "admin-auth",
+      name: STORAGE_KEY,
+      storage: createJSONStorage(() => rememberingStorage(STORAGE_KEY)),
       partialize: (state) => ({ session: state.session }),
     },
   ),

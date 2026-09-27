@@ -21,7 +21,7 @@ store. `PLATFORM_OWNER` gets 403 — there is no super-admin mode, by design.
 | Team / staff | `GET/POST/PATCH/DELETE /admin/users` | ✅ owner only |
 | Customers | — | ❌ none |
 | Reviews | — | ❌ no controller |
-| Settings / branding | — | ❌ none |
+| Settings / branding | `GET`/`PATCH /admin/settings` | ✅ owner only — colours, logo, name |
 | Product images | `POST /admin/uploads/product-images` + `/admin/products/:id/images` | ✅ direct-to-storage upload |
 | Brand / category images | — | ❌ URL strings only |
 
@@ -73,10 +73,34 @@ Two options (Size × Colour) with 3 sizes and 2 colours means **6 variants**,
 each with exactly 2 option values. Send a variant with one, or three, and you
 get a 400.
 
+### Category and brand on a product
+
+Both are optional foreign keys on create and edit — `categoryId` and
+`brandId`, each a UUID.
+
+| Field | Populate the picker from | Notes |
+|---|---|---|
+| `categoryId` | `GET /admin/categories/tree` | Nested; show the hierarchy, submit the leaf id |
+| `brandId` | `GET /admin/brands` | Flat list with product counts |
+
+Use the **tree** endpoint for categories, not the flat list — a shopper
+browsing *Men → Panjabi* needs the product filed at the leaf, and a flat
+dropdown hides which parent a name belongs to (two stores can both have
+"Shirts" under different parents).
+
+`brand` (a plain string) also exists on the DTO. It is **legacy** — set
+`brandId` instead. Nothing public reads the string column any more.
+
+Neither field is required, so a product can be created uncategorised. The
+storefront facet counts include a `null` row for exactly that case, and
+`GET /products/facets` returns `{ categoryId: null, count: n }`. Offer "No
+category" in the admin filter so those products remain findable.
+
 ### Recommended flow
 
 ```
 Step 1  Basics      name, slug, description, category, brand, status
+                    ↑ category and brand are PICKERS, not free text
 Step 2  Options     declare Size (40, 42, 44) and Colour (Black, Navy)
 Step 3  Variants    ← GENERATE the 3×2 grid, then fill price/stock/SKU per row
 Step 4  Images      upload files (see Image upload below), or paste https URLs

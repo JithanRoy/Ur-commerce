@@ -3,6 +3,7 @@ import type { Paginated } from "../types";
 import type {
   AdminBrand,
   AdminCategory,
+  AdminCategoryNode,
   AdminCollection,
   CreateBrandInput,
   CreateCategoryInput,
@@ -98,6 +99,7 @@ export function createAdminApi(client: ApiClient) {
     },
     categories: {
       list: () => client.get<AdminCategory[]>("/admin/categories"),
+      tree: () => client.get<AdminCategoryNode[]>("/admin/categories/tree"),
       create: (input: CreateCategoryInput) =>
         client.post<AdminCategory>("/admin/categories", input),
       update: (id: string, input: Partial<CreateCategoryInput>) =>

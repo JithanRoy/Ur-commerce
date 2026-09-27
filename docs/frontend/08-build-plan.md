@@ -33,10 +33,16 @@ rework, because every later screen inherits it.
 **Definition of done for 0.3:** no component in either app ever sees
 `.data.data`, and a 400 with field errors surfaces as `errors[]`.
 
-**0.6 is the subtle one.** Access tokens last 15 minutes, refresh 7 days.
-Refresh **rotates** — the old token is revoked, so two concurrent 401s must not
-each fire a refresh. Queue them behind one in-flight refresh or the second gets
-401 and logs the user out mid-session.
+**0.6 is the subtle one.** Access tokens last 15 minutes for everyone;
+refresh tokens last 7 days for customers but only **12 hours for staff**, so
+this code path runs constantly in the admin SPA. Refresh **rotates** — the old
+token is revoked, so two concurrent 401s must not each fire a refresh. Queue
+them behind one in-flight refresh or the second gets 401 and logs the user out
+mid-session.
+
+Add `POST /auth/logout-all` to the account screen while you are here (0.6 is
+where the session code lives): Bearer token, no body, returns
+`{ revokedSessions }`.
 
 ---
 
@@ -53,6 +59,24 @@ demoable and exercises most read paths.
 | 1.4 | Product detail — variant picker, gallery | L | `GET /products/:slug` |
 | 1.5 | Category / brand / collection landing pages | M | `GET /categories`, `/brands`, `/collections` |
 | 1.6 | 404, empty states, loading skeletons | S | — |
+| 1.7 | Theme from `GET /store` — colours, logo, name | S | `GET /store` |
+
+**1.7 belongs in phase 1, not polish.** Fetch `/store` once per page load and
+write the colours into CSS custom properties on `:root`. Retrofitting theming
+after the components are built means touching every one of them.
+
+```css
+:root { --brand-primary: #0F766E; --brand-on-primary: #FFFFFF; }
+```
+
+`theme.onPrimary` and `theme.onAccent` come back as `"light"` or `"dark"` —
+the API has already done the WCAG contrast maths. **Do not assume white text
+on the brand colour**: a store owner who picks amber gets `"dark"`, and
+hardcoding white makes their buttons unreadable.
+
+`storeName` is never null (it falls back to the tenant name). `tagline`,
+`logoUrl`, `faviconUrl` and the contact fields **are** — render nothing rather
+than an empty box.
 
 **1.1** — a new store returns `sections: []`. Render by `section.type` in array
 order; never index positionally. Unknown types must be skipped silently, not
@@ -150,6 +174,7 @@ What a store actually does every day. Both of these shipped recently.
 | 4.1 | Orders list — status tabs with counts, filters, search | M | `GET /admin/orders`, `/admin/orders/counts` |
 | 4.2 | Order detail + status transitions | M | `GET`/`PATCH /admin/orders/:id` |
 | 4.3 | Team management — **owner only** | M | `/admin/users*` |
+| 4.4 | Store branding editor — **owner only** | S | `GET`/`PATCH /admin/settings` |
 
 **4.2** — the backend enforces a transition matrix; do not reimplement it.
 Drive the available buttons from the current status and surface the 400 if a
@@ -186,7 +211,6 @@ thrown away, and worse, sets expectations with the store owner.
 | Admin dashboard / stats | No endpoint | [gaps.md](gaps.md) |
 | Customer management | No endpoint | §15 |
 | Reviews — read or write | No controller; ratings are defaults | §8 |
-| Store settings / branding | No endpoint | §4 |
 | Online payment | No gateway wired | §1 |
 | Coupon / promo field | No `Coupon` model | §12 |
 | Size guide | Not modelled | §13 |

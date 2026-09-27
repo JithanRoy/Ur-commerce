@@ -31,6 +31,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const queryClient = useQueryClient();
   const signIn = useAuth((state) => state.signIn);
   const [formError, setFormError] = useState<string | null>(null);
+  const [remember, setRemember] = useState(true);
 
   const returnTo = searchParams.get("returnTo") ?? "/";
   const schema = mode === "login" ? loginSchema : registerSchema;
@@ -60,7 +61,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         password: values.password,
       });
 
-      signIn(session);
+      signIn(session, remember);
       clearCartSession();
       await queryClient.invalidateQueries({ queryKey: cartQueryKey });
       router.push(returnTo);
@@ -142,6 +143,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <p className="text-sm text-destructive">{errors.password.message}</p>
         ) : null}
       </div>
+
+      <label className="flex cursor-pointer select-none items-center gap-2.5 text-sm">
+        <input
+          type="checkbox"
+          checked={remember}
+          onChange={(event) => setRemember(event.target.checked)}
+          className="size-4 rounded border-input accent-primary"
+        />
+        <span className="text-muted-foreground">
+          Keep me signed in on this device
+        </span>
+      </label>
 
       {formError ? (
         <p role="alert" className="text-sm text-destructive">

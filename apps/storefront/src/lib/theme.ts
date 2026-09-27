@@ -76,5 +76,6 @@ export function themeStyle(theme: StoreTheme): React.CSSProperties {
     "--accent-hue": String(Math.round(theme.accentHue)),
     "--accent-chroma": theme.accentChroma.toFixed(3),
     "--on-primary-l": theme.onPrimary === "light" ? "0.99" : "0.18",
+    "--on-accent-l": theme.onAccent === "light" ? "0.99" : "0.18",
   } as React.CSSProperties;
 }

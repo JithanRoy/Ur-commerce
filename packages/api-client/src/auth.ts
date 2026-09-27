@@ -33,6 +33,11 @@ export function createAuthApi(client: ApiClient) {
         withCartSession: true,
       }),
     me: () => client.get<CurrentUser>("/auth/me"),
-    logout: () => client.post<void>("/auth/logout"),
+    logout: () =>
+      client.post<{ loggedOut: boolean }>("/auth/logout", {
+        refreshToken: client.currentRefreshToken(),
+      }),
+    logoutAll: () =>
+      client.post<{ revokedSessions: number }>("/auth/logout-all"),
   };
 }
