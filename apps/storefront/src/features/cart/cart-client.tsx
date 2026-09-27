@@ -1,10 +1,67 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, Trash2 } from "lucide-react";
+import { Check, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { formatBDT } from "@urcommerce/api-client";
-import type { CartLine } from "@urcommerce/api-client";
+import type { CartLine, Paisa } from "@urcommerce/api-client";
 import { useCart, useCartMutations } from "./use-cart";
+import { cn } from "@/lib/utils";
+
+const FREE_SHIPPING_THRESHOLD = 200000 as Paisa;
+
+function FreeShippingMeter({
+  subtotal,
+  currency,
+}: {
+  subtotal: Paisa;
+  currency: string;
+}) {
+  const qualifies = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const remaining = (FREE_SHIPPING_THRESHOLD - subtotal) as Paisa;
+  const progress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+
+  return (
+    <div className="mb-6 rounded-xl border bg-card p-4">
+      <p className="flex items-center gap-2 text-sm">
+        {qualifies ? (
+          <>
+            <Check className="size-4 shrink-0 text-success" aria-hidden />
+            <span className="font-medium text-success">
+              Your order ships free
+            </span>
+          </>
+        ) : (
+          <>
+            <Truck className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <span>
+              Add{" "}
+              <span className="font-medium">
+                {formatBDT(remaining, currency)}
+              </span>{" "}
+              more for free shipping
+            </span>
+          </>
+        )}
+      </p>
+      <div
+        className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-valuenow={Math.round(progress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Progress towards free shipping"
+      >
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            qualifies ? "bg-success" : "bg-primary",
+          )}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function LineRow({ line }: { line: CartLine }) {
   const { updateItem, removeItem } = useCartMutations();
@@ -134,14 +191,17 @@ export function CartClient() {
   const hasStockProblem = cart.items.some((line) => line.exceedsStock);
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
-      <ul>
-        {cart.items.map((line) => (
-          <LineRow key={line.id} line={line} />
-        ))}
-      </ul>
+    <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
+      <div>
+        <FreeShippingMeter subtotal={cart.subtotal} currency={cart.currency} />
+        <ul className="rounded-xl border bg-card px-5">
+          {cart.items.map((line) => (
+            <LineRow key={line.id} line={line} />
+          ))}
+        </ul>
+      </div>
 
-      <aside className="h-fit rounded-xl border p-6">
+      <aside className="h-fit rounded-xl border bg-card p-6 lg:sticky lg:top-24">
         <h2 className="font-medium">Summary</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between">

@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { isApiError } from "@urcommerce/api-client";
 import { useCartMutations } from "@/features/cart/use-cart";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
 import type { ProductDetail } from "@urcommerce/api-client";
+import { Check, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { VariantPicker } from "./variant-picker";
+import { ProductGallery } from "./product-gallery";
 import {
   findVariant,
   imagesForVariant,
@@ -72,49 +75,32 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
   const showsDiscount = compareAt !== null && variant !== null && compareAt > variant.price;
 
   return (
-    <div className="grid gap-10 lg:grid-cols-2">
-      <div className="space-y-3">
-        <div className="aspect-4/5 overflow-hidden rounded-xl bg-muted">
-          {images[0] ? (
-            <img
-              src={images[0].url}
-              alt={images[0].alt ?? product.name}
-              className="size-full object-cover"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center">
-              <span className="font-display text-6xl text-muted-foreground/30">
-                {product.name.charAt(0)}
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14">
+      <div className="lg:max-w-xl">
+        <ProductGallery
+          images={images}
+          productName={product.name}
+          badge={
+            showsDiscount && compareAt !== null && variant !== null ? (
+              <span className="rounded-full bg-destructive px-2.5 py-1 text-xs font-medium text-white">
+                −{discountPercent(variant.price, compareAt)}%
               </span>
-            </div>
-          )}
-        </div>
-        {images.length > 1 ? (
-          <div className="grid grid-cols-4 gap-3">
-            {images.slice(1, 5).map((image) => (
-              <div
-                key={image.url}
-                className="aspect-square overflow-hidden rounded-lg bg-muted"
-              >
-                <img
-                  src={image.url}
-                  alt={image.alt ?? ""}
-                  className="size-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        ) : null}
+            ) : null
+          }
+        />
       </div>
 
       <div>
         {product.brand ? (
-          <p className="text-sm uppercase tracking-wide text-muted-foreground">
+          <Link
+            href={`/brand/${product.brand.slug}`}
+            className="text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+          >
             {product.brand.name}
-          </p>
+          </Link>
         ) : null}
 
-        <h1 className="mt-1 font-display text-3xl font-semibold">
+        <h1 className="mt-2 text-balance font-display text-3xl font-semibold leading-tight sm:text-4xl">
           {product.name}
         </h1>
 
@@ -133,8 +119,16 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
         </div>
 
         {product.description ? (
-          <p className="mt-5 text-pretty text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-5 text-pretty leading-relaxed text-muted-foreground">
             {product.description}
+          </p>
+        ) : null}
+
+        {isComplete && !isSoldOut ? (
+          <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-success">
+            <Check className="size-4" aria-hidden />
+            In stock
+            {variant.stock <= 5 ? ` — only ${variant.stock} left` : ""}
           </p>
         ) : null}
 
@@ -149,7 +143,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
         ) : null}
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <div className="flex h-11 items-center rounded-md border">
+          <div className="flex h-12 items-center rounded-full border bg-card">
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -179,7 +173,7 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
             type="button"
             onClick={onAddToCart}
             disabled={!isComplete || isSoldOut || addItem.isPending}
-            className="h-11 flex-1 rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-12 min-w-48 flex-1 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-all hover:shadow-lg hover:shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             {addItem.isPending
               ? "Adding…"
@@ -199,16 +193,24 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
           </p>
         ) : null}
 
-        {isComplete && !isSoldOut && variant.stock <= 5 ? (
-          <p className="mt-3 text-sm text-destructive">
-            Only {variant.stock} left
-          </p>
-        ) : null}
+        <ul className="mt-8 space-y-3 border-t pt-6">
+          {[
+            { icon: Truck, text: "Cash on delivery across Bangladesh" },
+            { icon: ShieldCheck, text: "Free shipping on orders over ৳2,000" },
+            { icon: RotateCcw, text: "7-day exchange on unworn items" },
+          ].map((item) => (
+            <li
+              key={item.text}
+              className="flex items-center gap-3 text-sm text-muted-foreground"
+            >
+              <item.icon className="size-4 shrink-0 text-primary/70" aria-hidden />
+              {item.text}
+            </li>
+          ))}
+        </ul>
 
         {variant ? (
-          <p className="mt-6 text-xs text-muted-foreground">
-            SKU {variant.sku}
-          </p>
+          <p className="mt-6 text-xs text-muted-foreground">SKU {variant.sku}</p>
         ) : null}
       </div>
     </div>
