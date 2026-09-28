@@ -126,7 +126,10 @@ await page
 
 const rendered = await page.evaluate(() => {
   const loaded = [...document.querySelectorAll("li img")].filter(
-    (el) => el.complete && el.naturalWidth > 0,
+    (el) =>
+      el.complete &&
+      el.naturalWidth > 0 &&
+      !el.src.startsWith("blob:"),
   );
   const last = loaded[loaded.length - 1];
   return last ? { w: last.naturalWidth, src: last.src } : null;

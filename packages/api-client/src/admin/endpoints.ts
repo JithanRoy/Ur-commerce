@@ -8,6 +8,9 @@ import type {
   CreateBrandInput,
   CreateCategoryInput,
   CreateCollectionInput,
+  UpdateBrandInput,
+  UpdateCategoryInput,
+  UpdateCollectionInput,
 } from "./taxonomy";
 import type {
   AdminUser,
@@ -36,6 +39,7 @@ import type {
   UpdateStoreSettingsInput,
   UploadTicket,
   UploadTicketInput,
+  ScopedUploadTicketInput,
   UpdateProductInput,
 } from "./types";
 
@@ -96,13 +100,15 @@ export function createAdminApi(client: ApiClient) {
     uploads: {
       productImageTicket: (input: UploadTicketInput) =>
         client.post<UploadTicket>("/admin/uploads/product-images", input),
+      imageTicket: (input: ScopedUploadTicketInput) =>
+        client.post<UploadTicket>("/admin/uploads/images", input),
     },
     categories: {
       list: () => client.get<AdminCategory[]>("/admin/categories"),
       tree: () => client.get<AdminCategoryNode[]>("/admin/categories/tree"),
       create: (input: CreateCategoryInput) =>
         client.post<AdminCategory>("/admin/categories", input),
-      update: (id: string, input: Partial<CreateCategoryInput>) =>
+      update: (id: string, input: UpdateCategoryInput) =>
         client.patch<AdminCategory>(`/admin/categories/${id}`, input),
       remove: (id: string) => client.delete<void>(`/admin/categories/${id}`),
     },
@@ -111,7 +117,7 @@ export function createAdminApi(client: ApiClient) {
         client.get<Paginated<AdminBrand>>("/admin/brands", { query }),
       create: (input: CreateBrandInput) =>
         client.post<AdminBrand>("/admin/brands", input),
-      update: (id: string, input: Partial<CreateBrandInput>) =>
+      update: (id: string, input: UpdateBrandInput) =>
         client.patch<AdminBrand>(`/admin/brands/${id}`, input),
       remove: (id: string) => client.delete<void>(`/admin/brands/${id}`),
     },
@@ -120,7 +126,7 @@ export function createAdminApi(client: ApiClient) {
         client.get<Paginated<AdminCollection>>("/admin/collections", { query }),
       create: (input: CreateCollectionInput) =>
         client.post<AdminCollection>("/admin/collections", input),
-      update: (id: string, input: Partial<CreateCollectionInput>) =>
+      update: (id: string, input: UpdateCollectionInput) =>
         client.patch<AdminCollection>(`/admin/collections/${id}`, input),
       remove: (id: string) => client.delete<void>(`/admin/collections/${id}`),
     },

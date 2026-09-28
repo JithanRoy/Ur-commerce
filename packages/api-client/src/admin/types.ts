@@ -57,6 +57,12 @@ export type UploadTicketInput = {
   contentLength: number;
 };
 
+export type UploadScope = "product" | "brand" | "category" | "collection";
+
+export type ScopedUploadTicketInput = UploadTicketInput & {
+  scope: UploadScope;
+};
+
 export type UploadTicket = {
   objectKey: string;
   uploadUrl: string;

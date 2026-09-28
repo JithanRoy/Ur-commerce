@@ -10,6 +10,14 @@ export function BrandsRoute() {
       load={() => adminApi.brands.list({ limit: 100 }).then((page) => page.items)}
       create={(input) => adminApi.brands.create(input)}
       remove={(id) => adminApi.brands.remove(id)}
+      image={{
+        scope: "brand",
+        label: "Logo",
+        urlOf: (row) => row.logoUrl,
+        setKey: (id, objectKey) =>
+          adminApi.brands.update(id, { logoObjectKey: objectKey }),
+        clear: (id) => adminApi.brands.update(id, { logoUrl: null }),
+      }}
     />
   );
 }

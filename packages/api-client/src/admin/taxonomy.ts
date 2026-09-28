@@ -48,6 +48,7 @@ export type AdminCollection = {
   name: string;
   slug: string;
   description: string | null;
+  imageUrl: string | null;
   isActive: boolean;
   position: number;
 };
@@ -58,4 +59,22 @@ export type CreateCollectionInput = {
   description?: string;
   isActive?: boolean;
   position?: number;
+};
+
+export type UpdateCategoryInput = Omit<
+  Partial<CreateCategoryInput>,
+  "imageUrl"
+> & {
+  imageObjectKey?: string;
+  imageUrl?: string | null;
+};
+
+export type UpdateBrandInput = Omit<Partial<CreateBrandInput>, "logoUrl"> & {
+  logoObjectKey?: string;
+  logoUrl?: string | null;
+};
+
+export type UpdateCollectionInput = Partial<CreateCollectionInput> & {
+  imageObjectKey?: string;
+  imageUrl?: string | null;
 };

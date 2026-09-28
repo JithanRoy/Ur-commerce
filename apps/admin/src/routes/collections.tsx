@@ -12,6 +12,14 @@ export function CollectionsRoute() {
       }
       create={(input) => adminApi.collections.create(input)}
       remove={(id) => adminApi.collections.remove(id)}
+      image={{
+        scope: "collection",
+        label: "Banner",
+        urlOf: (row) => row.imageUrl,
+        setKey: (id, objectKey) =>
+          adminApi.collections.update(id, { imageObjectKey: objectKey }),
+        clear: (id) => adminApi.collections.update(id, { imageUrl: null }),
+      }}
     />
   );
 }

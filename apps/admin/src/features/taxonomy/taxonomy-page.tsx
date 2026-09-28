@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { isApiError } from "@urcommerce/api-client";
+import type { UploadScope } from "@urcommerce/api-client";
+import { ImageField } from "./image-field";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { slugify } from "@/features/products/variant-matrix";
@@ -20,6 +22,13 @@ type Props<T extends TaxonomyRow> = {
   create: (input: { name: string; slug: string }) => Promise<unknown>;
   remove: (id: string) => Promise<unknown>;
   extraColumn?: { heading: string; render: (row: T) => React.ReactNode };
+  image?: {
+    scope: UploadScope;
+    label: string;
+    urlOf: (row: T) => string | null;
+    setKey: (id: string, objectKey: string) => Promise<unknown>;
+    clear: (id: string) => Promise<unknown>;
+  };
 };
 
 export function TaxonomyPage<T extends TaxonomyRow>({
@@ -30,6 +39,7 @@ export function TaxonomyPage<T extends TaxonomyRow>({
   create,
   remove,
   extraColumn,
+  image,
 }: Props<T>) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
@@ -55,6 +65,23 @@ export function TaxonomyPage<T extends TaxonomyRow>({
         isApiError(mutationError)
           ? mutationError.message
           : `Could not create the ${title.toLowerCase().replace(/s$/, "")}.`,
+      );
+    },
+  });
+
+  const imageMutation = useMutation({
+    mutationFn: (input: { id: string; objectKey: string | null }) => {
+      if (!image) return Promise.resolve();
+      return input.objectKey === null
+        ? image.clear(input.id)
+        : image.setKey(input.id, input.objectKey);
+    },
+    onSuccess: invalidate,
+    onError: (mutationError) => {
+      setFormError(
+        isApiError(mutationError)
+          ? mutationError.message
+          : "Could not update the image.",
       );
     },
   });
@@ -131,6 +158,9 @@ export function TaxonomyPage<T extends TaxonomyRow>({
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
+                {image ? (
+                  <th className="px-4 py-3 font-medium">{image.label}</th>
+                ) : null}
                 {extraColumn ? (
                   <th className="px-4 py-3 font-medium">
                     {extraColumn.heading}
@@ -146,6 +176,22 @@ export function TaxonomyPage<T extends TaxonomyRow>({
                   <td className="px-4 py-3 text-muted-foreground">
                     {row.slug}
                   </td>
+                  {image ? (
+                    <td className="px-4 py-3">
+                      <ImageField
+                        scope={image.scope}
+                        label={image.label.toLowerCase()}
+                        currentUrl={image.urlOf(row)}
+                        disabled={imageMutation.isPending}
+                        onUploaded={(objectKey) =>
+                          imageMutation.mutate({ id: row.id, objectKey })
+                        }
+                        onCleared={() =>
+                          imageMutation.mutate({ id: row.id, objectKey: null })
+                        }
+                      />
+                    </td>
+                  ) : null}
                   {extraColumn ? (
                     <td className="px-4 py-3">{extraColumn.render(row)}</td>
                   ) : null}
