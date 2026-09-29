@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { formatBDT } from "@urcommerce/api-client";
+import { ORDER_STATUS_LABELS, formatBDT } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { StatusBadge } from "@/features/orders/status-badge";
@@ -42,6 +42,15 @@ export function OrderDetailRoute() {
     { label: "Delivered", at: order.deliveredAt },
     { label: "Cancelled", at: order.cancelledAt },
   ].filter((entry) => entry.at);
+
+  const timestampedStatuses = [
+    "PENDING_PAYMENT",
+    "CONFIRMED",
+    "SHIPPED",
+    "DELIVERED",
+    "CANCELLED",
+  ];
+  const currentWithoutTimestamp = !timestampedStatuses.includes(order.status);
 
   return (
     <>
@@ -179,6 +188,14 @@ export function OrderDetailRoute() {
                     </span>
                   </li>
                 ))}
+                {currentWithoutTimestamp ? (
+                  <li className="flex justify-between gap-3 font-medium">
+                    <span>{ORDER_STATUS_LABELS[order.status]}</span>
+                    <span className="text-right text-muted-foreground">
+                      current
+                    </span>
+                  </li>
+                ) : null}
               </ol>
             </section>
           ) : null}

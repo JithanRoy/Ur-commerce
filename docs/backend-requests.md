@@ -103,7 +103,24 @@ fast. Low urgency — the sequential loop works.
 
 ---
 
-## 5. 🟡 Deleted products keep their SKUs reserved forever
+## 5. 🟡 No timestamp when an order enters PROCESSING (or REFUNDED)
+
+The order model records `placedAt / confirmedAt / shippedAt / deliveredAt /
+cancelledAt` — but nothing for PROCESSING or REFUNDED. Marking an order
+"processing" updates `status` yet leaves no trace of *when*, so the admin
+timeline cannot show the step (verified on ORD-202609-00019 today: status
+PROCESSING, no matching timestamp anywhere in the payload).
+
+The admin now shows the current status on the timeline labelled "current" as
+a stopgap. Proper fix, pick one:
+
+- add `processingAt` (and `refundedAt`), or
+- better, a `statusHistory[] { status, at, byUserId }` — which would also
+  give the store owner an audit trail of who changed what.
+
+---
+
+## 6. 🟡 Deleted products keep their SKUs reserved forever
 
 `DELETE /admin/products/:id` soft-deletes, and the dead product's SKUs stay
 unique-constrained. Recreating a product after deleting it fails with
