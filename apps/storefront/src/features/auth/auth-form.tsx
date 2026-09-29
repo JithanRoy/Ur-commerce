@@ -12,6 +12,7 @@ import { authApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { clearCartSession } from "@/stores/cart-session";
 import { cartQueryKey } from "@/features/cart/use-cart";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email"),
@@ -131,12 +132,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <label htmlFor="password" className="text-sm font-medium">
           Password
         </label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           aria-invalid={Boolean(errors.password)}
-          className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           {...form.register("password")}
         />
         {errors.password ? (

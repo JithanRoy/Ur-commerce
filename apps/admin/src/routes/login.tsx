@@ -7,6 +7,7 @@ import { Loader2, Lock, ShieldCheck } from "lucide-react";
 import { isApiError, isStaffRole } from "@urcommerce/api-client";
 import { authApi } from "@/lib/api";
 import { useAuth } from "@/stores/auth";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),
@@ -138,13 +139,11 @@ export function LoginRoute() {
               <label htmlFor="password" className="text-sm font-medium">
                 Password
               </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 placeholder="••••••••"
                 aria-invalid={Boolean(errors.password)}
-                className="h-11 w-full rounded-lg border border-input bg-transparent px-3.5 text-sm outline-none transition-shadow placeholder:text-muted-foreground/50 focus-visible:border-foreground/30 focus-visible:ring-4 focus-visible:ring-foreground/5 aria-invalid:border-destructive/60"
                 {...form.register("password")}
               />
               {errors.password ? (

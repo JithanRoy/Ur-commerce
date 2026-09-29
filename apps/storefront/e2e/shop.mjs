@@ -8,7 +8,10 @@ await page.goto(B + "/shop", { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(900);
 let body = await page.textContent("body");
 ok(body.includes("Classic Cotton Panjabi") && body.includes("Slim Fit Denim Shirt"), "shop lists both products");
-ok(body.includes("2 products"), "shows total count");
+const total = await fetch("http://localhost:3002/api/v1/products?limit=100", {
+  headers: { "X-Tenant-Host": "demo.localhost" },
+}).then((r) => r.json()).then((j) => j.data.total);
+ok(body.includes(`${total} product`), `shows total count (${total})`);
 ok(/৳[\d,]+/.test(body), "prices render with ৳");
 
 await page.click('text=Price: low to high');

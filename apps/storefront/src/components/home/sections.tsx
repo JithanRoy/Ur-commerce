@@ -5,7 +5,7 @@ import type {
   CategoryGridSection,
   ProductCarouselSection,
 } from "@urcommerce/api-client";
-import { ProductCard } from "./product-card";
+import { ProductCard } from "@/components/product/product-card";
 
 function SectionHeading({
   title,
@@ -76,7 +76,7 @@ export function ProductCarousel({
         {section.products.map((product) => (
           <div
             key={product.id}
-            className="flex w-[62%] shrink-0 snap-start sm:w-auto"
+            className="w-[62%] shrink-0 snap-start sm:w-full"
           >
             <ProductCard product={product} />
           </div>

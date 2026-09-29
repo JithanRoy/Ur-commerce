@@ -131,10 +131,9 @@ export type ProductVariantInput = {
   optionValues?: string[];
 };
 
-export type ProductImageInput = {
-  url: string;
-  alt?: string;
-};
+export type ProductImageInput =
+  | { url: string; objectKey?: never; alt?: string }
+  | { objectKey: string; url?: never; alt?: string };
 
 export type CreateProductInput = {
   name: string;

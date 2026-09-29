@@ -5,6 +5,7 @@ import { isApiError } from "@urcommerce/api-client";
 import type { ProductDetail } from "@urcommerce/api-client";
 import { storefront } from "@/lib/api";
 import { ProductDetailClient } from "@/features/product/product-detail-client";
+import { loadStoreTheme } from "@/lib/load-store";
 
 export const revalidate = 60;
 
@@ -33,7 +34,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
-  const product = await loadProduct(slug);
+  const [product, { store }] = await Promise.all([
+    loadProduct(slug),
+    loadStoreTheme(),
+  ]);
   if (!product) notFound();
 
   return (
@@ -57,7 +61,10 @@ export default async function ProductPage({ params }: Params) {
         <span className="text-foreground">{product.name}</span>
       </nav>
 
-      <ProductDetailClient product={product} />
+      <ProductDetailClient
+        product={product}
+        supportEmail={store?.supportEmail ?? null}
+      />
     </div>
   );
 }

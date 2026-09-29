@@ -1,15 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { isApiError } from "@urcommerce/api-client";
 import { useCartMutations } from "@/features/cart/use-cart";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
 import type { ProductDetail } from "@urcommerce/api-client";
-import { Check, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  Mail,
+  MessageCircle,
+  RotateCcw,
+  Send,
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+  Zap,
+} from "lucide-react";
+import { useAuth } from "@/stores/auth";
+import { SignInDialog } from "@/features/auth/sign-in-dialog";
 import { VariantPicker } from "./variant-picker";
 import { ProductGallery } from "./product-gallery";
+import { ProductTabs } from "./product-tabs";
 import {
   findVariant,
   imagesForVariant,
@@ -17,17 +31,32 @@ import {
   optionNamesInOrder,
   type Selection,
 } from "./variant-resolution";
+import { cn } from "@/lib/utils";
 
 function discountPercent(price: number, compareAtPrice: number): number {
   return Math.round(((compareAtPrice - price) / compareAtPrice) * 100);
 }
 
-export function ProductDetailClient({ product }: { product: ProductDetail }) {
+const DESCRIPTION_CLAMP = 220;
+
+export function ProductDetailClient({
+  product,
+  supportEmail,
+}: {
+  product: ProductDetail;
+  supportEmail: string | null;
+}) {
   const router = useRouter();
+  const session = useAuth((state) => state.session);
   const { addItem } = useCartMutations();
   const [selection, setSelection] = useState<Selection>({});
   const [quantity, setQuantity] = useState(1);
   const [cartError, setCartError] = useState<string | null>(null);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const buyBox = useRef<HTMLDivElement>(null);
 
   const variant = useMemo(
     () => findVariant(product, selection),
@@ -44,19 +73,30 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
   const maxQuantity = maxQuantityFor(variant);
   const isSoldOut = isComplete && maxQuantity === 0;
 
+  useEffect(() => {
+    const target = buyBox.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(entry ? !entry.isIntersecting : false),
+      { threshold: 0 },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
   function onSelect(optionName: string, value: string) {
     setQuantity(1);
     setCartError(null);
     setSelection((current) => ({ ...current, [optionName]: value }));
   }
 
-  function onAddToCart() {
+  function addToCart(onDone: () => void) {
     if (!variant) return;
     setCartError(null);
     addItem.mutate(
       { variantId: variant.id, quantity },
       {
-        onSuccess: () => router.push("/cart"),
+        onSuccess: onDone,
         onError: (error) =>
           setCartError(
             isApiError(error)
@@ -67,152 +107,377 @@ export function ProductDetailClient({ product }: { product: ProductDetail }) {
     );
   }
 
+  const onAddToCart = () => addToCart(() => router.push("/cart"));
+
+  const onBuyNow = () => {
+    if (!variant) return;
+    if (!session) {
+      setSignInOpen(true);
+      return;
+    }
+    addToCart(() => router.push("/checkout"));
+  };
+
   const price = variant
-    ? formatBDT(variant.price, variant.currency)
+    ? formatBDT(variant.price)
     : formatPriceRange(product.minPrice, product.maxPrice);
 
   const compareAt = variant?.compareAtPrice ?? null;
-  const showsDiscount = compareAt !== null && variant !== null && compareAt > variant.price;
+  const showsDiscount =
+    compareAt !== null && variant !== null && compareAt > variant.price;
+  const savePct =
+    showsDiscount && compareAt !== null && variant !== null
+      ? discountPercent(variant.price, compareAt)
+      : product.maxDiscountPct;
+
+  const description = product.description ?? "";
+  const isLongDescription = description.length > DESCRIPTION_CLAMP;
+  const shownDescription =
+    !isLongDescription || descriptionOpen
+      ? description
+      : `${description.slice(0, DESCRIPTION_CLAMP).trimEnd()}…`;
+
+  const addLabel = addItem.isPending
+    ? "Adding…"
+    : isSoldOut
+      ? "Sold out"
+      : isComplete
+        ? "Add to cart"
+        : `Select ${optionNamesInOrder(product)
+            .filter((name) => !selection[name])
+            .join(" and ")}`;
+
+  const shareUrl = `https://${typeof window !== "undefined" ? window.location.host : ""}/product/${product.slug}`;
+  const shareText = encodeURIComponent(product.name);
+  const encodedUrl = encodeURIComponent(shareUrl);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // clipboard unavailable; the share links still work
+    }
+  };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14">
-      <div className="lg:max-w-xl">
-        <ProductGallery
-          images={images}
-          productName={product.name}
-          badge={
-            showsDiscount && compareAt !== null && variant !== null ? (
-              <span className="rounded-full bg-destructive px-2.5 py-1 text-xs font-medium text-white">
-                −{discountPercent(variant.price, compareAt)}%
-              </span>
-            ) : null
-          }
-        />
-      </div>
-
-      <div>
-        {product.brand ? (
-          <Link
-            href={`/brand/${product.brand.slug}`}
-            className="text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {product.brand.name}
-          </Link>
-        ) : null}
-
-        <h1 className="mt-2 text-balance font-display text-3xl font-semibold leading-tight sm:text-4xl">
-          {product.name}
-        </h1>
-
-        <div className="mt-4 flex items-baseline gap-3">
-          <span className="text-2xl font-semibold">{price}</span>
-          {showsDiscount && compareAt !== null && variant !== null ? (
-            <>
-              <span className="text-muted-foreground line-through">
-                {formatBDT(compareAt, variant.currency)}
-              </span>
-              <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-sm font-medium text-destructive">
-                −{discountPercent(variant.price, compareAt)}%
-              </span>
-            </>
-          ) : null}
+    <>
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-14">
+        <div className="min-w-0 lg:max-w-xl">
+          <ProductGallery
+            images={images}
+            productName={product.name}
+            badge={
+              showsDiscount && compareAt !== null && variant !== null ? (
+                <span className="rounded-full bg-destructive px-2.5 py-1 text-xs font-medium text-white">
+                  −{discountPercent(variant.price, compareAt)}%
+                </span>
+              ) : null
+            }
+          />
         </div>
 
-        {product.description ? (
-          <p className="mt-5 text-pretty leading-relaxed text-muted-foreground">
-            {product.description}
-          </p>
-        ) : null}
-
-        {isComplete && !isSoldOut ? (
-          <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-success">
-            <Check className="size-4" aria-hidden />
-            In stock
-            {variant.stock <= 5 ? ` — only ${variant.stock} left` : ""}
-          </p>
-        ) : null}
-
-        {optionCount > 0 ? (
-          <div className="mt-8">
-            <VariantPicker
-              product={product}
-              selection={selection}
-              onSelect={onSelect}
-            />
-          </div>
-        ) : null}
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <div className="flex h-12 items-center rounded-full border bg-card">
-            <button
-              type="button"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              disabled={!isComplete || quantity <= 1}
-              aria-label="Decrease quantity"
-              className="h-full w-10 text-lg disabled:opacity-30"
+        <div>
+          {product.brand ? (
+            <Link
+              href={`/brand/${product.brand.slug}`}
+              className="text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
             >
-              −
-            </button>
-            <span className="w-10 text-center text-sm tabular-nums">
-              {quantity}
+              {product.brand.name}
+            </Link>
+          ) : null}
+
+          <h1 className="mt-2 text-balance font-display text-3xl font-semibold leading-tight sm:text-4xl">
+            {product.name}
+          </h1>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {showsDiscount && compareAt !== null ? (
+              <span className="text-xl text-muted-foreground line-through">
+                {formatBDT(compareAt)}
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                "text-3xl font-bold tracking-tight",
+                showsDiscount && "text-destructive",
+              )}
+            >
+              {price}
             </span>
+            {showsDiscount && savePct > 0 ? (
+              <span className="rounded bg-destructive px-2 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                Save {savePct}%
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Tax included. Shipping calculated at checkout.
+          </p>
+
+          {description ? (
+            <p className="mt-5 text-pretty leading-relaxed text-muted-foreground">
+              {shownDescription}
+              {isLongDescription ? (
+                <>
+                  {" "}
+                  <button
+                    type="button"
+                    onClick={() => setDescriptionOpen((open) => !open)}
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {descriptionOpen ? "Read less" : "Read more"}
+                  </button>
+                </>
+              ) : null}
+            </p>
+          ) : null}
+
+          {optionCount > 0 ? (
+            <div className="mt-7">
+              <VariantPicker
+                product={product}
+                selection={selection}
+                onSelect={onSelect}
+              />
+            </div>
+          ) : null}
+
+          {isComplete && !isSoldOut ? (
+            <p className="mt-5 inline-flex items-center gap-1.5 text-sm text-success">
+              <Check className="size-4" aria-hidden />
+              In stock
+              {variant.stock <= 5 ? ` — only ${variant.stock} left` : ""}
+            </p>
+          ) : null}
+
+          <div ref={buyBox} className="mt-6 space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex h-12 items-center rounded-lg border bg-card">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={!isComplete || quantity <= 1}
+                  aria-label="Decrease quantity"
+                  className="h-full w-11 text-lg disabled:opacity-30"
+                >
+                  −
+                </button>
+                <span className="w-10 text-center text-sm font-medium tabular-nums">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((q) => Math.min(maxQuantity || 1, q + 1))
+                  }
+                  disabled={!isComplete || quantity >= maxQuantity}
+                  aria-label="Increase quantity"
+                  className="h-full w-11 text-lg disabled:opacity-30"
+                >
+                  +
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={onAddToCart}
+                disabled={!isComplete || isSoldOut || addItem.isPending}
+                className="inline-flex h-12 min-w-44 flex-1 items-center justify-center gap-2 rounded-lg border-2 border-foreground bg-background px-6 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:border-input disabled:opacity-40"
+              >
+                {addItem.isPending ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  <ShoppingBag className="size-4" aria-hidden />
+                )}
+                {addLabel}
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={() =>
-                setQuantity((q) => Math.min(maxQuantity || 1, q + 1))
-              }
-              disabled={!isComplete || quantity >= maxQuantity}
-              aria-label="Increase quantity"
-              className="h-full w-10 text-lg disabled:opacity-30"
+              onClick={onBuyNow}
+              disabled={!isComplete || isSoldOut || addItem.isPending}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold uppercase tracking-wide text-primary-foreground transition-all hover:shadow-lg hover:shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
-              +
+              <Zap className="size-4" aria-hidden />
+              Buy it now
             </button>
           </div>
 
+          {cartError ? (
+            <p role="alert" className="mt-3 text-sm text-destructive">
+              {cartError}
+            </p>
+          ) : null}
+
+          <dl className="mt-7 space-y-2 border-t pt-5 text-sm">
+            {variant ? (
+              <div className="flex gap-2">
+                <dt className="w-28 shrink-0 text-muted-foreground">SKU</dt>
+                <dd className="font-medium">{variant.sku}</dd>
+              </div>
+            ) : null}
+            <div className="flex gap-2">
+              <dt className="w-28 shrink-0 text-muted-foreground">
+                Availability
+              </dt>
+              <dd
+                className={cn(
+                  "font-medium",
+                  product.totalStock > 0 ? "text-success" : "text-destructive",
+                )}
+              >
+                {product.totalStock > 0 ? "In stock" : "Out of stock"}
+              </dd>
+            </div>
+            {product.category ? (
+              <div className="flex gap-2">
+                <dt className="w-28 shrink-0 text-muted-foreground">
+                  Category
+                </dt>
+                <dd>
+                  <Link
+                    href={`/category/${product.category.slug}`}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {product.category.name}
+                  </Link>
+                </dd>
+              </div>
+            ) : null}
+            {product.brand ? (
+              <div className="flex gap-2">
+                <dt className="w-28 shrink-0 text-muted-foreground">Brand</dt>
+                <dd>
+                  <Link
+                    href={`/brand/${product.brand.slug}`}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {product.brand.name}
+                  </Link>
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+
+          <div className="mt-5 flex flex-wrap items-center gap-4 border-t pt-5">
+            <span className="text-sm text-muted-foreground">Share</span>
+            <div className="flex items-center gap-1">
+              {[
+                {
+                  label: "Share on Facebook",
+                  href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+                  icon: MessageCircle,
+                },
+                {
+                  label: "Share on WhatsApp",
+                  href: `https://wa.me/?text=${shareText}%20${encodedUrl}`,
+                  icon: Send,
+                },
+                {
+                  label: "Share by email",
+                  href: `mailto:?subject=${shareText}&body=${encodedUrl}`,
+                  icon: Mail,
+                },
+              ].map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={item.label}
+                  className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <item.icon className="size-4" aria-hidden />
+                </a>
+              ))}
+              <button
+                type="button"
+                onClick={copyLink}
+                className="ml-1 inline-flex h-9 items-center rounded-md border border-input px-3 text-xs font-medium transition-colors hover:bg-muted"
+              >
+                {linkCopied ? "Copied!" : "Copy link"}
+              </button>
+            </div>
+
+            {supportEmail ? (
+              <a
+                href={`mailto:${supportEmail}?subject=${encodeURIComponent(
+                  `Question about ${product.name}`,
+                )}`}
+                className="ml-auto text-sm font-medium underline-offset-4 hover:underline"
+              >
+                Ask a question
+              </a>
+            ) : null}
+          </div>
+
+          <ul className="mt-6 space-y-3 border-t pt-5">
+            {[
+              { icon: Truck, text: "Cash on delivery across Bangladesh" },
+              { icon: ShieldCheck, text: "Free shipping on orders over ৳2,000" },
+              { icon: RotateCcw, text: "7-day exchange on unworn items" },
+            ].map((item) => (
+              <li
+                key={item.text}
+                className="flex items-center gap-3 text-sm text-muted-foreground"
+              >
+                <item.icon
+                  className="size-4 shrink-0 text-primary/70"
+                  aria-hidden
+                />
+                {item.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <ProductTabs product={product} />
+
+      <div
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur-md transition-transform duration-300",
+          showStickyBar ? "translate-y-0" : "translate-y-full",
+        )}
+      >
+        <div className="container-page flex items-center gap-3 py-3">
+          {images[0] ? (
+            <img
+              src={images[0].url}
+              alt=""
+              className="hidden size-11 rounded-md object-cover sm:block"
+            />
+          ) : null}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{product.name}</p>
+            <p className="text-sm font-semibold">{price}</p>
+          </div>
           <button
             type="button"
             onClick={onAddToCart}
             disabled={!isComplete || isSoldOut || addItem.isPending}
-            className="h-12 min-w-48 flex-1 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-all hover:shadow-lg hover:shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className="ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-40"
           >
-            {addItem.isPending
-              ? "Adding…"
-              : isSoldOut
-                ? "Sold out"
-                : isComplete
-                ? "Add to cart"
-                  : `Select ${optionNamesInOrder(product)
-                      .filter((name) => !selection[name])
-                      .join(" and ")}`}
+            <ShoppingBag className="size-4" aria-hidden />
+            {isComplete ? "Add to cart" : "Choose options"}
           </button>
         </div>
-
-        {cartError ? (
-          <p role="alert" className="mt-3 text-sm text-destructive">
-            {cartError}
-          </p>
-        ) : null}
-
-        <ul className="mt-8 space-y-3 border-t pt-6">
-          {[
-            { icon: Truck, text: "Cash on delivery across Bangladesh" },
-            { icon: ShieldCheck, text: "Free shipping on orders over ৳2,000" },
-            { icon: RotateCcw, text: "7-day exchange on unworn items" },
-          ].map((item) => (
-            <li
-              key={item.text}
-              className="flex items-center gap-3 text-sm text-muted-foreground"
-            >
-              <item.icon className="size-4 shrink-0 text-primary/70" aria-hidden />
-              {item.text}
-            </li>
-          ))}
-        </ul>
-
-        {variant ? (
-          <p className="mt-6 text-xs text-muted-foreground">SKU {variant.sku}</p>
-        ) : null}
       </div>
-    </div>
+
+      <SignInDialog
+        open={signInOpen}
+        onClose={() => setSignInOpen(false)}
+        onSignedIn={() => {
+          setSignInOpen(false);
+          addToCart(() => router.push("/checkout"));
+        }}
+        returnTo={`/product/${product.slug}`}
+        title="Sign in to buy"
+        description={`You need an account to place an order. ${product.name} will be waiting in your bag.`}
+      />
+    </>
   );
 }

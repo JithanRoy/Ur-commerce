@@ -1,16 +1,23 @@
 # Backend Requests — from the frontend team
 
-Everything below was verified against the running API on 2026-09-22
-(`localhost:3002`, tenant `demo.localhost`, seeded demo store).
+Everything below was verified against the running API on **2026-09-29**
+(`localhost:3002`, tenant `demo.localhost`, seeded demo store). Each item has a
+runnable reproduce block. Ordered by what blocks frontend work soonest.
 
-Ordered by what blocks frontend work soonest.
+A correction first: an earlier version of this document reported
+`GET /products?collection=` as a bug. It is not — `collection` was never a
+parameter on that endpoint (the spec lists `page, limit, category, brands,
+minPrice, maxPrice, inStockOnly, search, sort`). The 400 is correct
+validation. Withdrawn.
 
 ---
 
 ## 1. 🔴 BUG — creating a product without options returns 500
 
-**The simplest possible product cannot be created.** A product with one variant
-and no Size/Colour options fails outright.
+**Unchanged since 2026-09-22.** The simplest possible product — one variant,
+no Size/Colour options — cannot be created. The admin panel's create form
+works for products *with* options and 500s otherwise, which makes the store's
+easiest onboarding path its most broken one.
 
 ### Reproduce
 
@@ -20,221 +27,118 @@ TOKEN=$(curl -s -X POST http://localhost:3002/api/v1/auth/login \
   -d '{"email":"admin@demo.local","password":"password123"}' \
   | jq -r '.data.accessToken')
 
-# FAILS — 500
+# FAILS — 500 {"success":false,"message":"Internal server error"}
 curl -s -X POST http://localhost:3002/api/v1/admin/products \
   -H "Authorization: Bearer $TOKEN" -H 'X-Tenant-Host: demo.localhost' \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Tote Bag","slug":"tote-bag","status":"DRAFT",
-       "variants":[{"sku":"TOTE-STD","price":49900,"stock":40}]}'
-
-# SUCCEEDS — 201, identical except it declares an option
-curl -s -X POST http://localhost:3002/api/v1/admin/products \
-  -H "Authorization: Bearer $TOKEN" -H 'X-Tenant-Host: demo.localhost' \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Tote Bag 2","slug":"tote-bag-2","status":"DRAFT",
-       "options":[{"name":"Size","values":["One Size"]}],
-       "variants":[{"sku":"TOTE-OS","price":49900,"stock":40,
-                    "optionValues":["One Size"]}]}'
+  -d '{"name":"Plain Tee","slug":"plain-tee","status":"DRAFT",
+       "variants":[{"sku":"TEE-STD","price":100000,"stock":10}]}'
 ```
 
-`options: []` fails the same way as omitting the key.
-
-### Server log
-
-```
-PrismaClientKnownRequestError:
-Invalid `db.product.update()` invocation in
-  src/modules/catalog/infrastructure/persistence/product.repository.ts:64:23
-
-An operation failed because it depends on one or more records that were
-required but not found. No record was found for an update.
-
-  at ProductRepository.create (product.repository.ts:83)
-  at ProductService.create (product.service.ts:113)
-```
-
-### Likely cause
-
-`ProductService.create` branches at `product.service.ts:112`:
-
-```ts
-if (!dto.options?.length) {
-  return this.afterWrite(tenantId, await this.repo.create(productData));
-}
-// ... else createWithVariantOptions(...)
-```
-
-The two paths use different clients:
-
-- `createWithVariantOptions` holds `const tx = this.prisma.db` and uses it for
-  every statement.
-- `create` writes with `this.prisma.db.product.create(...)`, then calls
-  `this.recomputeAggregates(product.id)` **with no client argument**, so it
-  falls back to `const db = client ?? this.prisma` — a different accessor from
-  `this.prisma.db`.
-
-The subsequent `db.product.update({ where: { id } })` then cannot see the row
-it just wrote, which matches the error exactly. Passing the same client
-through is the obvious candidate:
-
-```ts
-await this.recomputeAggregates(product.id, this.prisma.db);
-```
-
-Please confirm the mechanism rather than taking our word for it — we are
-reading this from outside and cannot see the tenant-scoping middleware.
-
-### Why it matters
-
-The admin product form defaults to a **single unnamed variant**, so this is the
-first thing a store owner hits when adding a plain product (a bag, a mug,
-anything without sizes). It also blocks us from testing add-to-cart directly
-from a product card, which only applies to single-variant products.
-
-### Acceptance
-
-- `POST /admin/products` with no `options` key returns 201.
-- Same with `options: []`.
-- The created product reports correct `minPrice`, `maxPrice`, `totalStock`
-  (i.e. aggregates actually recomputed, not skipped).
-- A regression test covers the no-options path — it is currently untested,
-  which is why this shipped.
+Expected: 201 with the product. The same payload plus an `options` array and
+`optionValues` on the variant succeeds, so the failure is specific to the
+optionless path.
 
 ---
 
-## 2. 🟠 FEATURE — tenant settings (branding + storefront copy)
+## 2. 🟠 Store branding logo/favicon cannot use uploaded images
 
-**Requested by the store owner.** They want to change their shop's colours and
-some text without a developer.
+The admin panel now uploads every image direct-to-storage — product galleries,
+brand logos, category and collection banners all work with `objectKey`. The
+one place still stuck on pasted URLs is **store settings**:
 
-No endpoint exists today — we checked; there are zero paths matching
-`setting`, `theme` or `branding`. `gaps.md` §4 lists it as unbuilt.
+- `UpdateStoreSettingsDto` accepts only `logoUrl` / `faviconUrl` — no
+  `logoObjectKey` / `faviconObjectKey` (verified in `docs-json` today).
+- The upload-ticket scope enum is `product | brand | category | collection` —
+  there is no `store` (or `branding`) scope to mint a ticket under.
 
-We are **not** building an admin screen for this until it has a backend. A
-colour picker that saves to `localStorage` would appear to work and then not
-apply for any other visitor or device.
+### Request
 
-### What we need
+1. Add a `store` scope to `POST /admin/uploads/images`.
+2. Accept `logoObjectKey` and `faviconObjectKey` on `PATCH /admin/settings`,
+   resolving to URLs on read exactly as `PATCH /admin/brands/:id` already does
+   with `logoObjectKey`.
 
-```
-GET   /api/v1/admin/settings     → the tenant's settings
-PATCH /api/v1/admin/settings     → update (owner only, we assume)
-GET   /api/v1/settings           → public subset, for the storefront
-```
+The brand implementation is the template; this is the same pattern on one more
+entity. Until then the admin branding screen keeps two URL text fields the
+owner has no way to fill without hosting the file somewhere themselves.
 
-Suggested shape — please push back if the model differs:
+---
+
+## 3. 🟠 Product card payload has no option names — blocks on-card quick-add
+
+Business gap. The storefront's product cards now carry "Add to bag / Buy now"
+buttons. For a **single-variant** product this works end to end. For a
+multi-variant product the card cannot offer a size picker, because
+`ProductCard.variants[]` is only:
 
 ```jsonc
-{
-  "storeName": "Demo Store",
-  "tagline": "Everyday essentials",
-  "logoUrl": null,
-  "theme": {
-    "brandHue": 265,        // 0–360
-    "brandChroma": 0.12     // 0–0.4, oklch
-  },
-  "contact": {
-    "email": "hello@demo.com",
-    "phone": "01712345678"
-  },
-  "social": { "facebook": null, "instagram": null }
-}
+{ "id": "…", "price": 195000, "compareAtPrice": 249900, "stock": 20 }
 ```
 
-Two notes on the theme fields:
+No option names, no values, not even the SKU. A shopper must click through to
+the detail page for every clothing product — which for this catalogue is
+nearly all of them. Quick-add from the grid is a meaningful conversion lever.
 
-- Our entire palette already derives from `brandHue`/`brandChroma` as oklch
-  values, so those two numbers are genuinely enough to re-skin the shop. If you
-  would rather store a hex string we can convert, but then we need to know
-  whether it is the primary, the accent, or both.
-- The **public** `GET /settings` must not leak anything staff-only. Storefront
-  pages are server-rendered for anonymous visitors.
+### Request
 
-### Acceptance
+Add a compact option summary to the card payload, e.g.
 
-- Public endpoint is readable with no token, scoped by `Host` like the rest.
-- A new tenant returns sensible defaults rather than 404 — the empty case is
-  the common path for us.
-- `PATCH` validates ranges (hue 0–360, chroma 0–0.4) rather than trusting us.
+```jsonc
+"options": [{ "name": "Size", "values": ["M", "L"] }],
+"variants": [{ "id": "…", "price": …, "stock": …, "optionValues": ["M"] }]
+```
+
+Names and values only — the card does not need the full variant join.
 
 ---
 
-## 3. 🟡 FEATURE — collection detail endpoint
+## 4. 🟡 Bulk image attach
 
-`GET /collections` returns the list, but there is **no** `GET /collections/:slug`
-and no way to fetch a collection's products publicly.
-
-```bash
-curl -s http://localhost:3002/api/v1/collections -H 'X-Tenant-Host: demo.localhost'
-# [{"id":"...","name":"Eid Edit","slug":"eid-edit","imageUrl":null,"productCount":0}]
-```
-
-So we can list collections but cannot build a page for one. Admin has
-`/admin/collections/:id/products`; the storefront has no equivalent.
-
-### What we need
-
-Either a detail route:
-
-```
-GET /api/v1/collections/:slug   → collection + paginated products
-```
-
-…or a filter on the existing products endpoint:
-
-```
-GET /api/v1/products?collection=eid-edit
-```
-
-**We would prefer the filter.** Our shop grid, category pages and brand pages
-all already run through `GET /products` with its pagination, sorting and
-facets. A `?collection=` parameter would reuse all of it; a separate detail
-route means a second pagination implementation for the same grid.
-
-### Note
-
-`Eid Edit` currently has `productCount: 0`, so there is nothing to render even
-once this lands. Worth seeding a few products into it so the feature can be
-demonstrated.
+`POST /admin/products/:id/images` takes exactly one `objectKey`. The admin
+gallery supports multi-select and drag-drop upload, so attaching ten images is
+ten sequential round-trips. A `{ "images": [...] }` batch variant (or
+accepting an array on the existing route) would make batch upload atomic and
+fast. Low urgency — the sequential loop works.
 
 ---
 
-## 4. 🟡 Seed data — the demo store has 2 products
+## 5. 🟡 Seed data is still 2 real products
 
-```bash
-curl -s 'http://localhost:3002/api/v1/products?limit=100' \
-  -H 'X-Tenant-Host: demo.localhost' | jq '.data.total'   # 2
-```
+`GET /products` returns 3, one of which is a price-0 test product
+(`laptop-111`). Grid layouts, pagination (`limit` capped at 100), facet
+counts and search relevance cannot be exercised against 2 realistic products.
+The earlier ask stands: ~20 products across the existing categories/brands,
+with variants, compare-at prices and mixed stock levels.
 
-Pagination, sorting, filters and facets are all built and all untestable with
-two products — every page is page 1.
-
-Also, running the storefront e2e suite **places real COD orders**, which drains
-real stock. `DEN-IND-M` has hit 0 twice and had to be restocked manually.
-
-### What would help
-
-- ~20 products across the existing 4 categories and 2 brands.
-- A mix of single-variant and multi-variant products (blocked on issue 1).
-- A few deliberately out of stock, to exercise the sold-out states.
-- Ideally `npm run seed:demo` being idempotent, so we can reset between test
-  runs instead of hand-restocking.
+Also: `laptop-111` is ACTIVE with `price: 0` and `maxDiscountPct: 100`. If it
+is meant as seed data, give it a real price; shoppers can currently order it
+for ৳0.
 
 ---
 
-## Not requested
+## 6. 🟡 Deleted products keep their SKUs reserved forever
 
-For completeness, so nobody builds these on our account: we are **not** asking
-for the payment gateway, refunds, customer-facing cancellation, reviews,
-coupons, or brand/category image upload. We know they are missing and have
-scoped around them per `gaps.md`.
+`DELETE /admin/products/:id` soft-deletes, and the dead product's SKUs stay
+unique-constrained. Recreating a product after deleting it fails with
+`"SKU already in use: …"` naming SKUs the admin cannot see anywhere in the
+panel. Verified today: create → delete → identical create → 400.
+
+Either exclude soft-deleted rows from the SKU uniqueness check, or suffix
+their SKUs on delete (`FOR-M__deleted_<id>`), whichever fits the model. As it
+stands an admin who deletes a mistyped product cannot make it again with the
+same SKUs and gets no explanation.
 
 ---
 
-## Contact
+## Delivered since the last version of this doc — thank you
 
-Frontend repo: `Ur-commerce` (separate from the backend).
-Everything above was verified against a live API, not read from a schema.
-
-If a shape changes, `docs/api/CHANGELOG.md` is the file we read — please keep
-entries there and we will pick them up.
+- **Object storage** — presigned uploads live end to end (verified 2026-09-28:
+  ticket → PUT → attach → public URL).
+- **Scoped uploads** for brand/category/collection with server-side scope
+  enforcement.
+- **Tenant settings** (`GET/PATCH /admin/settings`) with WCAG-computed
+  `onPrimary`/`onAccent`.
+- **`/auth/logout-all`**, refresh rotation, role-based refresh TTLs
+  (12h staff / 7d customer).
+- **`/admin/categories/tree`**.

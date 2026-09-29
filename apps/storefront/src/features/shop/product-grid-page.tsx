@@ -4,7 +4,7 @@ import type {
   StorefrontCategory,
 } from "@urcommerce/api-client";
 import type { Paginated, ProductCard as ProductCardData } from "@urcommerce/api-client";
-import { ProductCard } from "@/components/home/product-card";
+import { ProductCard } from "@/components/product/product-card";
 import { FilterSidebar } from "./filter-sidebar";
 import { SortLinks } from "./sort-select";
 import { Pagination } from "./pagination";

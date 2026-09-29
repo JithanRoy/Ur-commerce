@@ -40,7 +40,7 @@ ok(!/৳[\d,]+\s*–\s*৳[\d,]+/.test(body), "range replaced by one price");
 ok(body.includes("In stock"), "stock state shown once resolved");
 ok(body.includes("DEN-IND-M"), "SKU resolves to the chosen variant");
 ok(
-  await page.locator('button:has-text("Add to cart")').isEnabled(),
+  await page.locator('button:has-text("Add to cart")').first().isEnabled(),
   "add to cart enabled after a full selection",
 );
 
@@ -53,7 +53,7 @@ const brokenFrames = await page.evaluate(() =>
 ok(brokenFrames === 0, "no broken images rendered");
 
 // add to cart -> cart page
-await page.click('button:has-text("Add to cart")');
+await page.locator('button:has-text("Add to cart")').first().click();
 await page.waitForURL(/\/cart/, { timeout: 15000 }).catch(() => {});
 await page.waitForTimeout(2500);
 

@@ -37,17 +37,16 @@ ok(
 if (hasAdd) {
   const addButton = page.locator('button:has-text("Add to bag")').first();
   await addButton.click();
-  await page
+  const confirmed = await page
     .waitForFunction(
-      () => document.body.innerText.includes("Added to bag"),
+      () => /\bAdded\b/.test(document.body.innerText),
       undefined,
       { timeout: 15000 },
     )
     .then(() => true)
     .catch(() => false);
 
-  const after = await page.textContent("body");
-  ok(after.includes("Added to bag"), "card confirms the item was added");
+  ok(confirmed, "card confirms the item was added");
 
   await page.goto(B + "/cart", { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2500);

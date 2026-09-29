@@ -2,9 +2,10 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { SearchField } from "@/features/shop/search-field";
 import { AccountMenu } from "@/features/account/account-menu";
+import { CartIndicator } from "@/features/cart/cart-indicator";
 
 const navigation = [
   { label: "Shop", href: "/shop" },
@@ -71,13 +72,7 @@ export function SiteHeader({
             )}
           </button>
           <AccountMenu />
-          <Link
-            href="/cart"
-            aria-label="Your cart"
-            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <ShoppingBag className="size-[18px]" />
-          </Link>
+          <CartIndicator />
         </div>
       </div>
 

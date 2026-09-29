@@ -1,14 +1,21 @@
+import { autoSku } from "./variant-matrix";
 import type { VariantDraft } from "./variant-matrix";
 
 type Props = {
   variants: VariantDraft[];
   optionNames: string[];
   onChange: (variants: VariantDraft[]) => void;
+  productName?: string;
 };
 
 const numericField = "h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm tabular-nums";
 
-export function VariantTable({ variants, optionNames, onChange }: Props) {
+export function VariantTable({
+  variants,
+  optionNames,
+  onChange,
+  productName,
+}: Props) {
   function update(index: number, patch: Partial<VariantDraft>) {
     onChange(
       variants.map((variant, i) =>
@@ -49,8 +56,13 @@ export function VariantTable({ variants, optionNames, onChange }: Props) {
                 <input
                   value={variant.sku}
                   onChange={(event) => update(index, { sku: event.target.value })}
+                  placeholder={
+                    productName !== undefined
+                      ? autoSku(productName, variant.optionValues)
+                      : undefined
+                  }
                   aria-label={`SKU for ${variant.key || "variant"}`}
-                  className="h-9 w-36 rounded-md border border-input bg-transparent px-2 text-sm"
+                  className="h-9 w-36 rounded-md border border-input bg-transparent px-2 text-sm placeholder:text-muted-foreground/50"
                 />
               </td>
               <td className="px-3 py-2">

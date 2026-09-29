@@ -72,3 +72,26 @@ export function slugify(value: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 }
+
+function skuToken(value: string): string {
+  const cleaned = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  return /^\d+$/.test(cleaned) ? cleaned : cleaned.slice(0, 3);
+}
+
+function skuPrefix(productName: string): string {
+  const words = productName.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+  const initials = words
+    .map((word) => word.charAt(0))
+    .join("")
+    .toUpperCase()
+    .slice(0, 4);
+  if (initials.length >= 2) return initials;
+  const first = words[0] ?? "";
+  return first.toUpperCase().slice(0, 3) || "SKU";
+}
+
+export function autoSku(productName: string, optionValues: string[]): string {
+  const prefix = skuPrefix(productName);
+  if (optionValues.length === 0) return `${prefix}-STD`;
+  return [prefix, ...optionValues.map(skuToken)].join("-");
+}
