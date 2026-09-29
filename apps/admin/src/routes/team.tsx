@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isApiError, STAFF_ROLE_LABELS } from "@urcommerce/api-client";
 import type { CreateStaffInput, StaffRole } from "@urcommerce/api-client";
+import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
 import { useAuth } from "@/stores/auth";
 import { PageHeader } from "@/components/ui/page-header";
@@ -12,14 +13,12 @@ import { cn } from "@/lib/utils";
 export function TeamRoute() {
   const queryClient = useQueryClient();
   const currentUser = useAuth((state) => state.user);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
 
   const failed = (fallback: string) => (mutationError: unknown) => {
-    setMessage(null);
     setError(isApiError(mutationError) ? mutationError.message : fallback);
   };
 
@@ -33,7 +32,7 @@ export function TeamRoute() {
     mutationFn: (input: CreateStaffInput) => adminApi.users.create(input),
     onSuccess: () => {
       setError(null);
-      setMessage("Team member added.");
+      toast.success("Team member added.");
       invalidate();
     },
     onError: failed("Could not add the team member."),
@@ -44,7 +43,7 @@ export function TeamRoute() {
       adminApi.users.update(id, { isActive }),
     onSuccess: (_result, variables) => {
       setError(null);
-      setMessage(variables.isActive ? "Access restored." : "Access revoked.");
+      toast.success(variables.isActive ? "Access restored." : "Access revoked.");
       invalidate();
     },
     onError: failed("Could not update access."),
@@ -55,7 +54,7 @@ export function TeamRoute() {
       adminApi.users.update(id, { role }),
     onSuccess: () => {
       setError(null);
-      setMessage("Role updated.");
+      toast.success("Role updated.");
       invalidate();
     },
     onError: failed("Could not change the role."),
@@ -77,12 +76,6 @@ export function TeamRoute() {
         count={data?.total}
         description="People who can sign in to this admin panel."
       />
-
-      {message ? (
-        <p className="mb-4 rounded-md border border-success/30 bg-success/5 px-4 py-2 text-sm text-success">
-          {message}
-        </p>
-      ) : null}
       {error ? (
         <p
           role="alert"

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { ImageOff, Plus } from "lucide-react";
 import { formatPriceRange, paisa } from "@urcommerce/api-client";
 import type { AdminProduct, ProductStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
@@ -35,6 +35,12 @@ export function ProductsRoute() {
         ...(status ? { status } : {}),
       }),
     placeholderData: keepPreviousData,
+    select: (page) => ({
+      ...page,
+      items: page.items.filter(
+        (product) => !product.slug.includes("__archived_"),
+      ),
+    }),
   });
 
   const newProductLink = (
@@ -111,28 +117,52 @@ export function ProductsRoute() {
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50 text-left">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Product</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="hidden px-4 py-3 font-medium md:table-cell">
+                    Category
+                  </th>
                   <th className="px-4 py-3 font-medium">Price</th>
-                  <th className="px-4 py-3 font-medium">Variants</th>
                   <th className="px-4 py-3 text-right font-medium">Stock</th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((product) => (
-                  <tr key={product.id} className="border-b last:border-0">
-                    <td className="px-4 py-3">
+                  <tr
+                    key={product.id}
+                    className="group border-b transition-colors last:border-0 hover:bg-muted/40"
+                  >
+                    <td className="px-4 py-2.5">
                       <Link
                         to={`/products/${product.id}`}
-                        className="font-medium hover:underline"
+                        className="flex items-center gap-3"
                       >
-                        {product.name}
+                        <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+                          {product.images[0] ? (
+                            <img
+                              src={product.images[0].url}
+                              alt=""
+                              loading="lazy"
+                              className="size-full object-cover"
+                            />
+                          ) : (
+                            <ImageOff
+                              className="size-4 text-muted-foreground/50"
+                              aria-hidden
+                            />
+                          )}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium group-hover:underline">
+                            {product.name}
+                          </span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {product.slug}
+                          </span>
+                        </span>
                       </Link>
-                      <span className="block text-xs text-muted-foreground">
-                        {product.slug}
-                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2.5">
                       <span
                         className={cn(
                           "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
@@ -142,19 +172,25 @@ export function ProductsRoute() {
                         {product.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 tabular-nums">
+                    <td className="hidden px-4 py-2.5 text-muted-foreground md:table-cell">
+                      {product.category?.name ?? "—"}
+                    </td>
+                    <td className="px-4 py-2.5 tabular-nums">
                       {priceLabel(product)}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {product.variants.length}
-                    </td>
-                    <td
-                      className={cn(
-                        "px-4 py-3 text-right tabular-nums",
-                        product.totalStock === 0 && "text-destructive",
-                      )}
-                    >
-                      {product.totalStock}
+                    <td className="px-4 py-2.5 text-right">
+                      <span
+                        className={cn(
+                          "font-medium tabular-nums",
+                          product.totalStock === 0 && "text-destructive",
+                        )}
+                      >
+                        {product.totalStock}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {product.variants.length} variant
+                        {product.variants.length === 1 ? "" : "s"}
+                      </span>
                     </td>
                   </tr>
                 ))}

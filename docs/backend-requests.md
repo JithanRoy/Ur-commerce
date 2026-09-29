@@ -103,21 +103,7 @@ fast. Low urgency — the sequential loop works.
 
 ---
 
-## 5. 🟡 Seed data is still 2 real products
-
-`GET /products` returns 3, one of which is a price-0 test product
-(`laptop-111`). Grid layouts, pagination (`limit` capped at 100), facet
-counts and search relevance cannot be exercised against 2 realistic products.
-The earlier ask stands: ~20 products across the existing categories/brands,
-with variants, compare-at prices and mixed stock levels.
-
-Also: `laptop-111` is ACTIVE with `price: 0` and `maxDiscountPct: 100`. If it
-is meant as seed data, give it a real price; shoppers can currently order it
-for ৳0.
-
----
-
-## 6. 🟡 Deleted products keep their SKUs reserved forever
+## 5. 🟡 Deleted products keep their SKUs reserved forever
 
 `DELETE /admin/products/:id` soft-deletes, and the dead product's SKUs stay
 unique-constrained. Recreating a product after deleting it fails with
@@ -129,10 +115,18 @@ their SKUs on delete (`FOR-M__deleted_<id>`), whichever fits the model. As it
 stands an admin who deletes a mistyped product cannot make it again with the
 same SKUs and gets no explanation.
 
+Related: the tombstones also come back from `GET /admin/products` as ARCHIVED
+rows with mangled slugs (`form-test-78482__archived_<id>`), polluting the
+product list, and a PATCH against one 400s on its own slug. Deleted products
+should be excluded from admin listings entirely. (The frontend currently
+filters slugs containing `__archived_` as a workaround.)
+
 ---
 
 ## Delivered since the last version of this doc — thank you
 
+- **Seed data** — 24 realistic products across categories with variants and
+  real prices, delivered 2026-09-29. The ৳0 test product is gone too.
 - **Object storage** — presigned uploads live end to end (verified 2026-09-28:
   ticket → PUT → attach → public URL).
 - **Scoped uploads** for brand/category/collection with server-side scope

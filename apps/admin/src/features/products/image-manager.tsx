@@ -17,6 +17,7 @@ import {
   putToStorage,
 } from "@urcommerce/api-client";
 import type { AdminVariant } from "@urcommerce/api-client";
+import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -134,9 +135,11 @@ export function ImageManager({
 
     setPending((current) => [...current, ...accepted.map((item) => item.entry)]);
 
+    let uploadedCount = 0;
     for (const { file, entry } of accepted) {
       try {
         await uploadOne(file, entry.id);
+        uploadedCount += 1;
       } catch (cause) {
         if (isStorageUnavailable(cause)) {
           setUnavailable(true);
@@ -157,6 +160,13 @@ export function ImageManager({
       }
     }
 
+    if (uploadedCount > 0) {
+      toast.success(
+        uploadedCount === 1
+          ? "Image uploaded."
+          : `${uploadedCount} images uploaded.`,
+      );
+    }
     await refresh();
   };
 
@@ -184,7 +194,10 @@ export function ImageManager({
   const remove = useMutation({
     mutationFn: (imageId: string) =>
       adminApi.products.images.remove(productId, imageId),
-    onSuccess: () => refresh(),
+    onSuccess: () => {
+      toast.success("Image removed.");
+      refresh();
+    },
     onError: (cause) =>
       setError(failureText(cause, "Could not remove that image.")),
   });

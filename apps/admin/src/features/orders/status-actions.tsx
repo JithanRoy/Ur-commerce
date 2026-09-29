@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   isApiError,
   nextStatuses,
@@ -22,10 +23,11 @@ export function StatusActions({ orderId, status }: Props) {
   const mutation = useMutation({
     mutationFn: (next: { status: OrderStatus; cancelReason?: string }) =>
       adminApi.orders.changeStatus(orderId, next),
-    onSuccess: () => {
+    onSuccess: (_result, next) => {
       setError(null);
       setPendingCancel(false);
       setCancelReason("");
+      toast.success(`Order marked ${next.status.toLowerCase().replace("_", " ")}.`);
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
     },
     onError: (mutationError) =>

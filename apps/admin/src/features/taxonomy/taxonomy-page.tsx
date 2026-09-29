@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { UploadScope } from "@urcommerce/api-client";
 import { ImageField } from "./image-field";
@@ -55,9 +56,10 @@ export function TaxonomyPage<T extends TaxonomyRow>({
 
   const createMutation = useMutation({
     mutationFn: create,
-    onSuccess: () => {
+    onSuccess: (_created, input) => {
       setName("");
       setFormError(null);
+      toast.success(`${input.name} created.`);
       invalidate();
     },
     onError: (mutationError) => {
@@ -76,7 +78,10 @@ export function TaxonomyPage<T extends TaxonomyRow>({
         ? image.clear(input.id)
         : image.setKey(input.id, input.objectKey);
     },
-    onSuccess: invalidate,
+    onSuccess: (_result, input) => {
+      toast.success(input.objectKey === null ? "Image removed." : "Image saved.");
+      invalidate();
+    },
     onError: (mutationError) => {
       setFormError(
         isApiError(mutationError)
@@ -88,7 +93,10 @@ export function TaxonomyPage<T extends TaxonomyRow>({
 
   const removeMutation = useMutation({
     mutationFn: remove,
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success("Deleted.");
+      invalidate();
+    },
     onError: (mutationError) => {
       setFormError(
         isApiError(mutationError) ? mutationError.message : "Could not delete.",

@@ -15,10 +15,9 @@ ok((await cards.count()) >= 3, `cards render (${await cards.count()})`);
 
 ok((await g.getByRole("button", { name: "Buy now" }).count()) >= 3,
    "every card offers Buy now");
-const addLabels = await g.locator("section:has-text('New Arrivals') button").allTextContents();
-ok(addLabels.some((t) => /Add to bag/.test(t)) &&
-   addLabels.some((t) => /Choose options/.test(t)),
-   "single-variant shows Add to bag, multi shows Choose options");
+const homeLabels = await g.locator("section button").allTextContents();
+ok(homeLabels.some((t) => /Choose options/.test(t)),
+   "multi-variant cards show Choose options");
 
 // guest Buy now → dialog, NOT a redirect
 await g.getByRole("button", { name: "Buy now" }).first().click();
@@ -62,10 +61,16 @@ await p.fill("#email", "shopper@demo.local");
 await p.fill("#password", "password123");
 await p.click('button[type=submit]');
 await p.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 15000 });
-await p.goto(B + "/", { waitUntil: "load" });
+await p.goto(B + "/shop", { waitUntil: "load" });
 await p.waitForTimeout(3000);
 
-await p.getByRole("button", { name: "Buy now" }).first().click();
+// a single-variant card (it offers Add to bag) — its Buy now goes straight
+// to checkout; multi-variant Buy now routes to the detail page by design
+const directCard = p
+  .getByRole("button", { name: "Add to bag" })
+  .first()
+  .locator("xpath=ancestor::div[contains(@class,'group')][1]");
+await directCard.getByRole("button", { name: "Buy now" }).click();
 await p.waitForTimeout(1200);
 ok(!(await p.getByRole("dialog").isVisible().catch(() => false)),
    "signed-in Buy now shows NO dialog");

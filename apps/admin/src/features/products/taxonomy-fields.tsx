@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { AdminBrand, AdminCategoryNode } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
@@ -73,6 +74,7 @@ function TaxonomyPicker({
     onSuccess: (created) => {
       onChange(created.id);
       setCreating(false);
+      toast.success(`${label} created and selected.`);
       setName("");
       setError(null);
     },

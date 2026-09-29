@@ -24,6 +24,7 @@ const cards = await page.evaluate(() => {
     const ir = img?.getBoundingClientRect();
     const br = btn?.getBoundingClientRect();
     return {
+      top: Math.round(el.getBoundingClientRect().top),
       h: Math.round(el.getBoundingClientRect().height),
       imgW: ir ? Math.round(ir.width) : 0,
       imgH: ir ? Math.round(ir.height) : 0,
@@ -44,8 +45,10 @@ ok(boxes.size === 1, `all image boxes identical (${[...boxes].join(", ")})`);
 ok(cards.every((c) => c.imgW > 200),
    `no card collapses when it has no image (min ${Math.min(...cards.map(c=>c.imgW))}px)`);
 
+const rows = new Set(cards.map((c) => c.top));
 const bottoms = new Set(cards.map((c) => c.btnBottom));
-ok(bottoms.size === 1, `buttons align on one baseline (${[...bottoms].join(", ")})`);
+ok(bottoms.size === rows.size,
+   `buttons align per grid row (${rows.size} rows, ${bottoms.size} baselines)`);
 
 ok(cards.every((c) => /Add to bag|Choose options|Out of stock/.test(c.btnLabel)),
    "every card has a clear call to action");

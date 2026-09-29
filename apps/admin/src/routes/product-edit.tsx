@@ -8,6 +8,7 @@ import type {
   CreateVariantInput,
   ProductStatus,
 } from "@urcommerce/api-client";
+import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import {
@@ -54,7 +55,6 @@ export function ProductEditRoute() {
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState("");
   const [rows, setRows] = useState<VariantEdit[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -80,7 +80,6 @@ export function ProductEditRoute() {
   };
 
   const failed = (fallback: string) => (mutationError: unknown) => {
-    setMessage(null);
     setError(isApiError(mutationError) ? mutationError.message : fallback);
   };
 
@@ -96,7 +95,7 @@ export function ProductEditRoute() {
       }),
     onSuccess: () => {
       setError(null);
-      setMessage("Details saved.");
+      toast.success("Details saved.");
       invalidate();
     },
     onError: failed("Could not save the product."),
@@ -117,7 +116,7 @@ export function ProductEditRoute() {
       ),
     onSuccess: () => {
       setError(null);
-      setMessage("Variants saved.");
+      toast.success("Variants saved.");
       invalidate();
     },
     onError: failed("Could not save the variants."),
@@ -128,7 +127,7 @@ export function ProductEditRoute() {
       adminApi.products.addVariant(productId as string, input),
     onSuccess: () => {
       setError(null);
-      setMessage("Variant added.");
+      toast.success("Variant added.");
       invalidate();
     },
     onError: failed("Could not add the variant."),
@@ -139,7 +138,7 @@ export function ProductEditRoute() {
       adminApi.products.removeVariant(productId as string, variantId),
     onSuccess: () => {
       setError(null);
-      setMessage("Variant removed.");
+      toast.success("Variant removed.");
       invalidate();
     },
     onError: failed("Could not remove the variant."),
@@ -179,12 +178,6 @@ export function ProductEditRoute() {
       <h1 className="mt-4 text-xl font-semibold tracking-tight">
         {product.name}
       </h1>
-
-      {message ? (
-        <p className="mt-4 rounded-md border border-success/30 bg-success/5 px-4 py-2 text-sm text-success">
-          {message}
-        </p>
-      ) : null}
       {error ? (
         <p
           role="alert"

@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Boxes, Image as ImageIcon, Layers, Loader2 } from "lucide-react";
 import { isApiError, takaToPaisa } from "@urcommerce/api-client";
 import type { CreateProductInput, ProductStatus } from "@urcommerce/api-client";
+import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
 import { ImageDropzone, type UploadedImage } from "@/components/ui/image-dropzone";
 import { OptionsEditor } from "@/features/products/options-editor";
@@ -96,7 +97,10 @@ export function ProductNewRoute() {
 
   const mutation = useMutation({
     mutationFn: (input: CreateProductInput) => adminApi.products.create(input),
-    onSuccess: () => navigate("/products"),
+    onSuccess: (created) => {
+      toast.success(`${created.name} created.`);
+      navigate("/products");
+    },
     onError: (error) => {
       if (isApiError(error)) {
         setFormError(error.message);

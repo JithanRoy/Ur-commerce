@@ -89,7 +89,10 @@ const ph = await Promise.all([
 ok(ph[0] === `${PREFIX}-M` && ph[1] === `${PREFIX}-L`,
    `variant auto-SKUs include the option value (${ph.join(", ")})`);
 
-for (const [i, price] of [["0", "1500"], ["1", "1600"]]) {
+// explicit SKUs: the backend keeps soft-deleted products' SKUs reserved
+// forever (backend-requests.md §6), so auto-SKUs collide across reruns
+for (const [i, price, sku] of [["0", "1500", `FT${RUN}-M`], ["1", "1600", `FT${RUN}-L`]]) {
+  await skuInputs.nth(Number(i)).fill(sku);
   await page.locator('input[aria-label^="Price"]').nth(Number(i)).fill(price);
   await page.locator('input[aria-label^="Stock"]').nth(Number(i)).fill("5");
 }
@@ -108,8 +111,8 @@ if (created) {
   const detail = await fetch(`${API}/admin/products/${created.id}`, { headers: auth })
     .then((r) => r.json()).then((j) => j.data);
   const skus = detail.variants.map((v) => v.sku).sort();
-  ok(skus.join(",") === `${PREFIX}-L,${PREFIX}-M`,
-     `auto-SKUs persisted (${skus.join(", ")})`);
+  ok(skus.join(",") === `FT${RUN}-L,FT${RUN}-M`,
+     `typed SKUs persisted (${skus.join(", ")})`);
   ok(detail.images.length === 2, `both images attached at create (${detail.images.length})`);
   ok(Boolean(detail.brandId), "new brand tagged on the product");
   ok(detail.variants.every((v) => v.price === 150000 || v.price === 160000),

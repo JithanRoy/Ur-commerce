@@ -5,6 +5,7 @@ import type {
   StoreSettings,
   UpdateStoreSettingsInput,
 } from "@urcommerce/api-client";
+import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState, LoadingState } from "@/components/ui/states";
@@ -98,7 +99,6 @@ function Field({
 export function BrandingRoute() {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { data, isPending, error: loadError } = useQuery({
@@ -116,12 +116,11 @@ export function BrandingRoute() {
       adminApi.settings.update(patch),
     onSuccess: (updated) => {
       setError(null);
-      setMessage("Branding saved. Your storefront is updated.");
+      toast.success("Branding saved. Your storefront is updated.");
       setDraft(toDraft(updated));
       queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
     },
     onError: (cause) => {
-      setMessage(null);
       setError(
         isApiError(cause) ? cause.message : "Could not save your branding.",
       );
@@ -136,7 +135,6 @@ export function BrandingRoute() {
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((current) => (current ? { ...current, [key]: value } : current));
-    setMessage(null);
   };
 
   const problem = localProblem(draft);
@@ -262,9 +260,6 @@ export function BrandingRoute() {
               {error}
             </p>
           ) : null}
-          {message ? (
-            <p className="text-sm text-success">{message}</p>
-          ) : null}
 
           <div className="flex gap-3">
             <button
@@ -279,7 +274,6 @@ export function BrandingRoute() {
               onClick={() => {
                 setDraft(toDraft(data));
                 setError(null);
-                setMessage(null);
               }}
               className="h-10 rounded-md border border-input px-5 text-sm font-medium"
             >

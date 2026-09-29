@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
+import { Toaster } from "sonner";
 import { X } from "lucide-react";
 import { Sidebar, SidebarContent } from "./sidebar";
 import { Topbar } from "./topbar";
@@ -52,6 +53,7 @@ export function AdminShell() {
         <main className="flex-1 overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
           <Outlet />
         </main>
+        <Toaster position="top-right" richColors closeButton />
       </div>
     </div>
   );
