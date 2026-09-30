@@ -15,6 +15,7 @@ import { useCartMutations } from "@/features/cart/use-cart";
 import {
   LazySignInDialog,
   preloadSignInDialog,
+  useIdleSignInWarmup,
 } from "@/features/auth/lazy-sign-in-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,8 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       },
     );
   };
+
+  useIdleSignInWarmup(!session);
 
   const warmSignIn = () => {
     if (!session) preloadSignInDialog();

@@ -23,6 +23,28 @@ export function preloadSignInDialog() {
   });
 }
 
+let idleWarmupScheduled = false;
+
+function whenPageSettles(run: () => void) {
+  const schedule = () => {
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(run, { timeout: 5000 });
+    } else {
+      setTimeout(run, 2000);
+    }
+  };
+  if (document.readyState === "complete") schedule();
+  else window.addEventListener("load", schedule, { once: true });
+}
+
+export function useIdleSignInWarmup(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled || idleWarmupScheduled || loadedDialog) return;
+    idleWarmupScheduled = true;
+    whenPageSettles(preloadSignInDialog);
+  }, [enabled]);
+}
+
 export function LazySignInDialog(props: SignInDialogProps) {
   const [, setLoaded] = useState(false);
   const Dialog = loadedDialog;

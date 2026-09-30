@@ -23,6 +23,7 @@ import { useAuth } from "@/stores/auth";
 import {
   LazySignInDialog,
   preloadSignInDialog,
+  useIdleSignInWarmup,
 } from "@/features/auth/lazy-sign-in-dialog";
 import { VariantPicker } from "./variant-picker";
 import { ProductGallery } from "./product-gallery";
@@ -120,6 +121,8 @@ export function ProductDetailClient({
   }
 
   const onAddToCart = () => addToCart(() => router.push("/cart"));
+
+  useIdleSignInWarmup(!session);
 
   const warmSignIn = () => {
     if (!session) preloadSignInDialog();
