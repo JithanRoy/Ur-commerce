@@ -2,46 +2,55 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-let pending = 0;
-const listeners = new Set<() => void>();
+export function createPendingSignal() {
+  let pending = 0;
+  const listeners = new Set<() => void>();
 
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
+  const emit = () => {
+    for (const listener of listeners) listener();
   };
-}
 
-export function beginActivity(): () => void {
-  pending += 1;
-  emit();
-  let ended = false;
-  return () => {
-    if (ended) return;
-    ended = true;
-    pending = Math.max(0, pending - 1);
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+
+  const begin = (): (() => void) => {
+    pending += 1;
     emit();
+    let ended = false;
+    return () => {
+      if (ended) return;
+      ended = true;
+      pending = Math.max(0, pending - 1);
+      emit();
+    };
   };
+
+  const usePending = (): boolean =>
+    useSyncExternalStore(
+      subscribe,
+      () => pending > 0,
+      () => false,
+    );
+
+  const useTrack = (active: boolean) => {
+    useEffect(() => {
+      if (!active) return;
+      return begin();
+    }, [active]);
+  };
+
+  return { begin, usePending, useTrack };
 }
 
-export function useActivityPending(): boolean {
-  return useSyncExternalStore(
-    subscribe,
-    () => pending > 0,
-    () => false,
-  );
-}
+const activity = createPendingSignal();
 
-export function useTrackActivity(active: boolean) {
-  useEffect(() => {
-    if (!active) return;
-    return beginActivity();
-  }, [active]);
-}
+export const beginActivity = activity.begin;
+export const useActivityPending = activity.usePending;
+export const useTrackActivity = activity.useTrack;
 
 export function useDelayedFlag(active: boolean, delayMs: number): boolean {
   const [shown, setShown] = useState(false);

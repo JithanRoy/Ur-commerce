@@ -23,9 +23,11 @@ await page.route("**/urc-media/**", async (route) => {
   await route.continue();
 });
 const attaches = [];
+const batches = [];
 page.on("response", (r) => {
-  if (/\/admin\/products\/[^/]+\/images$/.test(r.url()) && r.request().method() === "POST")
-    attaches.push(r.status());
+  if (r.request().method() !== "POST") return;
+  if (/\/admin\/products\/[^/]+\/images$/.test(r.url())) attaches.push(r.status());
+  if (/\/admin\/products\/[^/]+\/images\/batch$/.test(r.url())) batches.push(r.status());
 });
 
 await page.goto(B + "/login", { waitUntil: "domcontentloaded" });
@@ -61,8 +63,8 @@ ok(sawProgress, "shows a spinner while uploading");
 ok(sawPreview, "shows an instant local preview before the upload finishes");
 
 await page.waitForTimeout(9000);
-ok(attaches.length === 3 && attaches.every((s) => s === 201),
-   `all 3 attached (${JSON.stringify(attaches)})`);
+ok(batches.length === 1 && batches[0] === 201 && attaches.length === 0,
+   `all 3 attached in one batch call (batch ${JSON.stringify(batches)}, single ${JSON.stringify(attaches)})`);
 
 const after = await page.locator("ul li img").count();
 ok(after === before + 3, `gallery grew by 3 (${before} → ${after})`);

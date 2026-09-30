@@ -24,6 +24,14 @@ import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/input";
 import { Button, IconButton } from "@/components/ui/button";
 
+const MAX_IMAGES_PER_BATCH = 20;
+
+type StagedUpload = {
+  entryId: string;
+  objectKey: string;
+  alt: string;
+};
+
 type PendingUpload = {
   id: string;
   name: string;
@@ -59,6 +67,18 @@ function altFromFileName(name: string): string {
   return name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
 }
 
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let start = 0; start < items.length; start += size) {
+    chunks.push(items.slice(start, start + size));
+  }
+  return chunks;
+}
+
+function toAttachInput({ objectKey, alt }: StagedUpload) {
+  return { objectKey, alt };
+}
+
 function reorderIds(ids: string[], from: number, to: number): string[] {
   const next = [...ids];
   const [moved] = next.splice(from, 1);
@@ -91,22 +111,51 @@ export function ImageManager({
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: imagesQueryKey(productId) });
 
-  const uploadOne = async (file: File, entryId: string) => {
+  const stageOne = async (
+    file: File,
+    entryId: string,
+  ): Promise<StagedUpload> => {
     const ticket = await adminApi.uploads.productImageTicket({
       fileName: file.name,
       contentType: file.type,
       contentLength: file.size,
     });
     await putToStorage(ticket, file);
-    await adminApi.products.images.attach(productId, {
+    return {
+      entryId,
       objectKey: ticket.objectKey,
       alt: altFromFileName(file.name),
+    };
+  };
+
+  const attachStaged = async (staged: StagedUpload[]) => {
+    const [only] = staged;
+    if (staged.length === 1 && only) {
+      await adminApi.products.images.attach(productId, toAttachInput(only));
+      return;
+    }
+    await adminApi.products.images.attachMany(productId, {
+      images: staged.map(toAttachInput),
     });
+  };
+
+  const settleEntries = (entryIds: string[]) => {
     setPending((current) => {
-      const done = current.find((entry) => entry.id === entryId);
-      if (done) URL.revokeObjectURL(done.previewUrl);
-      return current.filter((entry) => entry.id !== entryId);
+      for (const entry of current) {
+        if (entryIds.includes(entry.id)) URL.revokeObjectURL(entry.previewUrl);
+      }
+      return current.filter((entry) => !entryIds.includes(entry.id));
     });
+  };
+
+  const failEntries = (entryIds: string[], message: string) => {
+    setPending((current) =>
+      current.map((item) =>
+        entryIds.includes(item.id)
+          ? { ...item, status: "failed", message }
+          : item,
+      ),
+    );
   };
 
   const acceptFiles = async (files: File[]) => {
@@ -138,27 +187,40 @@ export function ImageManager({
 
     setPending((current) => [...current, ...accepted.map((item) => item.entry)]);
 
+    const results = await Promise.allSettled(
+      accepted.map(({ file, entry }) => stageOne(file, entry.id)),
+    );
+
+    if (
+      results.some(
+        (result) =>
+          result.status === "rejected" && isStorageUnavailable(result.reason),
+      )
+    ) {
+      setUnavailable(true);
+      setPending([]);
+      return;
+    }
+
+    const staged: StagedUpload[] = [];
+    results.forEach((result, index) => {
+      const entryId = accepted[index]?.entry.id;
+      if (!entryId) return;
+      if (result.status === "fulfilled") staged.push(result.value);
+      else failEntries([entryId], failureText(result.reason, "Upload failed."));
+    });
+
     let uploadedCount = 0;
-    for (const { file, entry } of accepted) {
+    for (const batch of chunk(staged, MAX_IMAGES_PER_BATCH)) {
+      const entryIds = batch.map((item) => item.entryId);
       try {
-        await uploadOne(file, entry.id);
-        uploadedCount += 1;
+        await attachStaged(batch);
+        settleEntries(entryIds);
+        uploadedCount += batch.length;
       } catch (cause) {
-        if (isStorageUnavailable(cause)) {
-          setUnavailable(true);
-          setPending([]);
-          return;
-        }
-        setPending((current) =>
-          current.map((item) =>
-            item.id === entry.id
-              ? {
-                  ...item,
-                  status: "failed",
-                  message: failureText(cause, "Upload failed."),
-                }
-              : item,
-          ),
+        failEntries(
+          entryIds,
+          failureText(cause, "Could not attach this image."),
         );
       }
     }

@@ -5,11 +5,18 @@ import { ArrowLeft } from "lucide-react";
 import { isApiError, paisaToTakaInput } from "@urcommerce/api-client";
 import type {
   AdminProduct,
+  AdminVariant,
   CreateVariantInput,
   ProductStatus,
 } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
+import { useBackToList } from "@/lib/list-params";
+import {
+  findProductInLists,
+  invalidateProductLists,
+  productDetailQuery,
+} from "@/features/products/queries";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ErrorState, LoadingState } from "@/components/ui/states";
@@ -22,8 +29,8 @@ import { AddVariantForm } from "@/features/products/add-variant-form";
 import { ImageManager } from "@/features/products/image-manager";
 import { TaxonomyFields } from "@/features/products/taxonomy-fields";
 
-function toRow(product: AdminProduct): VariantEdit[] {
-  return product.variants.map((variant) => ({
+function toVariantRow(variant: AdminVariant): VariantEdit {
+  return {
     id: variant.id,
     sku: variant.sku,
     price: String(paisaToTakaInput(variant.price)),
@@ -36,7 +43,11 @@ function toRow(product: AdminProduct): VariantEdit[] {
         ? ""
         : String(paisaToTakaInput(variant.costPrice)),
     stock: String(variant.stock),
-  }));
+  };
+}
+
+function toRow(product: AdminProduct): VariantEdit[] {
+  return product.variants.map(toVariantRow);
 }
 
 function toPaisa(value: string): number | undefined {
@@ -47,8 +58,10 @@ function toPaisa(value: string): number | undefined {
 }
 
 export function ProductEditRoute() {
-  const { productId } = useParams<{ productId: string }>();
+  const { productId = "" } = useParams<{ productId: string }>();
   const queryClient = useQueryClient();
+  const backToList = useBackToList("/products");
+  const detailQuery = productDetailQuery(productId);
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -59,26 +72,46 @@ export function ProductEditRoute() {
   const [rows, setRows] = useState<VariantEdit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [seededFor, setSeededFor] = useState<string | null>(null);
 
-  const { data: product, isPending, error: loadError } = useQuery({
-    queryKey: ["admin", "products", productId],
-    queryFn: () => adminApi.products.get(productId as string),
+  const {
+    data: product,
+    isPending,
+    isPlaceholderData,
+    error: loadError,
+  } = useQuery({
+    ...detailQuery,
     enabled: Boolean(productId),
+    placeholderData: () => findProductInLists(queryClient, productId),
   });
 
-  useEffect(() => {
-    if (!product) return;
-    setName(product.name);
-    setSlug(product.slug);
-    setDescription(product.description ?? "");
-    setStatus(product.status);
-    setCategoryId(product.categoryId ?? "");
-    setBrandId(product.brandId ?? "");
-    setRows(toRow(product));
-  }, [product]);
+  const serverProduct = isPlaceholderData ? undefined : product;
 
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+  const seedDetails = (source: AdminProduct) => {
+    setName(source.name);
+    setSlug(source.slug);
+    setDescription(source.description ?? "");
+    setStatus(source.status);
+    setCategoryId(source.categoryId ?? "");
+    setBrandId(source.brandId ?? "");
+  };
+
+  useEffect(() => {
+    if (!serverProduct || seededFor === serverProduct.id) return;
+    seedDetails(serverProduct);
+    setRows(toRow(serverProduct));
+    setError(null);
+    setSeededFor(serverProduct.id);
+  }, [serverProduct, seededFor]);
+
+  const storeProduct = (updated: AdminProduct) => {
+    queryClient.setQueryData(detailQuery.queryKey, updated);
+    void invalidateProductLists(queryClient, productId);
+  };
+
+  const refetchAfterVariantChange = () => {
+    void queryClient.invalidateQueries({ queryKey: detailQuery.queryKey });
+    void invalidateProductLists(queryClient, productId);
   };
 
   const failed = (fallback: string) => (mutationError: unknown) => {
@@ -87,7 +120,7 @@ export function ProductEditRoute() {
 
   const saveDetails = useMutation({
     mutationFn: () =>
-      adminApi.products.update(productId as string, {
+      adminApi.products.update(productId, {
         name: name.trim(),
         slug: slug.trim(),
         description: description.trim(),
@@ -95,10 +128,11 @@ export function ProductEditRoute() {
         categoryId: categoryId || null,
         brandId: brandId || null,
       }),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       setError(null);
+      storeProduct(updated);
+      seedDetails(updated);
       toast.success("Details saved.");
-      invalidate();
     },
     onError: failed("Could not save the product."),
   });
@@ -106,7 +140,7 @@ export function ProductEditRoute() {
   const saveVariants = useMutation({
     mutationFn: () =>
       adminApi.products.updateVariants(
-        productId as string,
+        productId,
         rows.map((row) => ({
           id: row.id,
           sku: row.sku.trim(),
@@ -116,39 +150,42 @@ export function ProductEditRoute() {
           stock: Number(row.stock) || 0,
         })),
       ),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       setError(null);
+      storeProduct(updated);
+      setRows(toRow(updated));
       toast.success("Variants saved.");
-      invalidate();
     },
     onError: failed("Could not save the variants."),
   });
 
   const addVariant = useMutation({
     mutationFn: (input: CreateVariantInput) =>
-      adminApi.products.addVariant(productId as string, input),
-    onSuccess: () => {
+      adminApi.products.addVariant(productId, input),
+    onSuccess: (variant) => {
       setError(null);
+      setRows((current) => [...current, toVariantRow(variant)]);
+      refetchAfterVariantChange();
       toast.success("Variant added.");
-      invalidate();
     },
     onError: failed("Could not add the variant."),
   });
 
   const removeVariant = useMutation({
     mutationFn: (variantId: string) =>
-      adminApi.products.removeVariant(productId as string, variantId),
-    onSuccess: () => {
+      adminApi.products.removeVariant(productId, variantId),
+    onSuccess: (_result, variantId) => {
       setError(null);
+      setRows((current) => current.filter((row) => row.id !== variantId));
+      refetchAfterVariantChange();
       toast.success("Variant removed.");
-      invalidate();
     },
     onError: failed("Could not remove the variant."),
     onSettled: () => setRemovingId(null),
   });
 
   if (isPending) return <LoadingState variant="form" />;
-  if (loadError || !product) {
+  if (!product) {
     return (
       <ErrorState
         message={
@@ -157,6 +194,28 @@ export function ProductEditRoute() {
             : "Could not load this product."
         }
       />
+    );
+  }
+
+  const backLink = (
+    <Link
+      to={backToList}
+      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+    >
+      <ArrowLeft className="size-4" />
+      Products
+    </Link>
+  );
+
+  if (seededFor !== product.id) {
+    return (
+      <>
+        {backLink}
+        <h1 className="mt-4 mb-8 text-xl font-semibold tracking-tight">
+          {product.name}
+        </h1>
+        <LoadingState variant="form" label="Loading product" />
+      </>
     );
   }
 
@@ -169,13 +228,7 @@ export function ProductEditRoute() {
 
   return (
     <>
-      <Link
-        to="/products"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Products
-      </Link>
+      {backLink}
 
       <h1 className="mt-4 text-xl font-semibold tracking-tight">
         {product.name}

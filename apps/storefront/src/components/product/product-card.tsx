@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAppRouter } from "@/lib/navigation";
 import { Check, ShoppingBag, Zap } from "lucide-react";
@@ -11,11 +12,16 @@ import type {
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
 import { useCartMutations } from "@/features/cart/use-cart";
-import { SignInDialog } from "@/features/auth/sign-in-dialog";
+import {
+  LazySignInDialog,
+  preloadSignInDialog,
+} from "@/features/auth/lazy-sign-in-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const LOW_STOCK_THRESHOLD = 5;
+const PRODUCT_CARD_IMAGE_SIZES =
+  "(min-width: 1280px) 320px, (min-width: 640px) 33vw, 50vw";
 
 function highestCompareAtPrice(product: ProductCardData): Paisa | null {
   return product.variants.reduce<Paisa | null>((highest, variant) => {
@@ -66,6 +72,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
     );
   };
 
+  const warmSignIn = () => {
+    if (!session) preloadSignInDialog();
+  };
+
   const onBuyNow = () => {
     if (!session) {
       setSignInOpen(true);
@@ -83,19 +93,20 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   };
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-all hover:border-foreground/15 hover:shadow-lg hover:shadow-foreground/5">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-[box-shadow,border-color] hover:border-foreground/15 hover:shadow-lg hover:shadow-foreground/5">
       <Link
         href={productHref}
         className="flex flex-col focus-visible:outline-none"
       >
         <div className="relative aspect-4/5 overflow-hidden bg-muted">
           {image && !imageBroken ? (
-            <img
+            <Image
               src={image.url}
               alt={image.alt ?? product.name}
-              loading="lazy"
+              fill
+              sizes={PRODUCT_CARD_IMAGE_SIZES}
               onError={() => setImageBroken(true)}
-              className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="flex size-full items-center justify-center">
@@ -197,6 +208,8 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               size="md"
               shape="rounded"
               onClick={onBuyNow}
+              onPointerEnter={warmSignIn}
+              onFocus={warmSignIn}
               disabled={addItem.isPending}
               leading={<Zap aria-hidden />}
               className="min-w-0 flex-1 shrink gap-1.5 px-2 hover:bg-primary hover:shadow-md hover:shadow-primary/20"
@@ -213,7 +226,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         ) : null}
       </div>
 
-      <SignInDialog
+      <LazySignInDialog
         open={signInOpen}
         onClose={() => setSignInOpen(false)}
         onSignedIn={() => {

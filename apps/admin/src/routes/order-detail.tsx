@@ -1,11 +1,17 @@
 import { Link, useParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { ORDER_STATUS_LABELS, formatBDT } from "@urcommerce/api-client";
-import { adminApi } from "@/lib/api";
+import { formatBDT } from "@urcommerce/api-client";
+import type { OrderStatus } from "@urcommerce/api-client";
 import { ErrorState, LoadingState } from "@/components/ui/states";
+import { useBackToList } from "@/lib/list-params";
 import { StatusBadge } from "@/features/orders/status-badge";
 import { StatusActions } from "@/features/orders/status-actions";
+import { StatusTimeline } from "@/features/orders/status-timeline";
+import {
+  findOrderInLists,
+  orderDetailQuery,
+} from "@/features/orders/queries";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", {
@@ -15,16 +21,63 @@ function formatDate(iso: string): string {
   });
 }
 
+function OrderHeader({
+  backTo,
+  orderNumber,
+  status,
+  placedAt,
+}: {
+  backTo: ReturnType<typeof useBackToList>;
+  orderNumber: string;
+  status: OrderStatus;
+  placedAt: string;
+}) {
+  return (
+    <>
+      <Link
+        to={backTo}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Orders
+      </Link>
+
+      <header className="mt-4 mb-8 flex flex-wrap items-center gap-4">
+        <h1 className="text-xl font-semibold tracking-tight">{orderNumber}</h1>
+        <StatusBadge status={status} />
+        <span className="text-sm text-muted-foreground">
+          {formatDate(placedAt)}
+        </span>
+      </header>
+    </>
+  );
+}
+
 export function OrderDetailRoute() {
-  const { orderId } = useParams<{ orderId: string }>();
+  const { orderId = "" } = useParams<{ orderId: string }>();
+  const queryClient = useQueryClient();
+  const backTo = useBackToList("/orders");
 
   const { data: order, isPending, error } = useQuery({
-    queryKey: ["admin", "orders", orderId],
-    queryFn: () => adminApi.orders.get(orderId as string),
+    ...orderDetailQuery(orderId),
     enabled: Boolean(orderId),
   });
 
-  if (isPending) return <LoadingState variant="detail" />;
+  if (isPending) {
+    const listed = findOrderInLists(queryClient, orderId);
+    if (!listed) return <LoadingState variant="detail" />;
+    return (
+      <>
+        <OrderHeader
+          backTo={backTo}
+          orderNumber={listed.orderNumber}
+          status={listed.status}
+          placedAt={listed.placedAt}
+        />
+        <LoadingState variant="detail" label="Loading order" />
+      </>
+    );
+  }
   if (error || !order) {
     return (
       <ErrorState
@@ -35,42 +88,14 @@ export function OrderDetailRoute() {
     );
   }
 
-  const timeline = [
-    { label: "Placed", at: order.placedAt },
-    { label: "Confirmed", at: order.confirmedAt },
-    { label: "Shipped", at: order.shippedAt },
-    { label: "Delivered", at: order.deliveredAt },
-    { label: "Cancelled", at: order.cancelledAt },
-  ].filter((entry) => entry.at);
-
-  const timestampedStatuses = [
-    "PENDING_PAYMENT",
-    "CONFIRMED",
-    "SHIPPED",
-    "DELIVERED",
-    "CANCELLED",
-  ];
-  const currentWithoutTimestamp = !timestampedStatuses.includes(order.status);
-
   return (
     <>
-      <Link
-        to="/orders"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Orders
-      </Link>
-
-      <header className="mt-4 mb-8 flex flex-wrap items-center gap-4">
-        <h1 className="text-xl font-semibold tracking-tight">
-          {order.orderNumber}
-        </h1>
-        <StatusBadge status={order.status} />
-        <span className="text-sm text-muted-foreground">
-          {formatDate(order.placedAt)}
-        </span>
-      </header>
+      <OrderHeader
+        backTo={backTo}
+        orderNumber={order.orderNumber}
+        status={order.status}
+        placedAt={order.placedAt}
+      />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-8">
@@ -176,27 +201,10 @@ export function OrderDetailRoute() {
             </address>
           </section>
 
-          {timeline.length > 0 ? (
+          {order.statusHistory.length > 0 ? (
             <section className="rounded-lg border p-5">
               <h2 className="mb-3 font-medium">Timeline</h2>
-              <ol className="space-y-2 text-sm">
-                {timeline.map((entry) => (
-                  <li key={entry.label} className="flex justify-between gap-3">
-                    <span>{entry.label}</span>
-                    <span className="text-right text-muted-foreground">
-                      {formatDate(entry.at as string)}
-                    </span>
-                  </li>
-                ))}
-                {currentWithoutTimestamp ? (
-                  <li className="flex justify-between gap-3 font-medium">
-                    <span>{ORDER_STATUS_LABELS[order.status]}</span>
-                    <span className="text-right text-muted-foreground">
-                      current
-                    </span>
-                  </li>
-                ) : null}
-              </ol>
+              <StatusTimeline history={order.statusHistory} />
             </section>
           ) : null}
         </aside>

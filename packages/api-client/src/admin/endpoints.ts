@@ -32,6 +32,7 @@ import type {
   AdminProductImage,
   AdminVariant,
   AttachImageInput,
+  AttachImagesInput,
   BulkVariantUpdate,
   CreateProductInput,
   CreateVariantInput,
@@ -78,6 +79,11 @@ export function createAdminApi(client: ApiClient) {
         attach: (id: string, input: AttachImageInput) =>
           client.post<AdminProductImage>(
             `/admin/products/${id}/images`,
+            input,
+          ),
+        attachMany: (id: string, input: AttachImagesInput) =>
+          client.post<AdminProductImage[]>(
+            `/admin/products/${id}/images/batch`,
             input,
           ),
         reorder: (id: string, imageIds: string[]) =>

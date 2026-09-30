@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAppRouter } from "@/lib/navigation";
 import { isApiError } from "@urcommerce/api-client";
@@ -19,7 +20,10 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/stores/auth";
-import { SignInDialog } from "@/features/auth/sign-in-dialog";
+import {
+  LazySignInDialog,
+  preloadSignInDialog,
+} from "@/features/auth/lazy-sign-in-dialog";
 import { VariantPicker } from "./variant-picker";
 import { ProductGallery } from "./product-gallery";
 import { ProductTabs } from "./product-tabs";
@@ -56,6 +60,9 @@ export function ProductDetailClient({
   const [signInOpen, setSignInOpen] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [brokenStickyImage, setBrokenStickyImage] = useState<string | null>(
+    null,
+  );
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
@@ -113,6 +120,14 @@ export function ProductDetailClient({
   }
 
   const onAddToCart = () => addToCart(() => router.push("/cart"));
+
+  const warmSignIn = () => {
+    if (!session) preloadSignInDialog();
+  };
+
+  useEffect(() => {
+    if (isComplete && !session) preloadSignInDialog();
+  }, [isComplete, session]);
 
   const onBuyNow = () => {
     if (!variant) return;
@@ -303,6 +318,8 @@ export function ProductDetailClient({
               shape="rounded"
               fullWidth
               onClick={onBuyNow}
+              onPointerEnter={warmSignIn}
+              onFocus={warmSignIn}
               disabled={!isComplete || isSoldOut || addItem.isPending}
               leading={<Zap aria-hidden />}
               className="text-sm font-semibold uppercase tracking-wide hover:bg-primary hover:shadow-lg hover:shadow-primary/20 disabled:opacity-40 disabled:shadow-none"
@@ -450,10 +467,14 @@ export function ProductDetailClient({
         )}
       >
         <div className="container-page flex items-center gap-3 py-3">
-          {images[0] ? (
-            <img
+          {images[0] && images[0].url !== brokenStickyImage ? (
+            <Image
               src={images[0].url}
               alt=""
+              width={44}
+              height={44}
+              sizes="44px"
+              onError={() => setBrokenStickyImage(images[0]?.url ?? null)}
               className="hidden size-11 rounded-md object-cover sm:block"
             />
           ) : null}
@@ -474,7 +495,7 @@ export function ProductDetailClient({
         </div>
       </div>
 
-      <SignInDialog
+      <LazySignInDialog
         open={signInOpen}
         onClose={() => setSignInOpen(false)}
         onSignedIn={() => {

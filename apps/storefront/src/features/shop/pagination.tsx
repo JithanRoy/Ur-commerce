@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ProductQuery } from "@urcommerce/api-client";
 import { buildShopHref } from "./search-params";
 import { Button } from "@/components/ui/button";
+import { LinkPendingIndicator } from "./catalogue-navigation";
 
 type Props = {
   query: ProductQuery;
@@ -28,6 +29,7 @@ export function Pagination({
           asChild
           variant="outline"
           size="md"
+          leading={<LinkPendingIndicator />}
           className="border-border font-normal shadow-none"
         >
           <Link
@@ -50,6 +52,7 @@ export function Pagination({
           asChild
           variant="outline"
           size="md"
+          trailing={<LinkPendingIndicator />}
           className="border-border font-normal shadow-none"
         >
           <Link

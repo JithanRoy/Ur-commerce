@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ImageOff, Plus, Search } from "lucide-react";
@@ -10,6 +9,18 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 import { Input, Select } from "@/components/ui/input";
+import {
+  useDebouncedSearchInput,
+  useListLinkState,
+  useListParams,
+} from "@/lib/list-params";
+import { usePrefetchProductDetail } from "@/features/products/queries";
+
+const PRODUCT_STATUSES: readonly ProductStatus[] = [
+  "ACTIVE",
+  "DRAFT",
+  "ARCHIVED",
+];
 
 const statusStyles: Record<ProductStatus, string> = {
   ACTIVE: "bg-success/10 text-success",
@@ -23,9 +34,11 @@ function priceLabel(product: AdminProduct): string {
 }
 
 export function ProductsRoute() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<ProductStatus | "">("");
-  const [page, setPage] = useState(1);
+  const { page, search, status, setPage, setStatus, commitSearch } =
+    useListParams(PRODUCT_STATUSES);
+  const searchInput = useDebouncedSearchInput(search, commitSearch);
+  const linkState = useListLinkState();
+  const prefetchProduct = usePrefetchProductDetail();
 
   const { data, isPending, isPlaceholderData, error } = useQuery({
     queryKey: ["admin", "products", { page, search, status }],
@@ -33,7 +46,7 @@ export function ProductsRoute() {
       adminApi.products.list({
         page,
         limit: 20,
-        ...(search.trim() ? { search: search.trim() } : {}),
+        ...(search ? { search } : {}),
         ...(status ? { status } : {}),
       }),
     placeholderData: keepPreviousData,
@@ -65,27 +78,20 @@ export function ProductsRoute() {
 
       <div className="mb-5 flex flex-wrap gap-3">
         <Input
-          value={search}
-          onChange={(event) => {
-            setPage(1);
-            setSearch(event.target.value);
-          }}
+          value={searchInput.input}
+          onChange={(event) => searchInput.setInput(event.target.value)}
           placeholder="Search products"
           aria-label="Search products"
           leading={<Search aria-hidden />}
-          onClear={() => {
-            setPage(1);
-            setSearch("");
-          }}
+          onClear={searchInput.clear}
           containerClassName="min-w-56 flex-1"
           className="h-9"
         />
         <Select
           value={status}
-          onChange={(event) => {
-            setPage(1);
-            setStatus(event.target.value as ProductStatus | "");
-          }}
+          onChange={(event) =>
+            setStatus(event.target.value as ProductStatus | "")
+          }
           aria-label="Filter by status"
           containerClassName="w-auto"
           className="h-9 w-auto"
@@ -150,6 +156,9 @@ export function ProductsRoute() {
                     <td className="px-4 py-2.5">
                       <Link
                         to={`/products/${product.id}`}
+                        state={linkState}
+                        onMouseEnter={() => prefetchProduct(product.id)}
+                        onFocus={() => prefetchProduct(product.id)}
                         className="flex items-center gap-3"
                       >
                         <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
@@ -221,7 +230,7 @@ export function ProductsRoute() {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  onClick={() => setPage(Math.max(1, data.page - 1))}
                   disabled={data.page <= 1}
                   className="h-9 px-3"
                 >
@@ -229,7 +238,7 @@ export function ProductsRoute() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setPage((current) => current + 1)}
+                  onClick={() => setPage(data.page + 1)}
                   disabled={data.page >= data.totalPages}
                   className="h-9 px-3"
                 >

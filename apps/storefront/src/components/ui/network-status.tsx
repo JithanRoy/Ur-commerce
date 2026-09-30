@@ -52,7 +52,7 @@ export function NetworkStatus() {
         ) : (
           <>
             <WifiOff className="size-4" aria-hidden />
-            You're offline. Browsing and checkout need a connection.
+            You&apos;re offline. Browsing and checkout need a connection.
           </>
         )}
       </p>

@@ -12,7 +12,52 @@ validation. Withdrawn.
 
 ---
 
-## 1. 🟠 Product card payload has no option names — blocks on-card quick-add
+## 1. 🔴 Server-rendered storefront pages cannot name their tenant in production
+
+Launch blocker, found 2026-09-30 while profiling. The storefront renders
+product, shop and home pages on its Node server, which then calls the API.
+That server-to-server request carries the **API's** `Host`, not the shopper's.
+`tenant.middleware.ts` honours `X-Tenant-Host` only outside production, and
+the fallback tenant must be unset in production. So in production every
+server-rendered page either resolves no tenant, or, worse, a build-time
+prerender caches one tenant's page for all hostnames.
+
+### Request
+
+Accept the original shopper host from the storefront server in production,
+but only from a trusted caller. Pick one:
+
+- `X-Forwarded-Host`, honoured only behind a trusted proxy (`app.set("trust proxy", …)`), or
+- `X-Tenant-Host` plus a shared secret header (`X-Internal-Key`) known only
+  to the storefront server.
+
+The frontend will forward `headers().get("host")` on every server fetch and
+cache per host.
+
+---
+
+## 2. 🟡 CORS preflight is re-sent every 5 seconds
+
+`enableCors` sets no `maxAge`, so Chrome caches the preflight for 5 s. Every
+cart call (it sends the custom `X-Cart-Session` header) pays an extra
+`OPTIONS` round trip, about 570 ms on 3G. One line in `main.ts`:
+
+```ts
+app.enableCors({ ..., maxAge: 7200 });
+```
+
+---
+
+## 3. 🟡 Uploaded images are served without `Cache-Control`
+
+MinIO objects come back with no `Cache-Control`, so repeat visits revalidate
+every product image. The keys are unique UUIDs and never overwritten, so set
+`Cache-Control: public, max-age=31536000, immutable` on upload (a
+`Cache-Control` field in the presigned PUT, or a bucket policy).
+
+---
+
+## 4. 🟠 Product card payload has no option names — blocks on-card quick-add
 
 Business gap. The storefront's product cards now carry "Add to bag / Buy now"
 buttons. For a **single-variant** product this works end to end. For a
@@ -40,34 +85,16 @@ Names and values only — the card does not need the full variant join.
 
 ---
 
-## 2. 🟡 Bulk image attach
+## 5. 🟡 Order responses have no schema in Swagger
 
-`POST /admin/products/:id/images` takes exactly one `objectKey`. The admin
-gallery supports multi-select and drag-drop upload, so attaching ten images is
-ten sequential round-trips. A `{ "images": [...] }` batch variant (or
-accepting an array on the existing route) would make batch upload atomic and
-fast. Low urgency — the sequential loop works.
-
----
-
-## 3. 🟡 No timestamp when an order enters PROCESSING (or REFUNDED)
-
-The order model records `placedAt / confirmedAt / shippedAt / deliveredAt /
-cancelledAt` — but nothing for PROCESSING or REFUNDED. Marking an order
-"processing" updates `status` yet leaves no trace of *when*, so the admin
-timeline cannot show the step (verified on ORD-202609-00019 today: status
-PROCESSING, no matching timestamp anywhere in the payload).
-
-The admin now shows the current status on the timeline labelled "current" as
-a stopgap. Proper fix, pick one:
-
-- add `processingAt` (and `refundedAt`), or
-- better, a `statusHistory[] { status, at, byUserId }` — which would also
-  give the store owner an audit trail of who changed what.
+`statusHistory[]` and `adminNote` shipped (backend commit 95ca7dd) but the
+admin order endpoints publish no response schema, so `docs-json` cannot
+confirm the shape. The frontend typed it from `docs/api/api-contract.md`.
+Please add the response DTOs so the contract is checkable.
 
 ---
 
-## 4. 🟡 Deleted products keep their SKUs reserved forever
+## 6. 🟡 Deleted products keep their SKUs reserved forever
 
 `DELETE /admin/products/:id` soft-deletes, and the dead product's SKUs stay
 unique-constrained. Recreating a product after deleting it fails with
@@ -88,6 +115,13 @@ filters slugs containing `__archived_` as a workaround.)
 ---
 
 ## Delivered since the last version of this doc — thank you
+
+- **Order status history** — `statusHistory[]` (status, time, who, note)
+  replaces the missing PROCESSING/REFUNDED timestamps; the admin order
+  timeline now renders it. Not yet verified live (admin login currently
+  rejected).
+- **Batch image attach** — `POST /admin/products/{id}/images/batch`
+  (in the spec 2026-09-30); the admin gallery is switching to it.
 
 - **Store branding uploads** — `store` upload scope plus `logoObjectKey` /
   `faviconObjectKey` on `PATCH /admin/settings` (verified 2026-09-30: ticket →

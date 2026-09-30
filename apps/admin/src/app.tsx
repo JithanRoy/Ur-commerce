@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { isApiError } from "@urcommerce/api-client";
 import { ActivityBar } from "@/components/layout/activity-bar";
+import { LoginFallback } from "@/components/layout/login-fallback";
 import { AdminShell } from "@/components/layout/admin-shell";
 import { NetworkStatus } from "@/components/ui/network-status";
 import {
@@ -10,6 +12,7 @@ import {
   CategoriesRoute,
   CollectionProductsRoute,
   CollectionsRoute,
+  LoginRoute,
   NotFoundRoute,
   OrderDetailRoute,
   OrdersRoute,
@@ -18,7 +21,6 @@ import {
   ProductsRoute,
   TeamRoute,
 } from "@/routes/lazy";
-import { LoginRoute } from "@/routes/login";
 import { RedirectIfAuthenticated } from "@/routes/redirect-if-authenticated";
 import { RequireStaff } from "@/routes/require-staff";
 
@@ -42,7 +44,14 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<RedirectIfAuthenticated />}>
-            <Route path="/login" element={<LoginRoute />} />
+            <Route
+              path="/login"
+              element={
+                <Suspense fallback={<LoginFallback />}>
+                  <LoginRoute />
+                </Suspense>
+              }
+            />
           </Route>
 
           <Route element={<RequireStaff />}>

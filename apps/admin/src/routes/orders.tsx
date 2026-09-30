@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { formatBDT, ORDER_STATUS_LABELS, ORDER_STATUSES } from "@urcommerce/api-client";
@@ -11,6 +10,12 @@ import { StatusBadge } from "@/features/orders/status-badge";
 import { OrderStats } from "@/features/orders/order-stats";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  useDebouncedSearchInput,
+  useListLinkState,
+  useListParams,
+} from "@/lib/list-params";
+import { usePrefetchOrderDetail } from "@/features/orders/queries";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", {
@@ -49,9 +54,11 @@ function StatusFilterChip({
 }
 
 export function OrdersRoute() {
-  const [status, setStatus] = useState<OrderStatus | "">("");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const { page, search, status, setPage, setStatus, commitSearch } =
+    useListParams<OrderStatus>(ORDER_STATUSES);
+  const searchInput = useDebouncedSearchInput(search, commitSearch);
+  const linkState = useListLinkState();
+  const prefetchOrder = usePrefetchOrderDetail();
 
   const { data: counts } = useQuery({
     queryKey: ["admin", "orders", "counts"],
@@ -65,7 +72,7 @@ export function OrdersRoute() {
         page,
         limit: 20,
         ...(status ? { status } : {}),
-        ...(search.trim() ? { search: search.trim() } : {}),
+        ...(search ? { search } : {}),
       }),
     placeholderData: keepPreviousData,
   });
@@ -85,10 +92,7 @@ export function OrdersRoute() {
       <div className="mb-5 flex flex-wrap gap-2">
         <StatusFilterChip
           active={status === ""}
-          onSelect={() => {
-            setPage(1);
-            setStatus("");
-          }}
+          onSelect={() => setStatus("")}
         >
           All
         </StatusFilterChip>
@@ -97,10 +101,7 @@ export function OrdersRoute() {
             <StatusFilterChip
               key={entry}
               active={status === entry}
-              onSelect={() => {
-                setPage(1);
-                setStatus(entry);
-              }}
+              onSelect={() => setStatus(entry)}
             >
               {ORDER_STATUS_LABELS[entry]}
               <span className="ml-1.5 tabular-nums opacity-70">
@@ -112,11 +113,8 @@ export function OrdersRoute() {
       </div>
 
       <Input
-        value={search}
-        onChange={(event) => {
-          setPage(1);
-          setSearch(event.target.value);
-        }}
+        value={searchInput.input}
+        onChange={(event) => searchInput.setInput(event.target.value)}
         placeholder="Search by order number, name or phone"
         aria-label="Search orders"
         className="mb-5 h-9 max-w-sm"
@@ -171,6 +169,9 @@ export function OrdersRoute() {
                     <td className="px-4 py-3">
                       <Link
                         to={`/orders/${order.id}`}
+                        state={linkState}
+                        onMouseEnter={() => prefetchOrder(order.id)}
+                        onFocus={() => prefetchOrder(order.id)}
                         className="font-medium hover:underline"
                       >
                         {order.orderNumber}
@@ -210,7 +211,7 @@ export function OrdersRoute() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  onClick={() => setPage(Math.max(1, data.page - 1))}
                   disabled={data.page <= 1}
                   className="h-9 font-normal"
                 >
@@ -219,7 +220,7 @@ export function OrdersRoute() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage((current) => current + 1)}
+                  onClick={() => setPage(data.page + 1)}
                   disabled={data.page >= data.totalPages}
                   className="h-9 font-normal"
                 >

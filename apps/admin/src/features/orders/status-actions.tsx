@@ -8,6 +8,10 @@ import {
 } from "@urcommerce/api-client";
 import type { OrderStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
+import {
+  invalidateOrderLists,
+  orderDetailQuery,
+} from "@/features/orders/queries";
 import { TextField } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 
@@ -25,12 +29,15 @@ export function StatusActions({ orderId, status }: Props) {
   const mutation = useMutation({
     mutationFn: (next: { status: OrderStatus; cancelReason?: string }) =>
       adminApi.orders.changeStatus(orderId, next),
-    onSuccess: (_result, next) => {
+    onSuccess: (updated) => {
+      queryClient.setQueryData(orderDetailQuery(orderId).queryKey, updated);
+      void invalidateOrderLists(queryClient, orderId);
       setError(null);
       setPendingCancel(false);
       setCancelReason("");
-      toast.success(`Order marked ${next.status.toLowerCase().replace("_", " ")}.`);
-      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+      toast.success(
+        `Order marked ${ORDER_STATUS_LABELS[updated.status].toLowerCase()}.`,
+      );
     },
     onError: (mutationError) =>
       setError(

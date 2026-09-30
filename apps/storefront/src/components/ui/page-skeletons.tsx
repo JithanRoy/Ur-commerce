@@ -45,11 +45,14 @@ export function ProductGridSkeleton({
         </div>
       ) : null}
       <div className="min-w-0">
-        <div className="mb-6 flex gap-2">
+        <div className="mb-6 flex gap-2 overflow-hidden">
+          {withFilters ? (
+            <Skeleton className="h-11 w-28 shrink-0 rounded-full lg:hidden" />
+          ) : null}
           {[64, 80, 72, 88].map((width) => (
             <Skeleton
               key={width}
-              className="h-8 rounded-full"
+              className="h-11 shrink-0 rounded-full lg:h-8"
               style={{ width }}
             />
           ))}

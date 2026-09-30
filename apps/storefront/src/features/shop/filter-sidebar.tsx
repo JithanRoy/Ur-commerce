@@ -6,6 +6,19 @@ import type {
 } from "@urcommerce/api-client";
 import { buildShopHref } from "./search-params";
 import { cn } from "@/lib/utils";
+import { LinkPendingIndicator } from "./catalogue-navigation";
+
+const filterRow =
+  "flex min-h-11 items-center justify-between gap-2 text-sm transition-colors has-[[data-link-pending]]:text-foreground lg:min-h-0";
+
+function FilterLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-1.5">
+      <span className="truncate">{children}</span>
+      <LinkPendingIndicator />
+    </span>
+  );
+}
 
 type Props = {
   query: ProductQuery;
@@ -61,15 +74,16 @@ export function FilterSidebar({
       {hasFilters ? (
         <Link
           href={basePath}
-          className="inline-block text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground lg:min-h-0"
         >
           Clear filters
+          <LinkPendingIndicator />
         </Link>
       ) : null}
 
       {showCategories && namedCategories.length > 0 ? (
         <FilterGroup heading="Category">
-          <ul className="space-y-1.5">
+          <ul className="lg:space-y-1.5">
             {namedCategories.map(({ facet, category }) => {
               const isActive = query.category === category?.slug;
               return (
@@ -84,13 +98,13 @@ export function FilterSidebar({
                       basePath,
                     )}
                     className={cn(
-                      "flex items-center justify-between text-sm transition-colors",
+                      filterRow,
                       isActive
                         ? "font-medium text-foreground"
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {category?.name}
+                    <FilterLabel>{category?.name}</FilterLabel>
                     <span className="text-xs tabular-nums">{facet.count}</span>
                   </Link>
                 </li>
@@ -102,7 +116,7 @@ export function FilterSidebar({
 
       {showBrands && facets.brands.length > 0 ? (
         <FilterGroup heading="Brand">
-          <ul className="space-y-1.5">
+          <ul className="lg:space-y-1.5">
             {facets.brands.map((brand) => {
               const selected = query.brands ?? [];
               const isActive = selected.includes(brand.slug);
@@ -118,13 +132,13 @@ export function FilterSidebar({
                       basePath,
                     )}
                     className={cn(
-                      "flex items-center justify-between text-sm transition-colors",
+                      filterRow,
                       isActive
                         ? "font-medium text-foreground"
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {brand.name}
+                    <FilterLabel>{brand.name}</FilterLabel>
                     <span className="text-xs tabular-nums">{brand.count}</span>
                   </Link>
                 </li>
@@ -142,13 +156,14 @@ export function FilterSidebar({
             basePath,
           )}
           className={cn(
-            "text-sm transition-colors",
+            filterRow,
+            "lg:justify-start",
             query.inStock
               ? "font-medium text-foreground"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          In stock only
+          <FilterLabel>In stock only</FilterLabel>
         </Link>
       </FilterGroup>
     </aside>

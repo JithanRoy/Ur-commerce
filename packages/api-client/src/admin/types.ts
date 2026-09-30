@@ -81,6 +81,10 @@ export type AttachImageInput = {
   variantId?: string | null;
 };
 
+export type AttachImagesInput = {
+  images: AttachImageInput[];
+};
+
 export type UpdateImageInput = {
   alt?: string | null;
   variantId?: string | null;

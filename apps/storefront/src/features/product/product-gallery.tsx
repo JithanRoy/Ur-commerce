@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type GalleryImage = { url: string; alt: string | null };
@@ -23,30 +24,6 @@ export function ProductGallery({
     setActive(0);
   }, [identity]);
 
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all(
-      images.map(
-        (image) =>
-          new Promise<string | null>((resolve) => {
-            const probe = new Image();
-            probe.onload = () => resolve(null);
-            probe.onerror = () => resolve(image.url);
-            probe.src = image.url;
-          }),
-      ),
-    ).then((results) => {
-      if (cancelled) return;
-      const failures = results.filter((url): url is string => url !== null);
-      if (failures.length > 0) {
-        setBroken((current) => new Set([...current, ...failures]));
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [identity]);
-
   const markBroken = (url: string) =>
     setBroken((current) => new Set(current).add(url));
 
@@ -65,18 +42,19 @@ export function ProductGallery({
               aria-label={`View image ${index + 1} of ${usable.length}`}
               aria-current={index === active}
               className={cn(
-                "aspect-square w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted transition-colors sm:w-full",
+                "relative aspect-square w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted transition-colors sm:w-full",
                 index === active
                   ? "border-foreground"
                   : "border-transparent hover:border-foreground/25",
               )}
             >
-              <img
+              <Image
                 src={image.url}
                 alt=""
-                loading="lazy"
+                fill
+                sizes="80px"
                 onError={() => markBroken(image.url)}
-                className="size-full object-cover"
+                className="object-cover"
               />
             </button>
           ))}
@@ -86,11 +64,14 @@ export function ProductGallery({
       <div className="relative min-w-0 flex-1">
         <div className="relative aspect-4/5 overflow-hidden rounded-xl bg-muted">
           {current ? (
-            <img
+            <Image
               src={current.url}
               alt={current.alt ?? productName}
+              fill
+              priority
+              sizes="(min-width: 1024px) 480px, (min-width: 640px) calc(100vw - 140px), 100vw"
               onError={() => markBroken(current.url)}
-              className="size-full object-cover"
+              className="object-cover"
             />
           ) : (
             <div className="flex size-full items-center justify-center">

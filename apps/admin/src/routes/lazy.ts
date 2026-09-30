@@ -1,4 +1,6 @@
-import { lazyRoute } from "@/lib/lazy-route";
+import { lazyRoute, type Preloadable } from "@/lib/lazy-route";
+
+export const LoginRoute = lazyRoute(() => import("./login"), "LoginRoute");
 
 export const ProductsRoute = lazyRoute(
   () => import("./products"),
@@ -57,4 +59,18 @@ const allRoutes = [
 
 export function preloadAllRoutes() {
   for (const route of allRoutes) void route.preload();
+}
+
+const routesByNavPath: Record<string, Preloadable> = {
+  "/products": ProductsRoute,
+  "/orders": OrdersRoute,
+  "/categories": CategoriesRoute,
+  "/brands": BrandsRoute,
+  "/collections": CollectionsRoute,
+  "/team": TeamRoute,
+  "/branding": BrandingRoute,
+};
+
+export function preloadRouteFor(path: string) {
+  void routesByNavPath[path]?.preload();
 }

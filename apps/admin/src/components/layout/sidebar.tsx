@@ -13,6 +13,12 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/stores/auth";
 import { cn } from "@/lib/utils";
+import { preloadRouteFor } from "@/routes/lazy";
+
+function preloadOnIntent(path: string) {
+  const preload = () => preloadRouteFor(path);
+  return { onMouseEnter: preload, onFocus: preload };
+}
 
 type NavItem = { label: string; to: string; icon: typeof Package };
 
@@ -46,6 +52,7 @@ function NavGroup({ title, items }: { title: string; items: NavItem[] }) {
           <NavLink
             key={item.to}
             to={item.to}
+            {...preloadOnIntent(item.to)}
             className={({ isActive }) =>
               cn(
                 "group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
@@ -117,6 +124,7 @@ function NavModule({
             <NavLink
               key={item.label}
               to={item.to}
+              {...preloadOnIntent(item.to)}
               end={item.to === "/products"}
               className={({ isActive }) =>
                 cn(

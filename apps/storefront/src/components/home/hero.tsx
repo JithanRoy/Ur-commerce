@@ -54,11 +54,11 @@ export function Hero({
               shape="pill"
               trailing={
                 <ArrowRight
-                  className="transition-transform group-hover:translate-x-0.5"
+                  className="transition-transform group-hover:translate-x-1"
                   aria-hidden
                 />
               }
-              className="group px-7 text-sm transition-all hover:gap-3 hover:bg-primary hover:shadow-lg hover:shadow-primary/20"
+              className="group px-7 text-sm hover:bg-primary hover:shadow-lg hover:shadow-primary/20"
             >
               <Link href="/shop">Shop the collection</Link>
             </Button>

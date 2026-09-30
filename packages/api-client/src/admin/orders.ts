@@ -30,6 +30,16 @@ export type AdminOrderItem = {
   variantId: string | null;
 };
 
+export type AdminOrderStatusChange = {
+  id: string;
+  status: OrderStatus;
+  note: string | null;
+  byUserId: string | null;
+  byName: string | null;
+  byEmail: string | null;
+  createdAt: string;
+};
+
 export type AdminOrder = {
   id: string;
   orderNumber: string;
@@ -51,6 +61,8 @@ export type AdminOrder = {
   deliveredAt: string | null;
   cancelledAt: string | null;
   cancelReason: string | null;
+  adminNote: string | null;
+  statusHistory: AdminOrderStatusChange[];
   items: AdminOrderItem[];
   shippingAddress: ShippingAddressSnapshot;
 };

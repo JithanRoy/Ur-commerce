@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
-import { Slot } from "radix-ui";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(
@@ -100,7 +100,7 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot.Root : "button";
+  const Comp = asChild ? Slot : "button";
   const isDisabled = Boolean(disabled) || loading;
   const label = loading
     ? loadingLabel(size, asChild, children, loadingText)
@@ -122,7 +122,7 @@ export function Button({
       )}
     >
       {loading ? <Loader2 className="animate-spin" aria-hidden /> : leading}
-      <Slot.Slottable>{label}</Slot.Slottable>
+      <Slottable>{label}</Slottable>
       {loading ? null : trailing}
     </Comp>
   );

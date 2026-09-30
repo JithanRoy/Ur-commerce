@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Check, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { formatBDT } from "@urcommerce/api-client";
 import type { CartLine, Paisa } from "@urcommerce/api-client";
-import { useCart, useCartMutations } from "./use-cart";
+import { useCart, useCartLineMutations } from "./use-cart";
 import { Button, IconButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CartSkeleton } from "@/components/ui/page-skeletons";
@@ -55,10 +56,10 @@ function FreeShippingMeter({
       >
         <div
           className={cn(
-            "h-full rounded-full transition-all duration-500",
+            "h-full w-full origin-left transition-transform duration-500",
             qualifies ? "bg-success" : "bg-primary",
           )}
-          style={{ width: `${progress}%` }}
+          style={{ transform: `scaleX(${progress / 100})` }}
         />
       </div>
     </div>
@@ -66,20 +67,23 @@ function FreeShippingMeter({
 }
 
 function LineRow({ line }: { line: CartLine }) {
-  const { updateItem, removeItem } = useCartMutations();
+  const { updateItem, removeItem, isRemoving, lastAttemptFailed } =
+    useCartLineMutations(line.id);
   const maxQuantity = Math.min(line.variant.stock, 100);
 
   return (
     <li className="flex gap-4 border-b py-5 last:border-0">
       <Link
         href={`/product/${line.product.slug}`}
-        className="size-24 shrink-0 overflow-hidden rounded-lg bg-muted"
+        className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-muted"
       >
         {line.product.image ? (
-          <img
+          <Image
             src={line.product.image.url}
             alt={line.product.image.alt ?? line.product.name}
-            className="size-full object-cover"
+            fill
+            sizes="96px"
+            className="object-cover"
           />
         ) : null}
       </Link>
@@ -95,6 +99,12 @@ function LineRow({ line }: { line: CartLine }) {
           {line.variant.options.map((option) => option.value).join(" · ")}
         </p>
 
+        {lastAttemptFailed ? (
+          <p role="alert" className="mt-1.5 text-sm text-destructive">
+            Could not update this item. Please try again.
+          </p>
+        ) : null}
+
         {line.exceedsStock ? (
           <p role="alert" className="mt-1.5 text-sm text-destructive">
             Only {line.variant.stock} left — reduce the quantity to continue.
@@ -106,13 +116,8 @@ function LineRow({ line }: { line: CartLine }) {
             <IconButton
               label="Decrease quantity"
               size="sm"
-              onClick={() =>
-                updateItem.mutate({
-                  itemId: line.id,
-                  quantity: line.quantity - 1,
-                })
-              }
-              disabled={line.quantity <= 1 || updateItem.isPending}
+              onClick={() => updateItem.mutate(line.quantity - 1)}
+              disabled={line.quantity <= 1}
               className="h-full w-9 px-0 text-base disabled:opacity-30"
             >
               −
@@ -123,13 +128,8 @@ function LineRow({ line }: { line: CartLine }) {
             <IconButton
               label="Increase quantity"
               size="sm"
-              onClick={() =>
-                updateItem.mutate({
-                  itemId: line.id,
-                  quantity: line.quantity + 1,
-                })
-              }
-              disabled={line.quantity >= maxQuantity || updateItem.isPending}
+              onClick={() => updateItem.mutate(line.quantity + 1)}
+              disabled={line.quantity >= maxQuantity}
               className="h-full w-9 px-0 text-base disabled:opacity-30"
             >
               +
@@ -139,8 +139,8 @@ function LineRow({ line }: { line: CartLine }) {
           <IconButton
             label={`Remove ${line.product.name}`}
             variant="destructive-ghost"
-            onClick={() => removeItem.mutate(line.id)}
-            disabled={removeItem.isPending}
+            onClick={() => removeItem.mutate()}
+            disabled={isRemoving}
             className="size-9"
           >
             <Trash2 />

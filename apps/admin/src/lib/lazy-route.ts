@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from "react";
 
-type Preloadable = ComponentType & { preload: () => Promise<unknown> };
+export type Preloadable = ComponentType & { preload: () => Promise<unknown> };
 
 export function lazyRoute<M extends Record<string, unknown>>(
   loader: () => Promise<M>,
