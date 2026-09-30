@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/stores/auth";
+import { Button } from "@/components/ui/button";
 
 export function RequireCustomer({
   children,
@@ -29,12 +30,11 @@ export function RequireCustomer({
       <div className="rounded-xl border border-dashed px-8 py-16 text-center">
         <p className="font-medium">{title}</p>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        <Link
-          href={`/login?returnTo=${encodeURIComponent(returnTo)}`}
-          className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-        >
-          Sign in
-        </Link>
+        <Button asChild shape="pill" className="mt-6 px-6">
+          <Link href={`/login?returnTo=${encodeURIComponent(returnTo)}`}>
+            Sign in
+          </Link>
+        </Button>
       </div>
     );
   }

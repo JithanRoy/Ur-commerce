@@ -12,31 +12,7 @@ validation. Withdrawn.
 
 ---
 
-## 1. 🟠 Store branding logo/favicon cannot use uploaded images
-
-The admin panel now uploads every image direct-to-storage — product galleries,
-brand logos, category and collection banners all work with `objectKey`. The
-one place still stuck on pasted URLs is **store settings**:
-
-- `UpdateStoreSettingsDto` accepts only `logoUrl` / `faviconUrl` — no
-  `logoObjectKey` / `faviconObjectKey` (verified in `docs-json` today).
-- The upload-ticket scope enum is `product | brand | category | collection` —
-  there is no `store` (or `branding`) scope to mint a ticket under.
-
-### Request
-
-1. Add a `store` scope to `POST /admin/uploads/images`.
-2. Accept `logoObjectKey` and `faviconObjectKey` on `PATCH /admin/settings`,
-   resolving to URLs on read exactly as `PATCH /admin/brands/:id` already does
-   with `logoObjectKey`.
-
-The brand implementation is the template; this is the same pattern on one more
-entity. Until then the admin branding screen keeps two URL text fields the
-owner has no way to fill without hosting the file somewhere themselves.
-
----
-
-## 2. 🟠 Product card payload has no option names — blocks on-card quick-add
+## 1. 🟠 Product card payload has no option names — blocks on-card quick-add
 
 Business gap. The storefront's product cards now carry "Add to bag / Buy now"
 buttons. For a **single-variant** product this works end to end. For a
@@ -64,7 +40,7 @@ Names and values only — the card does not need the full variant join.
 
 ---
 
-## 3. 🟡 Bulk image attach
+## 2. 🟡 Bulk image attach
 
 `POST /admin/products/:id/images` takes exactly one `objectKey`. The admin
 gallery supports multi-select and drag-drop upload, so attaching ten images is
@@ -74,7 +50,7 @@ fast. Low urgency — the sequential loop works.
 
 ---
 
-## 4. 🟡 No timestamp when an order enters PROCESSING (or REFUNDED)
+## 3. 🟡 No timestamp when an order enters PROCESSING (or REFUNDED)
 
 The order model records `placedAt / confirmedAt / shippedAt / deliveredAt /
 cancelledAt` — but nothing for PROCESSING or REFUNDED. Marking an order
@@ -91,7 +67,7 @@ a stopgap. Proper fix, pick one:
 
 ---
 
-## 5. 🟡 Deleted products keep their SKUs reserved forever
+## 4. 🟡 Deleted products keep their SKUs reserved forever
 
 `DELETE /admin/products/:id` soft-deletes, and the dead product's SKUs stay
 unique-constrained. Recreating a product after deleting it fails with
@@ -112,6 +88,12 @@ filters slugs containing `__archived_` as a workaround.)
 ---
 
 ## Delivered since the last version of this doc — thank you
+
+- **Store branding uploads** — `store` upload scope plus `logoObjectKey` /
+  `faviconObjectKey` on `PATCH /admin/settings` (verified 2026-09-30: ticket →
+  PUT → save → public `/store` returns the storage URL, served 200; clearing
+  with `logoUrl: null` works). The admin branding screen now uploads instead
+  of taking URLs.
 
 - **Single-variant product create** — the 500 on optionless products is fixed
   (verified 2026-09-30: 201 with a clean payload). The simplest product can

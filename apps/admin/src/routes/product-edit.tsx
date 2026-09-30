@@ -10,6 +10,7 @@ import type {
 } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import {
@@ -238,14 +239,14 @@ export function ProductEditRoute() {
           />
 
           <div>
-            <button
-              type="button"
+            <Button
               onClick={() => saveDetails.mutate()}
-              disabled={saveDetails.isPending}
-              className="h-10 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+              loading={saveDetails.isPending}
+              loadingText="Saving…"
+              className="px-5"
             >
-              {saveDetails.isPending ? "Saving…" : "Save details"}
-            </button>
+              Save details
+            </Button>
           </div>
         </div>
       </section>
@@ -262,14 +263,15 @@ export function ProductEditRoute() {
               Prices in taka. Stored as paisa.
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => saveVariants.mutate()}
-            disabled={saveVariants.isPending || rows.length === 0}
-            className="h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            disabled={rows.length === 0}
+            loading={saveVariants.isPending}
+            loadingText="Saving…"
+            className="h-9"
           >
-            {saveVariants.isPending ? "Saving…" : "Save variants"}
-          </button>
+            Save variants
+          </Button>
         </div>
 
         <EditVariantTable

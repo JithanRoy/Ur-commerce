@@ -3,12 +3,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation, useNavigate } from "react-router";
-import { Loader2, Lock, ShieldCheck } from "lucide-react";
+import { Lock, ShieldCheck } from "lucide-react";
 import { isApiError, isStaffRole } from "@urcommerce/api-client";
 import { authApi } from "@/lib/api";
 import { useAuth } from "@/stores/auth";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),
@@ -160,20 +161,17 @@ export function LoginRoute() {
             }
           />
 
-          <button
+          <Button
             type="submit"
-            disabled={isSubmitting}
-            className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            size="lg"
+            shape="rounded"
+            fullWidth
+            loading={isSubmitting}
+            loadingText="Signing in…"
+            className="mt-4"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-                Signing in…
-              </>
-            ) : (
-              "Sign in"
-            )}
-          </button>
+            Sign in
+          </Button>
         </form>
       </section>
     </main>

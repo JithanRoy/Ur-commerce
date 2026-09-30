@@ -6,6 +6,7 @@ import { Search, X } from "lucide-react";
 import { SearchField } from "@/features/shop/search-field";
 import { AccountMenu } from "@/features/account/account-menu";
 import { CartIndicator } from "@/features/cart/cart-indicator";
+import { IconButton } from "@/components/ui/button";
 
 const navigation = [
   { label: "Shop", href: "/shop" },
@@ -58,19 +59,18 @@ export function SiteHeader({
         </div>
 
         <div className="ml-auto flex items-center gap-1 lg:ml-2">
-          <button
-            type="button"
-            aria-label={searchOpen ? "Close search" : "Search"}
+          <IconButton
+            label={searchOpen ? "Close search" : "Search"}
             aria-expanded={searchOpen}
             onClick={() => setSearchOpen((open) => !open)}
-            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+            className="size-9 text-muted-foreground lg:hidden"
           >
             {searchOpen ? (
               <X className="size-[18px]" />
             ) : (
               <Search className="size-[18px]" />
             )}
-          </button>
+          </IconButton>
           <AccountMenu />
           <CartIndicator />
         </div>

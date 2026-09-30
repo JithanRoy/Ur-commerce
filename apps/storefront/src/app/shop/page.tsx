@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { loadCatalogue } from "@/features/shop/load-catalogue";
 import { ProductGridPage } from "@/features/shop/product-grid-page";
 import {
@@ -53,13 +54,16 @@ export default async function ShopPage({
             {data.products.total === 1 ? "product" : "products"}
           </p>
           {query.search ? (
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors hover:border-foreground/40"
+            <Button
+              asChild
+              variant="outline"
+              size="xs"
+              shape="pill"
+              leading={<X className="size-3" aria-hidden />}
+              className="h-auto gap-1.5 border-border px-3 py-1 shadow-none hover:border-foreground/40 hover:bg-transparent"
             >
-              <X className="size-3" aria-hidden />
-              Clear search
-            </Link>
+              <Link href="/shop">Clear search</Link>
+            </Button>
           ) : null}
         </div>
       </header>

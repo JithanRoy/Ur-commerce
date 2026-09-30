@@ -8,8 +8,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { StatusBadge } from "@/features/orders/status-badge";
 import { OrderStats } from "@/features/orders/order-stats";
-import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", {
@@ -19,6 +19,32 @@ function formatDate(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function StatusFilterChip({
+  active,
+  onSelect,
+  children,
+}: {
+  active: boolean;
+  onSelect: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      variant={active ? "primary" : "outline"}
+      shape="pill"
+      size="sm"
+      onClick={onSelect}
+      className={
+        active
+          ? "h-9 gap-0 px-3.5"
+          : "h-9 gap-0 bg-card px-3.5 text-muted-foreground shadow-none hover:border-foreground/25 hover:bg-card"
+      }
+    >
+      {children}
+    </Button>
+  );
 }
 
 export function OrdersRoute() {
@@ -56,42 +82,30 @@ export function OrdersRoute() {
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => {
+        <StatusFilterChip
+          active={status === ""}
+          onSelect={() => {
             setPage(1);
             setStatus("");
           }}
-          className={cn(
-            "h-9 rounded-full px-3.5 text-sm font-medium transition-colors",
-            status === ""
-              ? "bg-primary text-primary-foreground shadow-xs"
-              : "border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
-          )}
         >
           All
-        </button>
+        </StatusFilterChip>
         {ORDER_STATUSES.filter((entry) => (counts?.[entry] ?? 0) > 0).map(
           (entry) => (
-            <button
+            <StatusFilterChip
               key={entry}
-              type="button"
-              onClick={() => {
+              active={status === entry}
+              onSelect={() => {
                 setPage(1);
                 setStatus(entry);
               }}
-              className={cn(
-                "h-9 rounded-full px-3.5 text-sm font-medium transition-colors",
-                status === entry
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
-              )}
             >
               {ORDER_STATUS_LABELS[entry]}
               <span className="ml-1.5 tabular-nums opacity-70">
                 {counts?.[entry]}
               </span>
-            </button>
+            </StatusFilterChip>
           ),
         )}
       </div>
@@ -186,22 +200,24 @@ export function OrdersRoute() {
                 Page {data.page} of {data.totalPages}
               </p>
               <div className="flex gap-2">
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   disabled={data.page <= 1}
-                  className="h-9 rounded-md border px-3 text-sm disabled:opacity-40"
+                  className="h-9 font-normal"
                 >
                   Previous
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPage((current) => current + 1)}
                   disabled={data.page >= data.totalPages}
-                  className="h-9 rounded-md border px-3 text-sm disabled:opacity-40"
+                  className="h-9 font-normal"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           ) : null}

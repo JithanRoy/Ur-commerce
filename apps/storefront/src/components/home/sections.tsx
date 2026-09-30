@@ -6,6 +6,7 @@ import type {
   ProductCarouselSection,
 } from "@urcommerce/api-client";
 import { ProductCard } from "@/components/product/product-card";
+import { Button } from "@/components/ui/button";
 
 function SectionHeading({
   title,
@@ -95,21 +96,25 @@ export function BrandStrip({ section }: { section: BrandStripSection }) {
         <SectionHeading title={section.title} />
         <div className="flex flex-wrap items-center gap-3">
           {section.brands.map((brand) => (
-            <Link
+            <Button
               key={brand.id}
-              href={`/brand/${brand.slug}`}
-              className="inline-flex h-11 items-center gap-2 rounded-full border bg-background px-5 text-sm transition-colors hover:border-foreground/25 hover:bg-accent"
+              asChild
+              variant="outline"
+              shape="pill"
+              className="border-border font-normal shadow-none hover:border-foreground/25 hover:bg-accent"
             >
-              {brand.logoUrl ? (
-                <img
-                  src={brand.logoUrl}
-                  alt=""
-                  loading="lazy"
-                  className="size-5 rounded-full object-cover"
-                />
-              ) : null}
-              {brand.name}
-            </Link>
+              <Link href={`/brand/${brand.slug}`}>
+                {brand.logoUrl ? (
+                  <img
+                    src={brand.logoUrl}
+                    alt=""
+                    loading="lazy"
+                    className="size-5 rounded-full object-cover"
+                  />
+                ) : null}
+                {brand.name}
+              </Link>
+            </Button>
           ))}
         </div>
       </div>

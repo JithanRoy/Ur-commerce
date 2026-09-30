@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { FileQuestion } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function NotFoundRoute() {
   return (
@@ -12,12 +13,9 @@ export function NotFoundRoute() {
       <p className="mt-1 text-sm text-muted-foreground">
         That page does not exist in the admin panel.
       </p>
-      <Link
-        to="/products"
-        className="mt-6 inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-      >
-        Go to Products
-      </Link>
+      <Button asChild className="mt-6">
+        <Link to="/products">Go to Products</Link>
+      </Button>
     </div>
   );
 }

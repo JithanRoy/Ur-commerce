@@ -3,6 +3,7 @@ import { UserPlus } from "lucide-react";
 import type { CreateStaffInput, StaffRole } from "@urcommerce/api-client";
 import { SelectField, TextField } from "@/components/ui/field";
 import type { SelectOption } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   onAdd: (input: CreateStaffInput) => void;
@@ -78,14 +79,16 @@ export function AddStaffForm({ onAdd, isPending }: Props) {
         options={ROLE_OPTIONS}
       />
 
-      <button
+      <Button
         type="submit"
-        disabled={!complete || isPending}
-        className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-40"
+        disabled={!complete}
+        loading={isPending}
+        loadingText="Adding…"
+        leading={<UserPlus />}
+        className="h-9 gap-1.5"
       >
-        <UserPlus className="size-4" />
-        {isPending ? "Adding…" : "Add member"}
-      </button>
+        Add member
+      </Button>
     </form>
   );
 }

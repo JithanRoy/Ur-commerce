@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import type { AdminProduct, AdminVariant } from "@urcommerce/api-client";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export type VariantEdit = {
   id: string;
@@ -123,20 +124,22 @@ export function EditVariantTable({
                 />
               </td>
               <td className="px-3 py-2">
-                <button
-                  type="button"
+                <Button
+                  variant="destructive-ghost"
+                  size="icon-sm"
                   onClick={() => onRemove(row.id)}
-                  disabled={!canRemove || removingId === row.id}
+                  disabled={!canRemove}
+                  loading={removingId === row.id}
                   title={
                     canRemove
                       ? "Remove this variant"
                       : "A product must keep at least one variant"
                   }
                   aria-label={`Remove ${labels[row.id] ?? row.id}`}
-                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30"
+                  className="disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  <Trash2 className="size-4" />
-                </button>
+                  <Trash2 />
+                </Button>
               </td>
             </tr>
           ))}

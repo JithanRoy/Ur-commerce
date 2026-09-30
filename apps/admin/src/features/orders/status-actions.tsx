@@ -9,6 +9,7 @@ import {
 import type { OrderStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { TextField } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   orderId: string;
@@ -54,9 +55,9 @@ export function StatusActions({ orderId, status }: Props) {
         {available.map((next) => {
           const isCancel = next === "CANCELLED";
           return (
-            <button
+            <Button
               key={next}
-              type="button"
+              variant={isCancel ? "outline" : "primary"}
               disabled={mutation.isPending}
               onClick={() =>
                 isCancel
@@ -65,14 +66,14 @@ export function StatusActions({ orderId, status }: Props) {
               }
               className={
                 isCancel
-                  ? "h-9 rounded-md border border-destructive/40 px-4 text-sm text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-50"
-                  : "h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                  ? "border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                  : undefined
               }
             >
               {isCancel
                 ? "Cancel order"
                 : `Mark ${ORDER_STATUS_LABELS[next].toLowerCase()}`}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -88,26 +89,26 @@ export function StatusActions({ orderId, status }: Props) {
             className="h-9"
           />
           <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              disabled={mutation.isPending || cancelReason.trim() === ""}
+            <Button
+              variant="destructive"
+              disabled={cancelReason.trim() === ""}
+              loading={mutation.isPending}
+              loadingText="Cancelling…"
               onClick={() =>
                 mutation.mutate({
                   status: "CANCELLED",
                   cancelReason: cancelReason.trim(),
                 })
               }
-              className="h-9 rounded-md bg-destructive px-4 text-sm font-medium text-white disabled:opacity-50"
             >
-              {mutation.isPending ? "Cancelling…" : "Confirm cancellation"}
-            </button>
-            <button
-              type="button"
+              Confirm cancellation
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setPendingCancel(false)}
-              className="h-9 rounded-md border border-input px-4 text-sm"
             >
               Keep order
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}

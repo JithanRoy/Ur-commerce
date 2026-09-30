@@ -5,6 +5,7 @@ import { Check, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { formatBDT } from "@urcommerce/api-client";
 import type { CartLine, Paisa } from "@urcommerce/api-client";
 import { useCart, useCartMutations } from "./use-cart";
+import { Button, IconButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const FREE_SHIPPING_THRESHOLD = 200000 as Paisa;
@@ -101,8 +102,9 @@ function LineRow({ line }: { line: CartLine }) {
 
         <div className="mt-3 flex items-center gap-3">
           <div className="flex h-9 items-center rounded-md border">
-            <button
-              type="button"
+            <IconButton
+              label="Decrease quantity"
+              size="sm"
               onClick={() =>
                 updateItem.mutate({
                   itemId: line.id,
@@ -110,16 +112,16 @@ function LineRow({ line }: { line: CartLine }) {
                 })
               }
               disabled={line.quantity <= 1 || updateItem.isPending}
-              aria-label="Decrease quantity"
-              className="h-full w-9 disabled:opacity-30"
+              className="h-full w-9 px-0 text-base disabled:opacity-30"
             >
               −
-            </button>
+            </IconButton>
             <span className="w-8 text-center text-sm tabular-nums">
               {line.quantity}
             </span>
-            <button
-              type="button"
+            <IconButton
+              label="Increase quantity"
+              size="sm"
               onClick={() =>
                 updateItem.mutate({
                   itemId: line.id,
@@ -127,22 +129,21 @@ function LineRow({ line }: { line: CartLine }) {
                 })
               }
               disabled={line.quantity >= maxQuantity || updateItem.isPending}
-              aria-label="Increase quantity"
-              className="h-full w-9 disabled:opacity-30"
+              className="h-full w-9 px-0 text-base disabled:opacity-30"
             >
               +
-            </button>
+            </IconButton>
           </div>
 
-          <button
-            type="button"
+          <IconButton
+            label={`Remove ${line.product.name}`}
+            variant="destructive-ghost"
             onClick={() => removeItem.mutate(line.id)}
             disabled={removeItem.isPending}
-            aria-label={`Remove ${line.product.name}`}
-            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            className="size-9"
           >
-            <Trash2 className="size-4" />
-          </button>
+            <Trash2 />
+          </IconButton>
         </div>
       </div>
 
@@ -178,12 +179,9 @@ export function CartClient() {
         <p className="mt-1 text-sm text-muted-foreground">
           Browse the shop and add something you like.
         </p>
-        <Link
-          href="/shop"
-          className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-        >
-          Continue shopping
-        </Link>
+        <Button asChild shape="pill" className="mt-6 px-6">
+          <Link href="/shop">Continue shopping</Link>
+        </Button>
       </div>
     );
   }
@@ -219,17 +217,9 @@ export function CartClient() {
           </div>
         </dl>
 
-        <Link
-          href={hasStockProblem ? "/cart" : "/checkout"}
-          aria-disabled={hasStockProblem}
-          className={
-            hasStockProblem
-              ? "mt-6 flex h-11 cursor-not-allowed items-center justify-center rounded-md bg-primary/40 text-sm font-medium text-primary-foreground"
-              : "mt-6 flex h-11 items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          }
-        >
-          Checkout
-        </Link>
+        <Button asChild fullWidth disabled={hasStockProblem} className="mt-6">
+          <Link href={hasStockProblem ? "/cart" : "/checkout"}>Checkout</Link>
+        </Button>
 
         {hasStockProblem ? (
           <p className="mt-2 text-center text-xs text-destructive">

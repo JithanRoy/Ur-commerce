@@ -5,6 +5,7 @@ import { ImageOff, Plus, Search } from "lucide-react";
 import { formatPriceRange, paisa } from "@urcommerce/api-client";
 import type { AdminProduct, ProductStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
@@ -45,13 +46,12 @@ export function ProductsRoute() {
   });
 
   const newProductLink = (
-    <Link
-      to="/products/new"
-      className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-    >
-      <Plus className="size-4" />
-      New product
-    </Link>
+    <Button asChild className="h-9 gap-1.5">
+      <Link to="/products/new">
+        <Plus />
+        New product
+      </Link>
+    </Button>
   );
 
   return (
@@ -213,22 +213,22 @@ export function ProductsRoute() {
                 Page {data.page} of {data.totalPages}
               </p>
               <div className="flex gap-2">
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   disabled={data.page <= 1}
-                  className="h-9 rounded-md border border-input px-3 text-sm disabled:opacity-40"
+                  className="h-9 px-3"
                 >
                   Previous
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => setPage((current) => current + 1)}
                   disabled={data.page >= data.totalPages}
-                  className="h-9 rounded-md border border-input px-3 text-sm disabled:opacity-40"
+                  className="h-9 px-3"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           ) : null}

@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import type { AdminProduct, CreateVariantInput } from "@urcommerce/api-client";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 function CompactField({
   id,
@@ -111,14 +112,17 @@ export function AddVariantForm({ product, onAdd, isPending }: Props) {
         />
       </CompactField>
 
-      <button
+      <Button
         type="submit"
-        disabled={!complete || isPending}
-        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-input px-3 text-sm disabled:opacity-40"
+        variant="outline"
+        disabled={!complete}
+        loading={isPending}
+        loadingText="Adding…"
+        leading={<Plus />}
+        className="h-9 gap-1.5 px-3"
       >
-        <Plus className="size-4" />
-        {isPending ? "Adding…" : "Add variant"}
-      </button>
+        Add variant
+      </Button>
     </form>
   );
 }

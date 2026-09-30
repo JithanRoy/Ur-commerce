@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Boxes, Image as ImageIcon, Layers, Loader2 } from "lucide-react";
+import { ArrowLeft, Boxes, Image as ImageIcon, Layers } from "lucide-react";
 import { isApiError, takaToPaisa } from "@urcommerce/api-client";
 import type { CreateProductInput, ProductStatus } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ImageDropzone, type UploadedImage } from "@/components/ui/image-dropzone";
 import { OptionsEditor } from "@/features/products/options-editor";
@@ -277,26 +278,17 @@ export function ProductNewRoute() {
         ) : null}
 
         <div className="sticky bottom-0 -mx-1 flex items-center gap-3 rounded-xl border bg-card/95 p-4 shadow-lg backdrop-blur-sm">
-          <button
+          <Button
             type="submit"
-            disabled={mutation.isPending}
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            loading={mutation.isPending}
+            loadingText="Saving…"
+            className="px-5"
           >
-            {mutation.isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-                Saving…
-              </>
-            ) : (
-              "Create product"
-            )}
-          </button>
-          <Link
-            to="/products"
-            className="inline-flex h-10 items-center rounded-md border border-input px-5 text-sm transition-colors hover:bg-muted"
-          >
-            Cancel
-          </Link>
+            Create product
+          </Button>
+          <Button asChild variant="outline" className="px-5">
+            <Link to="/products">Cancel</Link>
+          </Button>
           <p className="ml-auto hidden text-xs text-muted-foreground sm:block">
             {images.length > 0
               ? `${images.length} image${images.length === 1 ? "" : "s"} ready`

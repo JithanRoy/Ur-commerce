@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Truck, BadgeCheck, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const assurances = [
   { icon: Truck, label: "Cash on delivery" },
@@ -47,22 +48,29 @@ export function Hero({
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link
-              href="/shop"
-              className="group inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-medium text-primary-foreground transition-all hover:gap-3 hover:shadow-lg hover:shadow-primary/20"
+            <Button
+              asChild
+              size="xl"
+              shape="pill"
+              trailing={
+                <ArrowRight
+                  className="transition-transform group-hover:translate-x-0.5"
+                  aria-hidden
+                />
+              }
+              className="group px-7 text-sm transition-all hover:gap-3 hover:bg-primary hover:shadow-lg hover:shadow-primary/20"
             >
-              Shop the collection
-              <ArrowRight
-                className="size-4 transition-transform group-hover:translate-x-0.5"
-                aria-hidden
-              />
-            </Link>
-            <Link
-              href="/brand"
-              className="inline-flex h-12 items-center rounded-full border border-foreground/15 px-7 text-sm font-medium transition-colors hover:border-foreground/40"
+              <Link href="/shop">Shop the collection</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="xl"
+              shape="pill"
+              className="border-foreground/15 bg-transparent px-7 text-sm shadow-none hover:border-foreground/40 hover:bg-transparent"
             >
-              Browse brands
-            </Link>
+              <Link href="/brand">Browse brands</Link>
+            </Button>
           </div>
 
           <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-foreground/10 pt-6">

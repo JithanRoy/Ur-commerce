@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Loader2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { AdminBrand, AdminCategoryNode } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
+import { Button, IconButton } from "@/components/ui/button";
 import { slugify } from "./variant-matrix";
 
 type CategoryOption = { id: string; label: string };
@@ -114,31 +115,27 @@ function TaxonomyPicker({
             placeholder={`New ${label.toLowerCase()} name`}
             aria-label={`New ${label.toLowerCase()} name`}
           />
-          <button
-            type="button"
+          <Button
             onClick={submitNew}
-            disabled={create.isPending || name.trim() === ""}
+            disabled={name.trim() === ""}
+            loading={create.isPending}
             aria-label={`Create ${label.toLowerCase()}`}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            leading={<Check aria-hidden />}
+            className="gap-1.5 px-3"
           >
-            {create.isPending ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-            ) : (
-              <Check className="size-4" aria-hidden />
-            )}
             Create
-          </button>
-          <button
-            type="button"
+          </Button>
+          <IconButton
+            label="Cancel"
+            variant="outline"
             onClick={() => {
               setCreating(false);
               setError(null);
             }}
-            aria-label="Cancel"
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground"
+            className="text-muted-foreground"
           >
-            <X className="size-4" aria-hidden />
-          </button>
+            <X aria-hidden />
+          </IconButton>
         </div>
       ) : (
         <Select

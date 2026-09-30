@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { X } from "lucide-react";
 import { Sidebar, SidebarContent } from "./sidebar";
 import { Topbar } from "./topbar";
+import { IconButton } from "@/components/ui/button";
 
 const STORE_NAME = "Store admin";
 
@@ -35,14 +36,14 @@ export function AdminShell() {
             className="absolute inset-0 bg-foreground/40"
           />
           <div className="relative h-full w-64 bg-sidebar">
-            <button
-              type="button"
+            <IconButton
+              size="icon-sm"
               onClick={() => setNavOpen(false)}
-              aria-label="Close navigation"
-              className="absolute right-3 top-3.5 inline-flex size-8 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground"
+              label="Close navigation"
+              className="absolute right-3 top-3.5 text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground"
             >
-              <X className="size-4" aria-hidden />
-            </button>
+              <X aria-hidden />
+            </IconButton>
             <SidebarContent storeName={STORE_NAME} />
           </div>
         </div>

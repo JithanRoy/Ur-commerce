@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
 import { checkoutApi } from "@/lib/browser-api";
 import { OrderStatusBadge, formatOrderDate } from "./order-status";
+import { Button } from "@/components/ui/button";
 
 export function OrderDetailClient({ orderId }: { orderId: string }) {
   const { data: order, isPending, error } = useQuery({
@@ -25,12 +26,14 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
         <p className="font-medium">
           {notFound ? "Order not found" : "We could not load this order"}
         </p>
-        <Link
-          href="/account/orders"
-          className="mt-6 inline-flex h-11 items-center rounded-full border px-6 text-sm"
+        <Button
+          asChild
+          variant="outline"
+          shape="pill"
+          className="mt-6 px-6 shadow-none"
         >
-          Back to orders
-        </Link>
+          <Link href="/account/orders">Back to orders</Link>
+        </Button>
       </div>
     );
   }

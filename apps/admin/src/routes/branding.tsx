@@ -8,6 +8,8 @@ import type {
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
 import { TextField } from "@/components/ui/field";
+import { ImageField } from "@/components/ui/image-field";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { ColourField } from "@/features/branding/colour-field";
@@ -15,11 +17,16 @@ import { BrandPreview } from "@/features/branding/brand-preview";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
+type ImageDraft = {
+  url: string | null;
+  objectKey?: string;
+};
+
 type Draft = {
   displayName: string;
   tagline: string;
-  logoUrl: string;
-  faviconUrl: string;
+  logo: ImageDraft;
+  favicon: ImageDraft;
   primaryColor: string;
   accentColor: string;
   supportEmail: string;
@@ -30,8 +37,8 @@ function toDraft(settings: StoreSettings): Draft {
   return {
     displayName: settings.storeName,
     tagline: settings.tagline ?? "",
-    logoUrl: settings.logoUrl ?? "",
-    faviconUrl: settings.faviconUrl ?? "",
+    logo: { url: settings.logoUrl },
+    favicon: { url: settings.faviconUrl },
     primaryColor: settings.theme.primaryColor,
     accentColor: settings.theme.accentColor,
     supportEmail: settings.supportEmail ?? "",
@@ -44,12 +51,28 @@ function optional(value: string): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-function buildPatch(draft: Draft): UpdateStoreSettingsInput {
+function imagePatch(
+  image: ImageDraft,
+  savedUrl: string | null,
+): { objectKey?: string; url?: null } {
+  if (image.objectKey) return { objectKey: image.objectKey };
+  if (image.url === null && savedUrl !== null) return { url: null };
+  return {};
+}
+
+function buildPatch(
+  draft: Draft,
+  saved: StoreSettings,
+): UpdateStoreSettingsInput {
+  const logo = imagePatch(draft.logo, saved.logoUrl);
+  const favicon = imagePatch(draft.favicon, saved.faviconUrl);
   return {
     displayName: draft.displayName.trim(),
     tagline: optional(draft.tagline),
-    logoUrl: optional(draft.logoUrl),
-    faviconUrl: optional(draft.faviconUrl),
+    ...(logo.objectKey ? { logoObjectKey: logo.objectKey } : {}),
+    ...(logo.url === null ? { logoUrl: null } : {}),
+    ...(favicon.objectKey ? { faviconObjectKey: favicon.objectKey } : {}),
+    ...(favicon.url === null ? { faviconUrl: null } : {}),
     primaryColor: draft.primaryColor.toUpperCase(),
     accentColor: draft.accentColor.toUpperCase(),
     supportEmail: optional(draft.supportEmail),
@@ -64,11 +87,6 @@ function localProblem(draft: Draft): string | null {
   if (!HEX.test(draft.primaryColor) || !HEX.test(draft.accentColor)) {
     return "Colours must be a six-digit hex value such as #0F766E.";
   }
-  const https = (value: string) =>
-    value.trim() === "" || value.trim().startsWith("https://");
-  if (!https(draft.logoUrl) || !https(draft.faviconUrl)) {
-    return "Image links must start with https://";
-  }
   return null;
 }
 
@@ -77,7 +95,11 @@ export function BrandingRoute() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, isPending, error: loadError } = useQuery({
+  const {
+    data,
+    isPending,
+    error: loadError,
+  } = useQuery({
     queryKey: ["admin", "settings"],
     queryFn: () => adminApi.settings.get(),
     retry: false,
@@ -127,7 +149,7 @@ export function BrandingRoute() {
           onSubmit={(event) => {
             event.preventDefault();
             if (localProblem(draft)) return;
-            save.mutate(buildPatch(draft));
+            save.mutate(buildPatch(draft, data));
           }}
           className="space-y-6"
           noValidate
@@ -151,23 +173,32 @@ export function BrandingRoute() {
               placeholder="Everyday wear, made in Bangladesh"
             />
 
-            <TextField
-              id="logoUrl"
-              label="Logo URL"
-              hint="Replaces the store name in the header. Must be https."
-              value={draft.logoUrl}
-              onChange={(event) => set("logoUrl", event.target.value)}
-              placeholder="https://…"
-            />
-
-            <TextField
-              id="faviconUrl"
-              label="Favicon URL"
-              hint="Must be https."
-              value={draft.faviconUrl}
-              onChange={(event) => set("faviconUrl", event.target.value)}
-              placeholder="https://…"
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ImageField
+                scope="store"
+                label="logo"
+                hint="Replaces the store name in the header."
+                fit="contain"
+                currentUrl={draft.logo.url}
+                disabled={save.isPending}
+                onUploaded={(objectKey, previewUrl) =>
+                  set("logo", { url: previewUrl, objectKey })
+                }
+                onCleared={() => set("logo", { url: null })}
+              />
+              <ImageField
+                scope="store"
+                label="favicon"
+                hint="Square, 64×64 or larger."
+                fit="contain"
+                currentUrl={draft.favicon.url}
+                disabled={save.isPending}
+                onUploaded={(objectKey, previewUrl) =>
+                  set("favicon", { url: previewUrl, objectKey })
+                }
+                onCleared={() => set("favicon", { url: null })}
+              />
+            </div>
           </section>
 
           <section className="space-y-4">
@@ -218,32 +249,38 @@ export function BrandingRoute() {
           ) : null}
 
           <div className="flex gap-3">
-            <button
+            <Button
               type="submit"
-              disabled={save.isPending || Boolean(problem)}
-              className="h-10 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              disabled={Boolean(problem)}
+              loading={save.isPending}
+              loadingText="Saving…"
+              className="px-5"
             >
-              {save.isPending ? "Saving…" : "Save branding"}
-            </button>
-            <button
-              type="button"
+              Save branding
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => {
                 setDraft(toDraft(data));
                 setError(null);
               }}
-              className="h-10 rounded-md border border-input px-5 text-sm font-medium"
+              className="px-5"
             >
               Reset
-            </button>
+            </Button>
           </div>
         </form>
 
         <BrandPreview
           storeName={draft.displayName || "Your store"}
           tagline={draft.tagline}
-          logoUrl={draft.logoUrl}
-          primaryColor={HEX.test(draft.primaryColor) ? draft.primaryColor : "#000000"}
-          accentColor={HEX.test(draft.accentColor) ? draft.accentColor : "#EEEEEE"}
+          logoUrl={draft.logo.url ?? ""}
+          primaryColor={
+            HEX.test(draft.primaryColor) ? draft.primaryColor : "#000000"
+          }
+          accentColor={
+            HEX.test(draft.accentColor) ? draft.accentColor : "#EEEEEE"
+          }
         />
       </div>
     </div>

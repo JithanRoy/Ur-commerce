@@ -10,6 +10,7 @@ import {
 import type { UploadScope } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Button, IconButton } from "@/components/ui/button";
 
 export type UploadedImage = {
   objectKey: string;
@@ -179,13 +180,14 @@ export function ImageDropzone({
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           or{" "}
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="xs"
             onClick={() => fileInput.current?.click()}
-            className="font-medium text-primary underline underline-offset-2"
+            className="align-baseline underline underline-offset-2"
           >
             browse your files
-          </button>{" "}
+          </Button>{" "}
           · JPEG, PNG, WebP or AVIF up to 10 MB
         </p>
       </div>
@@ -229,14 +231,14 @@ export function ImageDropzone({
                   Primary
                 </span>
               ) : null}
-              <button
-                type="button"
+              <IconButton
+                label={`Remove ${image.fileName}`}
+                size="icon-xs"
                 onClick={() => removeImage(image.objectKey)}
-                aria-label={`Remove ${image.fileName}`}
-                className="absolute right-1.5 top-1.5 inline-flex size-6 items-center justify-center rounded-md bg-background/90 text-muted-foreground opacity-0 backdrop-blur-sm transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+                className="absolute right-1.5 top-1.5 size-6 bg-background/90 text-muted-foreground opacity-0 backdrop-blur-sm hover:bg-background/90 hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
               >
-                <X className="size-3.5" aria-hidden />
-              </button>
+                <X aria-hidden />
+              </IconButton>
             </li>
           ))}
 

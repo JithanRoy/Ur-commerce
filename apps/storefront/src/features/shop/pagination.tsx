@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ProductQuery } from "@urcommerce/api-client";
 import { buildShopHref } from "./search-params";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   query: ProductQuery;
@@ -23,13 +24,19 @@ export function Pagination({
       className="mt-10 flex items-center justify-between border-t pt-6"
     >
       {page > 1 ? (
-        <Link
-          href={buildShopHref(query, { page: page - 1 }, basePath)}
-          rel="prev"
-          className="inline-flex h-10 items-center rounded-md border px-4 text-sm transition-colors hover:bg-muted"
+        <Button
+          asChild
+          variant="outline"
+          size="md"
+          className="border-border font-normal shadow-none"
         >
-          Previous
-        </Link>
+          <Link
+            href={buildShopHref(query, { page: page - 1 }, basePath)}
+            rel="prev"
+          >
+            Previous
+          </Link>
+        </Button>
       ) : (
         <span />
       )}
@@ -39,13 +46,19 @@ export function Pagination({
       </p>
 
       {page < totalPages ? (
-        <Link
-          href={buildShopHref(query, { page: page + 1 }, basePath)}
-          rel="next"
-          className="inline-flex h-10 items-center rounded-md border px-4 text-sm transition-colors hover:bg-muted"
+        <Button
+          asChild
+          variant="outline"
+          size="md"
+          className="border-border font-normal shadow-none"
         >
-          Next
-        </Link>
+          <Link
+            href={buildShopHref(query, { page: page + 1 }, basePath)}
+            rel="next"
+          >
+            Next
+          </Link>
+        </Button>
       ) : (
         <span />
       )}

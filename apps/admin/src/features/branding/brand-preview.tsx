@@ -56,7 +56,7 @@ export function BrandPreview({
 
       <div className="overflow-hidden rounded-xl border shadow-sm">
         <div className="flex h-12 items-center gap-3 border-b bg-white px-4">
-          {logoUrl.trim().startsWith("https://") ? (
+          {logoUrl.trim() !== "" ? (
             <img
               src={logoUrl}
               alt=""

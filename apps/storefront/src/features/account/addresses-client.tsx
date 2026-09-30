@@ -6,6 +6,7 @@ import { MapPin } from "lucide-react";
 import { isApiError } from "@urcommerce/api-client";
 import type { Address } from "@urcommerce/api-client";
 import { checkoutApi } from "@/lib/browser-api";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AddressForm, toCreateInput } from "./address-form";
 import type { AddressValues } from "./address-form";
@@ -126,13 +127,13 @@ export function AddressesClient() {
         <p className="mt-1 text-sm text-muted-foreground">
           Save an address to check out faster next time.
         </p>
-        <button
-          type="button"
+        <Button
+          shape="pill"
           onClick={() => setIsAdding(true)}
-          className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
+          className="mt-6 px-6"
         >
           Add an address
-        </button>
+        </Button>
       </div>
     );
   }
@@ -187,40 +188,42 @@ export function AddressesClient() {
 
                   <div className="flex shrink-0 flex-wrap gap-2">
                     {!address.isDefault ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setDefaultAddress.mutate(address.id)}
                         disabled={isMutating}
-                        className="h-9 rounded-md border border-input px-3 text-sm font-medium disabled:opacity-50"
+                        className="h-9 shadow-none"
                       >
                         Make default
-                      </button>
+                      </Button>
                     ) : null}
-                    <button
-                      type="button"
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setActionError(null);
                         setIsAdding(false);
                         setEditingId(address.id);
                       }}
                       disabled={isMutating}
-                      className="h-9 rounded-md border border-input px-3 text-sm font-medium disabled:opacity-50"
+                      className="h-9 shadow-none"
                     >
                       Edit
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setPendingDeleteId(address.id)}
                       disabled={isMutating}
                       className={cn(
-                        "h-9 rounded-md border px-3 text-sm font-medium disabled:opacity-50",
-                        pendingDeleteId === address.id
-                          ? "border-destructive text-destructive"
-                          : "border-input",
+                        "h-9 shadow-none",
+                        pendingDeleteId === address.id &&
+                          "border-destructive text-destructive hover:text-destructive",
                       )}
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -231,21 +234,24 @@ export function AddressesClient() {
                       copy.
                     </p>
                     <div className="ml-auto flex gap-2">
-                      <button
-                        type="button"
+                      <Button
+                        variant="destructive"
+                        size="sm"
                         onClick={() => removeAddress.mutate(address.id)}
-                        disabled={removeAddress.isPending}
-                        className="h-9 rounded-md bg-destructive px-4 text-sm font-medium text-destructive-foreground disabled:opacity-50"
+                        loading={removeAddress.isPending}
+                        loadingText="Removing…"
+                        className="h-9 px-4"
                       >
-                        {removeAddress.isPending ? "Removing…" : "Remove"}
-                      </button>
-                      <button
-                        type="button"
+                        Remove
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setPendingDeleteId(null)}
-                        className="h-9 rounded-md border border-input px-4 text-sm font-medium"
+                        className="h-9 px-4 shadow-none"
                       >
                         Keep
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : null}
@@ -267,17 +273,18 @@ export function AddressesClient() {
           />
         </div>
       ) : (
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="md"
           onClick={() => {
             setActionError(null);
             setEditingId(null);
             setIsAdding(true);
           }}
-          className="h-10 rounded-md border border-input px-5 text-sm font-medium"
+          className="px-5 shadow-none"
         >
           Add another address
-        </button>
+        </Button>
       )}
     </div>
   );

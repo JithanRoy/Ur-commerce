@@ -116,7 +116,8 @@ await page
   .waitForFunction(
     () =>
       [...document.querySelectorAll("li img")].some(
-        (el) => el.complete && el.naturalWidth > 0,
+        (el) =>
+          el.complete && el.naturalWidth > 0 && !el.src.startsWith("blob:"),
       ),
     undefined,
     { timeout: 15000 },

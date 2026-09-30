@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Address, CreateAddressInput } from "@urcommerce/api-client";
 import { TextField } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 export const addressSchema = z.object({
   fullName: z.string().min(2, "Enter at least 2 characters"),
@@ -196,21 +197,24 @@ export function AddressForm({
       ) : null}
 
       <div className="flex gap-3">
-        <button
+        <Button
           type="submit"
-          disabled={pending}
-          className="h-10 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+          size="md"
+          loading={pending}
+          loadingText="Saving…"
+          className="px-5"
         >
-          {pending ? "Saving…" : submitLabel}
-        </button>
+          {submitLabel}
+        </Button>
         {onCancel ? (
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="md"
             onClick={onCancel}
-            className="h-10 rounded-md border border-input px-5 text-sm font-medium"
+            className="px-5 shadow-none"
           >
             Cancel
-          </button>
+          </Button>
         ) : null}
       </div>
     </form>

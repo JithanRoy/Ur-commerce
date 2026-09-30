@@ -1,6 +1,7 @@
 import { LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/stores/auth";
 import { authApi } from "@/lib/api";
+import { Button, IconButton } from "@/components/ui/button";
 
 function initials(name: string): string {
   return name
@@ -27,14 +28,13 @@ export function Topbar({ onOpenNav }: { onOpenNav?: () => void }) {
   return (
     <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b bg-card/80 px-4 backdrop-blur-md sm:px-6">
       {onOpenNav ? (
-        <button
-          type="button"
+        <IconButton
           onClick={onOpenNav}
-          aria-label="Open navigation"
-          className="-ml-1 inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+          label="Open navigation"
+          className="-ml-1 size-9 text-muted-foreground md:hidden"
         >
           <Menu className="size-4.5" aria-hidden />
-        </button>
+        </IconButton>
       ) : null}
 
       <div className="ml-auto flex items-center gap-3">
@@ -55,14 +55,15 @@ export function Topbar({ onOpenNav }: { onOpenNav?: () => void }) {
           </div>
         ) : null}
 
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onSignOut}
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-input px-3 text-sm transition-colors hover:bg-muted"
+          leading={<LogOut aria-hidden />}
+          className="h-9 gap-2"
         >
-          <LogOut className="size-4" aria-hidden />
           <span className="hidden sm:inline">Sign out</span>
-        </button>
+        </Button>
       </div>
     </header>
   );

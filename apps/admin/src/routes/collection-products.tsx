@@ -5,7 +5,6 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
-  Loader2,
   Plus,
   Search,
   X,
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { AdminProduct } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
+import { Button, IconButton } from "@/components/ui/button";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -130,21 +130,15 @@ export function CollectionProductsRoute() {
             them.
           </p>
         </div>
-        <button
-          type="button"
+        <Button
           onClick={() => save.mutate()}
-          disabled={save.isPending || !isDirty}
-          className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+          disabled={!isDirty}
+          loading={save.isPending}
+          loadingText="Saving…"
+          className="px-5"
         >
-          {save.isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-              Saving…
-            </>
-          ) : (
-            "Save collection"
-          )}
-        </button>
+          Save collection
+        </Button>
       </div>
 
       {error ? (
@@ -192,36 +186,39 @@ export function CollectionProductsRoute() {
                         </span>
                       ) : null}
                     </span>
-                    <button
-                      type="button"
+                    <IconButton
+                      label={`Move ${product?.name ?? "product"} up`}
+                      variant="outline"
+                      size="icon-sm"
                       onClick={() =>
                         setSelectedIds(moveId(chosen, id, -1))
                       }
                       disabled={index === 0}
-                      aria-label={`Move ${product?.name ?? "product"} up`}
-                      className="inline-flex size-8 items-center justify-center rounded-md border border-input disabled:opacity-30"
+                      className="disabled:opacity-30"
                     >
                       <ArrowUp className="size-3.5" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
+                    </IconButton>
+                    <IconButton
+                      label={`Move ${product?.name ?? "product"} down`}
+                      variant="outline"
+                      size="icon-sm"
                       onClick={() => setSelectedIds(moveId(chosen, id, 1))}
                       disabled={index === chosen.length - 1}
-                      aria-label={`Move ${product?.name ?? "product"} down`}
-                      className="inline-flex size-8 items-center justify-center rounded-md border border-input disabled:opacity-30"
+                      className="disabled:opacity-30"
                     >
                       <ArrowDown className="size-3.5" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
+                    </IconButton>
+                    <IconButton
+                      label={`Remove ${product?.name ?? "product"} from collection`}
+                      variant="outline"
+                      size="icon-sm"
                       onClick={() =>
                         setSelectedIds(chosen.filter((x) => x !== id))
                       }
-                      aria-label={`Remove ${product?.name ?? "product"} from collection`}
-                      className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition-colors hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive"
                     >
                       <X className="size-3.5" aria-hidden />
-                    </button>
+                    </IconButton>
                   </li>
                 );
               })}
@@ -268,15 +265,16 @@ export function CollectionProductsRoute() {
                         : "Draft — hidden from shoppers"}
                     </span>
                   </span>
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setSelectedIds([...chosen, product.id])}
                     aria-label={`Add ${product.name} to collection`}
-                    className="inline-flex h-8 items-center gap-1 rounded-md border border-input px-2.5 text-xs font-medium transition-colors hover:bg-muted"
+                    leading={<Plus className="size-3.5" aria-hidden />}
+                    className="gap-1 px-2.5 text-xs"
                   >
-                    <Plus className="size-3.5" aria-hidden />
                     Add
-                  </button>
+                  </Button>
                 </li>
               ))
             )}

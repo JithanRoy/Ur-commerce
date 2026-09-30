@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { isApiError } from "@urcommerce/api-client";
 import { authApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
@@ -13,6 +12,7 @@ import { clearCartSession } from "@/stores/cart-session";
 import { cartQueryKey } from "@/features/cart/use-cart";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),
@@ -95,20 +95,15 @@ export function SignInForm({
         </p>
       ) : null}
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+        shape="rounded"
+        fullWidth
+        loading={isSubmitting}
+        loadingText="Signing in…"
       >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="size-4 animate-spin" aria-hidden />
-            Signing in…
-          </>
-        ) : (
-          submitLabel
-        )}
-      </button>
+        {submitLabel}
+      </Button>
     </form>
   );
 }

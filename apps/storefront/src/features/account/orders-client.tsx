@@ -6,6 +6,7 @@ import { PackageSearch } from "lucide-react";
 import { formatBDT } from "@urcommerce/api-client";
 import { checkoutApi } from "@/lib/browser-api";
 import { OrderStatusBadge, formatOrderDate } from "./order-status";
+import { Button } from "@/components/ui/button";
 
 export function OrdersClient() {
   const { data, isPending, isError } = useQuery({
@@ -37,12 +38,9 @@ export function OrdersClient() {
         <p className="mt-1 text-sm text-muted-foreground">
           When you place an order it will appear here.
         </p>
-        <Link
-          href="/shop"
-          className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-        >
-          Start shopping
-        </Link>
+        <Button asChild shape="pill" className="mt-6 px-6">
+          <Link href="/shop">Start shopping</Link>
+        </Button>
       </div>
     );
   }

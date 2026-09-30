@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Order confirmed" };
 
@@ -24,18 +25,17 @@ export default async function OrderConfirmationPage({
           been placed. You will pay in cash when it arrives.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/account/orders"
-            className="inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
+          <Button asChild shape="pill" className="px-6">
+            <Link href="/account/orders">View your orders</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            shape="pill"
+            className="px-6 shadow-none"
           >
-            View your orders
-          </Link>
-          <Link
-            href="/shop"
-            className="inline-flex h-11 items-center rounded-full border px-6 text-sm font-medium"
-          >
-            Continue shopping
-          </Link>
+            <Link href="/shop">Continue shopping</Link>
+          </Button>
         </div>
       </div>
     </div>

@@ -4,11 +4,12 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { UploadScope } from "@urcommerce/api-client";
-import { ImageField } from "./image-field";
+import { ImageField } from "@/components/ui/image-field";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { slugify } from "@/features/products/variant-matrix";
 import { Input } from "@/components/ui/input";
+import { Button, IconButton } from "@/components/ui/button";
 
 export type TaxonomyRow = {
   id: string;
@@ -128,13 +129,14 @@ export function TaxonomyPage<T extends TaxonomyRow>({
           aria-label={`New ${title.toLowerCase().replace(/s$/, "")} name`}
           className="min-w-56 flex-1"
         />
-        <button
+        <Button
           type="submit"
-          disabled={createMutation.isPending || name.trim() === ""}
-          className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          disabled={name.trim() === ""}
+          loading={createMutation.isPending}
+          loadingText="Adding…"
         >
-          {createMutation.isPending ? "Adding…" : "Add"}
-        </button>
+          Add
+        </Button>
       </form>
 
       {formError ? (
@@ -205,15 +207,15 @@ export function TaxonomyPage<T extends TaxonomyRow>({
                     <td className="px-4 py-3">{extraColumn.render(row)}</td>
                   ) : null}
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="destructive-ghost"
+                      size="icon-sm"
                       onClick={() => removeMutation.mutate(row.id)}
                       disabled={removeMutation.isPending}
-                      aria-label={`Delete ${row.name}`}
-                      className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                      label={`Delete ${row.name}`}
                     >
-                      <Trash2 className="size-4" />
-                    </button>
+                      <Trash2 />
+                    </IconButton>
                   </td>
                 </tr>
               ))}

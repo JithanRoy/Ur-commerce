@@ -1,5 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button, IconButton } from "@/components/ui/button";
 import type { OptionDraft } from "./variant-matrix";
 
 type Props = {
@@ -28,14 +29,13 @@ export function OptionsEditor({ options, onChange }: Props) {
               aria-label={`Option ${index + 1} name`}
               className="h-9 flex-1"
             />
-            <button
-              type="button"
+            <IconButton
+              label={`Remove option ${index + 1}`}
               onClick={() => onChange(options.filter((_, i) => i !== index))}
-              aria-label={`Remove option ${index + 1}`}
-              className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="size-9 text-muted-foreground"
             >
-              <X className="size-4" />
-            </button>
+              <X />
+            </IconButton>
           </div>
 
           <Input
@@ -53,14 +53,14 @@ export function OptionsEditor({ options, onChange }: Props) {
         </div>
       ))}
 
-      <button
-        type="button"
+      <Button
+        variant="outline"
         onClick={() => onChange([...options, { name: "", values: [] }])}
-        className="inline-flex h-9 items-center gap-2 rounded-md border border-input px-3 text-sm"
+        leading={<Plus />}
+        className="h-9 px-3"
       >
-        <Plus className="size-4" />
         Add option
-      </button>
+      </Button>
     </div>
   );
 }

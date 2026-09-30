@@ -13,6 +13,7 @@ import { AddressForm, toCreateInput } from "@/features/account/address-form";
 import type { AddressValues } from "@/features/account/address-form";
 import { Radio } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type PaymentOption = {
   value: PaymentMethod;
@@ -99,12 +100,9 @@ export function CheckoutClient() {
         <p className="mt-1 text-sm text-muted-foreground">
           Your cart is saved and will be waiting for you.
         </p>
-        <Link
-          href="/login?returnTo=/checkout"
-          className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-        >
-          Sign in
-        </Link>
+        <Button asChild shape="pill" className="mt-6 px-6">
+          <Link href="/login?returnTo=/checkout">Sign in</Link>
+        </Button>
       </div>
     );
   }
@@ -115,12 +113,9 @@ export function CheckoutClient() {
     return (
       <div className="rounded-xl border border-dashed px-8 py-16 text-center">
         <p className="font-medium">Your cart is empty</p>
-        <Link
-          href="/shop"
-          className="mt-6 inline-flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground"
-        >
-          Continue shopping
-        </Link>
+        <Button asChild shape="pill" className="mt-6 px-6">
+          <Link href="/shop">Continue shopping</Link>
+        </Button>
       </div>
     );
   }
@@ -250,14 +245,16 @@ export function CheckoutClient() {
           </p>
         ) : null}
 
-        <button
-          type="button"
+        <Button
+          fullWidth
           onClick={() => placeOrder.mutate()}
-          disabled={!addressId || hasStockProblem || placeOrder.isPending}
-          className="mt-6 h-11 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+          disabled={!addressId || hasStockProblem}
+          loading={placeOrder.isPending}
+          loadingText="Placing order…"
+          className="mt-6 disabled:opacity-40"
         >
-          {placeOrder.isPending ? "Placing order…" : "Place order"}
-        </button>
+          Place order
+        </Button>
 
         {hasStockProblem ? (
           <p className="mt-2 text-center text-xs text-destructive">

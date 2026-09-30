@@ -22,6 +22,7 @@ import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/input";
+import { Button, IconButton } from "@/components/ui/button";
 
 type PendingUpload = {
   id: string;
@@ -273,13 +274,14 @@ export function ImageManager({
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           or{" "}
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="xs"
             onClick={() => fileInput.current?.click()}
-            className="font-medium text-primary underline underline-offset-2"
+            className="align-baseline underline underline-offset-2"
           >
             browse your files
-          </button>{" "}
+          </Button>{" "}
           · JPEG, PNG, WebP or AVIF up to 10 MB · select several at once
         </p>
       </div>
@@ -377,16 +379,16 @@ export function ImageManager({
                   </span>
                 ) : null}
 
-                <button
-                  type="button"
+                <IconButton
+                  label="Remove image"
+                  title={`Remove image ${index + 1}`}
+                  size="icon-sm"
                   onClick={() => remove.mutate(image.id)}
                   disabled={busy}
-                  aria-label="Remove image"
-                  title={`Remove image ${index + 1}`}
-                  className="absolute bottom-2 right-2 inline-flex size-8 items-center justify-center rounded-md bg-background/90 text-muted-foreground opacity-0 backdrop-blur-sm transition-all hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-30"
+                  className="absolute bottom-2 right-2 bg-background/90 text-muted-foreground opacity-0 backdrop-blur-sm hover:bg-background/90 hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-30"
                 >
-                  <Trash2 className="size-4" aria-hidden />
-                </button>
+                  <Trash2 aria-hidden />
+                </IconButton>
               </div>
 
               <div className="border-t p-2.5">
@@ -467,19 +469,19 @@ export function ImageManager({
                   {entry.name}
                 </p>
                 {entry.status === "failed" ? (
-                  <button
-                    type="button"
+                  <IconButton
+                    label={`Dismiss ${entry.name}`}
+                    size="icon-xs"
                     onClick={() => {
                       URL.revokeObjectURL(entry.previewUrl);
                       setPending((current) =>
                         current.filter((item) => item.id !== entry.id),
                       );
                     }}
-                    aria-label={`Dismiss ${entry.name}`}
-                    className="ml-auto inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+                    className="ml-auto text-muted-foreground"
                   >
-                    <Trash2 className="size-3.5" aria-hidden />
-                  </button>
+                    <Trash2 aria-hidden />
+                  </IconButton>
                 ) : null}
               </div>
             </li>

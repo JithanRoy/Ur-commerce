@@ -144,6 +144,13 @@ admin. Storefront filter state lives in the URL query string, not React state.
 Resist a shared `packages/ui` until a second real use case appears. The
 storefront is a branded consumer experience; the admin is a dense tool.
 
+## UI components
+
+Buttons and form controls come from each app's `src/components/ui/`
+(`button.tsx`, `input.tsx`, `field.tsx`) — never a raw hand-styled
+`<button>`, `<input>`, `<select>` or `<textarea>` in feature code. Both apps
+expose the same API. Catalogue and rules: `docs/ui-components.md`.
+
 ## Git — do not commit
 
 **Never run `git commit`, `git push`, or `git add` in this repository.** The

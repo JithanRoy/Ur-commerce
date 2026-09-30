@@ -11,6 +11,7 @@ import {
 import type { UploadScope } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Button } from "./button";
 
 function failureText(error: unknown, fallback: string): string {
   if (error instanceof UploadError) return error.message;
@@ -29,13 +30,17 @@ export function ImageField({
   onUploaded,
   onCleared,
   disabled,
+  hint,
+  fit = "cover",
 }: {
   scope: UploadScope;
   label: string;
   currentUrl: string | null;
-  onUploaded: (objectKey: string) => void;
+  onUploaded: (objectKey: string, previewUrl: string) => void;
   onCleared: () => void;
   disabled?: boolean;
+  hint?: string;
+  fit?: "cover" | "contain";
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,14 +62,16 @@ export function ImageField({
     },
     onMutate: (file: File) => {
       setError(null);
+      const previewUrl = URL.createObjectURL(file);
       setPreview((current) => {
         if (current) URL.revokeObjectURL(current);
-        return URL.createObjectURL(file);
+        return previewUrl;
       });
+      return previewUrl;
     },
-    onSuccess: (objectKey) => {
+    onSuccess: (objectKey, _file, previewUrl) => {
       setBroken(false);
-      onUploaded(objectKey);
+      onUploaded(objectKey, previewUrl);
     },
     onError: (cause) => {
       setPreview((current) => {
@@ -137,7 +144,8 @@ export function ImageField({
               alt=""
               onError={() => setBroken(true)}
               className={cn(
-                "size-full object-cover",
+                "size-full",
+                fit === "contain" ? "object-contain p-1.5" : "object-cover",
                 upload.isPending && "opacity-40",
               )}
             />
@@ -164,10 +172,14 @@ export function ImageField({
                 ? "Drop to upload"
                 : "Click or drop an image"}
           </p>
+          {hint ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+          ) : null}
 
           {currentUrl ? (
-            <button
-              type="button"
+            <Button
+              variant="destructive-ghost"
+              size="xs"
               onClick={() => {
                 setBroken(false);
                 setPreview((current) => {
@@ -177,11 +189,11 @@ export function ImageField({
                 onCleared();
               }}
               disabled={busy}
-              className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
+              leading={<Trash2 aria-hidden />}
+              className="-ml-2 mt-1 gap-1.5"
             >
-              <Trash2 className="size-3.5" aria-hidden />
               Remove {label}
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

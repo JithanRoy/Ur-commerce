@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ShieldCheck, X } from "lucide-react";
 import { SignInForm } from "./sign-in-form";
+import { IconButton } from "@/components/ui/button";
 
 export function SignInDialog({
   open,
@@ -53,14 +54,14 @@ export function SignInDialog({
         aria-labelledby="sign-in-dialog-title"
         className="relative my-auto w-full max-w-sm rounded-2xl border bg-background p-6 shadow-xl"
       >
-        <button
-          type="button"
+        <IconButton
+          label="Close"
+          size="icon-sm"
           onClick={onClose}
-          aria-label="Close"
-          className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="absolute right-3 top-3 text-muted-foreground"
         >
-          <X className="size-4" aria-hidden />
-        </button>
+          <X aria-hidden />
+        </IconButton>
 
         <span className="inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
           <ShieldCheck className="size-5" aria-hidden />

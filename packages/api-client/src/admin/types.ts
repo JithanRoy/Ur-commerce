@@ -57,7 +57,12 @@ export type UploadTicketInput = {
   contentLength: number;
 };
 
-export type UploadScope = "product" | "brand" | "category" | "collection";
+export type UploadScope =
+  | "product"
+  | "brand"
+  | "category"
+  | "collection"
+  | "store";
 
 export type ScopedUploadTicketInput = UploadTicketInput & {
   scope: UploadScope;
@@ -211,6 +216,8 @@ export type UpdateStoreSettingsInput = {
   tagline?: string | null;
   logoUrl?: string | null;
   faviconUrl?: string | null;
+  logoObjectKey?: string;
+  faviconObjectKey?: string;
   primaryColor?: string;
   accentColor?: string;
   supportEmail?: string | null;

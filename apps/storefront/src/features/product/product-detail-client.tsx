@@ -9,7 +9,6 @@ import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
 import type { ProductDetail } from "@urcommerce/api-client";
 import {
   Check,
-  Loader2,
   Mail,
   MessageCircle,
   RotateCcw,
@@ -31,6 +30,7 @@ import {
   optionNamesInOrder,
   type Selection,
 } from "./variant-resolution";
+import { Button, IconButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function discountPercent(price: number, compareAtPrice: number): number {
@@ -56,6 +56,11 @@ export function ProductDetailClient({
   const [signInOpen, setSignInOpen] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
   const buyBox = useRef<HTMLDivElement>(null);
 
   const variant = useMemo(
@@ -137,17 +142,15 @@ export function ProductDetailClient({
       ? description
       : `${description.slice(0, DESCRIPTION_CLAMP).trimEnd()}…`;
 
-  const addLabel = addItem.isPending
-    ? "Adding…"
-    : isSoldOut
-      ? "Sold out"
-      : isComplete
-        ? "Add to cart"
-        : `Select ${optionNamesInOrder(product)
-            .filter((name) => !selection[name])
-            .join(" and ")}`;
+  const addLabel = isSoldOut
+    ? "Sold out"
+    : isComplete
+      ? "Add to cart"
+      : `Select ${optionNamesInOrder(product)
+          .filter((name) => !selection[name])
+          .join(" and ")}`;
 
-  const shareUrl = `https://${typeof window !== "undefined" ? window.location.host : ""}/product/${product.slug}`;
+  const shareUrl = `${origin}/product/${product.slug}`;
   const shareText = encodeURIComponent(product.name);
   const encodedUrl = encodeURIComponent(shareUrl);
 
@@ -222,13 +225,13 @@ export function ProductDetailClient({
               {isLongDescription ? (
                 <>
                   {" "}
-                  <button
-                    type="button"
+                  <Button
+                    variant="link"
                     onClick={() => setDescriptionOpen((open) => !open)}
-                    className="font-medium text-foreground underline underline-offset-4"
+                    className="text-[length:inherit] text-foreground underline"
                   >
                     {descriptionOpen ? "Read less" : "Read more"}
-                  </button>
+                  </Button>
                 </>
               ) : null}
             </p>
@@ -255,55 +258,57 @@ export function ProductDetailClient({
           <div ref={buyBox} className="mt-6 space-y-3">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex h-12 items-center rounded-lg border bg-card">
-                <button
-                  type="button"
+                <IconButton
+                  label="Decrease quantity"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={!isComplete || quantity <= 1}
-                  aria-label="Decrease quantity"
-                  className="h-full w-11 text-lg disabled:opacity-30"
+                  size="md"
+                  className="h-full w-11 px-0 text-lg disabled:opacity-30"
                 >
                   −
-                </button>
+                </IconButton>
                 <span className="w-10 text-center text-sm font-medium tabular-nums">
                   {quantity}
                 </span>
-                <button
-                  type="button"
+                <IconButton
+                  label="Increase quantity"
                   onClick={() =>
                     setQuantity((q) => Math.min(maxQuantity || 1, q + 1))
                   }
                   disabled={!isComplete || quantity >= maxQuantity}
-                  aria-label="Increase quantity"
-                  className="h-full w-11 text-lg disabled:opacity-30"
+                  size="md"
+                  className="h-full w-11 px-0 text-lg disabled:opacity-30"
                 >
                   +
-                </button>
+                </IconButton>
               </div>
 
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="xl"
+                shape="rounded"
                 onClick={onAddToCart}
-                disabled={!isComplete || isSoldOut || addItem.isPending}
-                className="inline-flex h-12 min-w-44 flex-1 items-center justify-center gap-2 rounded-lg border-2 border-foreground bg-background px-6 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:border-input disabled:opacity-40"
+                disabled={!isComplete || isSoldOut}
+                loading={addItem.isPending}
+                loadingText="Adding…"
+                leading={<ShoppingBag aria-hidden />}
+                className="min-w-44 flex-1 border-2 border-foreground text-sm font-semibold uppercase tracking-wide shadow-none hover:bg-foreground hover:text-background disabled:border-input disabled:opacity-40"
               >
-                {addItem.isPending ? (
-                  <Loader2 className="size-4 animate-spin" aria-hidden />
-                ) : (
-                  <ShoppingBag className="size-4" aria-hidden />
-                )}
                 {addLabel}
-              </button>
+              </Button>
             </div>
 
-            <button
-              type="button"
+            <Button
+              size="xl"
+              shape="rounded"
+              fullWidth
               onClick={onBuyNow}
               disabled={!isComplete || isSoldOut || addItem.isPending}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold uppercase tracking-wide text-primary-foreground transition-all hover:shadow-lg hover:shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              leading={<Zap aria-hidden />}
+              className="text-sm font-semibold uppercase tracking-wide hover:bg-primary hover:shadow-lg hover:shadow-primary/20 disabled:opacity-40 disabled:shadow-none"
             >
-              <Zap className="size-4" aria-hidden />
               Buy it now
-            </button>
+            </Button>
           </div>
 
           {cartError ? (
@@ -382,24 +387,25 @@ export function ProductDetailClient({
                   icon: Mail,
                 },
               ].map((item) => (
-                <a
+                <IconButton
                   key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={item.label}
-                  className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  asChild
+                  label={item.label}
+                  className="size-9 text-muted-foreground"
                 >
-                  <item.icon className="size-4" aria-hidden />
-                </a>
+                  <a href={item.href} target="_blank" rel="noreferrer">
+                    <item.icon aria-hidden />
+                  </a>
+                </IconButton>
               ))}
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={copyLink}
-                className="ml-1 inline-flex h-9 items-center rounded-md border border-input px-3 text-xs font-medium transition-colors hover:bg-muted"
+                className="ml-1 h-9 text-xs shadow-none"
               >
                 {linkCopied ? "Copied!" : "Copy link"}
-              </button>
+              </Button>
             </div>
 
             {supportEmail ? (
@@ -455,15 +461,16 @@ export function ProductDetailClient({
             <p className="truncate text-sm font-medium">{product.name}</p>
             <p className="text-sm font-semibold">{price}</p>
           </div>
-          <button
-            type="button"
+          <Button
+            size="md"
+            shape="rounded"
             onClick={onAddToCart}
             disabled={!isComplete || isSoldOut || addItem.isPending}
-            className="ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-40"
+            leading={<ShoppingBag aria-hidden />}
+            className="ml-auto px-5 disabled:opacity-40"
           >
-            <ShoppingBag className="size-4" aria-hidden />
             {isComplete ? "Add to cart" : "Choose options"}
-          </button>
+          </Button>
         </div>
       </div>
 

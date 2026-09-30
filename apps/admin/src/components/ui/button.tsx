@@ -13,8 +13,7 @@ export const buttonVariants = cva(
           "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        accent:
-          "bg-accent-solid text-accent-solid-foreground shadow-xs hover:bg-accent-solid/90",
+        accent: "bg-accent text-accent-foreground hover:bg-accent/80",
         outline:
           "border border-input bg-background shadow-xs hover:bg-muted hover:text-foreground",
         ghost: "hover:bg-muted hover:text-foreground",
@@ -50,7 +49,7 @@ export const buttonVariants = cva(
     compoundVariants: [{ variant: "link", class: "h-auto px-0 shadow-none" }],
     defaultVariants: {
       variant: "primary",
-      size: "lg",
+      size: "md",
       shape: "default",
       fullWidth: false,
     },
@@ -115,7 +114,7 @@ export function Button({
       aria-busy={loading || undefined}
       data-slot="button"
       data-variant={variant ?? "primary"}
-      data-size={size ?? "lg"}
+      data-size={size ?? "md"}
       className={cn(
         buttonVariants({ variant, size, shape, fullWidth }),
         className,

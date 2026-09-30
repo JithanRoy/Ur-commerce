@@ -9,6 +9,7 @@ import { authApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { clearCartSession } from "@/stores/cart-session";
 import { cartQueryKey } from "@/features/cart/use-cart";
+import { IconButton } from "@/components/ui/button";
 
 const links = [
   { href: "/account/orders", label: "Your orders", icon: Package },
@@ -64,13 +65,15 @@ export function AccountMenu() {
   if (!ready || !session) {
     return (
       <>
-        <Link
-          href="/account/orders"
-          aria-label="Your orders"
-          className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        <IconButton
+          asChild
+          label="Your orders"
+          className="size-9 text-muted-foreground"
         >
-          <User className="size-[18px]" />
-        </Link>
+          <Link href="/account/orders">
+            <User className="size-[18px]" />
+          </Link>
+        </IconButton>
         {notice ? <SignedOutNotice message={notice} /> : null}
       </>
     );
@@ -114,16 +117,15 @@ export function AccountMenu() {
 
   return (
     <div ref={container} className="relative">
-      <button
-        type="button"
-        aria-label="Your account"
+      <IconButton
+        label="Your account"
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="size-9 text-muted-foreground"
       >
         <User className="size-[18px]" />
-      </button>
+      </IconButton>
 
       {open ? (
         <div

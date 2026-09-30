@@ -14,6 +14,7 @@ import { clearCartSession } from "@/stores/cart-session";
 import { cartQueryKey } from "@/features/cart/use-cart";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email"),
@@ -139,17 +140,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </p>
       ) : null}
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="h-11 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+        fullWidth
+        loading={isSubmitting}
+        loadingText="Please wait…"
       >
-        {isSubmitting
-          ? "Please wait…"
-          : mode === "login"
-            ? "Sign in"
-            : "Create account"}
-      </button>
+        {mode === "login" ? "Sign in" : "Create account"}
+      </Button>
 
       <p className="text-center text-sm text-muted-foreground">
         {mode === "login" ? (

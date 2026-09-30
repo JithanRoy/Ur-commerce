@@ -101,6 +101,7 @@ export type InputProps = Omit<React.ComponentProps<"input">, "size"> &
     trailing?: React.ReactNode;
     revealable?: boolean;
     onClear?: () => void;
+    clearLabel?: string;
   };
 
 export function Input({
@@ -111,6 +112,7 @@ export function Input({
   trailing,
   revealable = true,
   onClear,
+  clearLabel = "Clear",
   className,
   type = "text",
   id,
@@ -150,7 +152,12 @@ export function Input({
   }
   if (showClear) {
     trailingItems.push(
-      <SlotButton key="clear" label="Clear" size={size} onClick={onClear}>
+      <SlotButton
+        key="clear"
+        label={clearLabel}
+        size={size}
+        onClick={onClear}
+      >
         <X aria-hidden />
       </SlotButton>,
     );

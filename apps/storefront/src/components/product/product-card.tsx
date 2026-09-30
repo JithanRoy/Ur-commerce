@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, ShoppingBag, Zap } from "lucide-react";
+import { Check, ShoppingBag, Zap } from "lucide-react";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
 import type {
   Paisa,
@@ -12,6 +12,7 @@ import type {
 import { useAuth } from "@/stores/auth";
 import { useCartMutations } from "@/features/cart/use-cart";
 import { SignInDialog } from "@/features/auth/sign-in-dialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const LOW_STOCK_THRESHOLD = 5;
@@ -155,34 +156,34 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
       <div className="mt-auto flex flex-col gap-2 p-4 pt-3">
         {isSoldOut ? (
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="md"
+            shape="rounded"
+            fullWidth
             disabled
-            className="h-10 w-full cursor-not-allowed rounded-lg border bg-muted/50 text-sm font-medium text-muted-foreground"
+            className="bg-muted/50 text-muted-foreground shadow-none disabled:opacity-100"
           >
             Out of stock
-          </button>
+          </Button>
         ) : (
           <div className="flex gap-2">
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="md"
+              shape="rounded"
               onClick={onAddToBag}
-              disabled={addItem.isPending}
+              loading={addItem.isPending}
+              leading={
+                justAdded ? <Check aria-hidden /> : <ShoppingBag aria-hidden />
+              }
               className={cn(
-                "inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border text-sm font-medium transition-all",
+                "min-w-0 flex-1 shrink gap-1.5 px-2 shadow-none",
                 justAdded
-                  ? "border-success bg-success text-white"
-                  : "border-input hover:border-foreground/40 hover:bg-accent/40",
-                addItem.isPending && "opacity-50",
+                  ? "border-success bg-success text-white hover:bg-success hover:text-white"
+                  : "hover:border-foreground/40 hover:bg-accent/40",
               )}
             >
-              {addItem.isPending ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-              ) : justAdded ? (
-                <Check className="size-4" aria-hidden />
-              ) : (
-                <ShoppingBag className="size-4" aria-hidden />
-              )}
               <span className="truncate">
                 {justAdded
                   ? "Added"
@@ -190,20 +191,18 @@ export function ProductCard({ product }: { product: ProductCardData }) {
                     ? "Choose options"
                     : "Add to bag"}
               </span>
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              size="md"
+              shape="rounded"
               onClick={onBuyNow}
               disabled={addItem.isPending}
-              className={cn(
-                "inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition-all hover:shadow-md hover:shadow-primary/20",
-                addItem.isPending && "opacity-50",
-              )}
+              leading={<Zap aria-hidden />}
+              className="min-w-0 flex-1 shrink gap-1.5 px-2 hover:bg-primary hover:shadow-md hover:shadow-primary/20"
             >
-              <Zap className="size-4" aria-hidden />
               <span className="truncate">Buy now</span>
-            </button>
+            </Button>
           </div>
         )}
 

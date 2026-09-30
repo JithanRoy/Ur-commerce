@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { AddStaffForm } from "@/features/team/add-staff-form";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export function TeamRoute() {
   const queryClient = useQueryClient();
@@ -177,8 +178,9 @@ export function TeamRoute() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
+                      <Button
+                        variant="outline"
+                        size="sm"
                         disabled={isSelf || setActive.isPending}
                         onClick={() =>
                           setActive.mutate({
@@ -191,10 +193,10 @@ export function TeamRoute() {
                             ? "You cannot change your own access"
                             : undefined
                         }
-                        className="h-8 whitespace-nowrap rounded-md border px-3 text-xs transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                        className="text-xs font-normal disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {member.isActive ? "Revoke access" : "Restore access"}
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );

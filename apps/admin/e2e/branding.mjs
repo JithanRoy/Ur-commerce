@@ -51,13 +51,13 @@ ok(
   "save is disabled while invalid",
 );
 
-// non-https image link refused
 await page.fill("#primaryColor", store.theme.primaryColor);
-await page.fill("#logoUrl", "http://insecure.test/logo.png");
-await page.waitForTimeout(400);
-body = await page.innerText("body");
-ok(body.includes("https://"), "non-https image link rejected");
-await page.fill("#logoUrl", "");
+ok((await page.locator("#logoUrl, #faviconUrl").count()) === 0, "no image URL text fields remain");
+ok(
+  (await page.getByRole("button", { name: /(Upload|Replace) logo/i }).count()) === 1 &&
+    (await page.getByRole("button", { name: /(Upload|Replace) favicon/i }).count()) === 1,
+  "logo and favicon upload tiles present",
+);
 
 // a real save reaches the API and the public endpoint
 const newTagline = `E2E tagline ${Date.now().toString().slice(-5)}`;
