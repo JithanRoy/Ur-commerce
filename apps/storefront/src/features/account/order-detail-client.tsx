@@ -7,6 +7,7 @@ import { formatBDT, isApiError } from "@urcommerce/api-client";
 import { checkoutApi } from "@/lib/browser-api";
 import { OrderStatusBadge, formatOrderDate } from "./order-status";
 import { Button } from "@/components/ui/button";
+import { CartSkeleton } from "@/components/ui/page-skeletons";
 
 export function OrderDetailClient({ orderId }: { orderId: string }) {
   const { data: order, isPending, error } = useQuery({
@@ -16,7 +17,7 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
   });
 
   if (isPending) {
-    return <p className="text-muted-foreground">Loading…</p>;
+    return <CartSkeleton label="Loading your order" />;
   }
 
   if (error || !order) {

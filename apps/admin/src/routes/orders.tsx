@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { formatBDT, ORDER_STATUS_LABELS, ORDER_STATUSES } from "@urcommerce/api-client";
 import type { OrderStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { StatusBadge } from "@/features/orders/status-badge";
@@ -57,7 +58,7 @@ export function OrdersRoute() {
     queryFn: () => adminApi.orders.counts(),
   });
 
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, isPlaceholderData, error } = useQuery({
     queryKey: ["admin", "orders", { page, status, search }],
     queryFn: () =>
       adminApi.orders.list({
@@ -121,7 +122,7 @@ export function OrdersRoute() {
         className="mb-5 h-9 max-w-sm"
       />
 
-      {isPending ? <LoadingState /> : null}
+      {isPending ? <LoadingState variant="table" /> : null}
 
       {error ? (
         <ErrorState
@@ -144,7 +145,13 @@ export function OrdersRoute() {
 
       {data && data.items.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-xl border bg-card shadow-xs">
+          <div
+            aria-busy={isPlaceholderData}
+            className={cn(
+              "overflow-x-auto rounded-xl border bg-card shadow-xs transition-opacity duration-200",
+              isPlaceholderData && "opacity-60",
+            )}
+          >
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/60 text-left">
                 <tr>

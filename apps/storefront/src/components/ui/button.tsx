@@ -5,7 +5,7 @@ import { Slot } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(
-  "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-medium outline-none transition-[color,background-color,border-color,box-shadow,opacity] select-none focus-visible:ring-4 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-medium outline-none transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-150 select-none active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:ring-4 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -47,7 +47,7 @@ export const buttonVariants = cva(
         false: "",
       },
     },
-    compoundVariants: [{ variant: "link", class: "h-auto px-0 shadow-none" }],
+    compoundVariants: [{ variant: "link", class: "h-auto px-0 shadow-none active:scale-100" }],
     defaultVariants: {
       variant: "primary",
       size: "lg",

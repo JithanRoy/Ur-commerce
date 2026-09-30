@@ -7,6 +7,7 @@ import type { CartLine, Paisa } from "@urcommerce/api-client";
 import { useCart, useCartMutations } from "./use-cart";
 import { Button, IconButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CartSkeleton } from "@/components/ui/page-skeletons";
 
 const FREE_SHIPPING_THRESHOLD = 200000 as Paisa;
 
@@ -165,7 +166,7 @@ export function CartClient() {
   const { data: cart, isPending, isError } = useCart();
 
   if (isPending) {
-    return <p className="text-muted-foreground">Loading your cart…</p>;
+    return <CartSkeleton />;
   }
 
   if (isError || !cart || cart.items.length === 0) {

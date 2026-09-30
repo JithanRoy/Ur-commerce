@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation";
 import { isApiError } from "@urcommerce/api-client";
 import { useCartMutations } from "@/features/cart/use-cart";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
@@ -46,7 +46,7 @@ export function ProductDetailClient({
   product: ProductDetail;
   supportEmail: string | null;
 }) {
-  const router = useRouter();
+  const router = useAppRouter();
   const session = useAuth((state) => state.session);
   const { addItem } = useCartMutations();
   const [selection, setSelection] = useState<Selection>({});

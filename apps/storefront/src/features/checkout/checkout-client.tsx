@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
@@ -14,6 +14,7 @@ import type { AddressValues } from "@/features/account/address-form";
 import { Radio } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CheckoutSkeleton } from "@/components/ui/page-skeletons";
 
 type PaymentOption = {
   value: PaymentMethod;
@@ -30,7 +31,7 @@ const paymentOptions: [PaymentOption, ...PaymentOption[]] = [
 ];
 
 export function CheckoutClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const queryClient = useQueryClient();
   const session = useAuth((state) => state.session);
   const { data: cart, isPending: cartPending } = useCart();
@@ -107,7 +108,7 @@ export function CheckoutClient() {
     );
   }
 
-  if (cartPending) return <p className="text-muted-foreground">Loading…</p>;
+  if (cartPending) return <CheckoutSkeleton />;
 
   if (!cart || cart.items.length === 0) {
     return (

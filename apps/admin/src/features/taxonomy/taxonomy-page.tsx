@@ -145,7 +145,7 @@ export function TaxonomyPage<T extends TaxonomyRow>({
         </p>
       ) : null}
 
-      {isPending ? <LoadingState /> : null}
+      {isPending ? <LoadingState variant="table" /> : null}
 
       {error ? (
         <ErrorState

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/stores/auth";
 import { Button } from "@/components/ui/button";
+import { ListSkeleton } from "@/components/ui/page-skeletons";
 
 export function RequireCustomer({
   children,
@@ -22,7 +23,7 @@ export function RequireCustomer({
   useEffect(() => setReady(true), []);
 
   if (!ready) {
-    return <p className="text-muted-foreground">Loading…</p>;
+    return <ListSkeleton rows={3} />;
   }
 
   if (!session) {

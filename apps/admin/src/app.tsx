@@ -1,22 +1,26 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { isApiError } from "@urcommerce/api-client";
+import { ActivityBar } from "@/components/layout/activity-bar";
 import { AdminShell } from "@/components/layout/admin-shell";
-import { BrandsRoute } from "@/routes/brands";
-import { CategoriesRoute } from "@/routes/categories";
-import { CollectionsRoute } from "@/routes/collections";
-import { CollectionProductsRoute } from "@/routes/collection-products";
+import { NetworkStatus } from "@/components/ui/network-status";
+import {
+  BrandingRoute,
+  BrandsRoute,
+  CategoriesRoute,
+  CollectionProductsRoute,
+  CollectionsRoute,
+  NotFoundRoute,
+  OrderDetailRoute,
+  OrdersRoute,
+  ProductEditRoute,
+  ProductNewRoute,
+  ProductsRoute,
+  TeamRoute,
+} from "@/routes/lazy";
 import { LoginRoute } from "@/routes/login";
-import { NotFoundRoute } from "@/routes/not-found";
-import { ProductEditRoute } from "@/routes/product-edit";
-import { ProductNewRoute } from "@/routes/product-new";
-import { OrderDetailRoute } from "@/routes/order-detail";
-import { OrdersRoute } from "@/routes/orders";
-import { ProductsRoute } from "@/routes/products";
 import { RedirectIfAuthenticated } from "@/routes/redirect-if-authenticated";
 import { RequireStaff } from "@/routes/require-staff";
-import { TeamRoute } from "@/routes/team";
-import { BrandingRoute } from "@/routes/branding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +37,8 @@ const queryClient = new QueryClient({
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ActivityBar />
+      <NetworkStatus />
       <BrowserRouter>
         <Routes>
           <Route element={<RedirectIfAuthenticated />}>

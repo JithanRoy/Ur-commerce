@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Toaster } from "sonner";
 import { X } from "lucide-react";
 import { Sidebar, SidebarContent } from "./sidebar";
 import { Topbar } from "./topbar";
 import { IconButton } from "@/components/ui/button";
+import { preloadAllRoutes } from "@/routes/lazy";
+import { RouteFallback } from "./route-fallback";
 
 const STORE_NAME = "Store admin";
 
@@ -13,6 +15,13 @@ export function AdminShell() {
   const location = useLocation();
 
   useEffect(() => setNavOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    const idle =
+      window.requestIdleCallback ??
+      ((run: () => void) => window.setTimeout(run, 1200));
+    idle(preloadAllRoutes);
+  }, []);
 
   useEffect(() => {
     if (!navOpen) return;
@@ -52,7 +61,9 @@ export function AdminShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onOpenNav={() => setNavOpen(true)} />
         <main className="flex-1 overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
-          <Outlet />
+          <Suspense fallback={<RouteFallback />}>
+            <Outlet />
+          </Suspense>
         </main>
         <Toaster position="top-right" richColors closeButton />
       </div>

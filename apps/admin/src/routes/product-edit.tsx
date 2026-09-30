@@ -147,7 +147,7 @@ export function ProductEditRoute() {
     onSettled: () => setRemovingId(null),
   });
 
-  if (isPending) return <LoadingState />;
+  if (isPending) return <LoadingState variant="form" />;
   if (loadError || !product) {
     return (
       <ErrorState

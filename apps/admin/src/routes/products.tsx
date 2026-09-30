@@ -27,7 +27,7 @@ export function ProductsRoute() {
   const [status, setStatus] = useState<ProductStatus | "">("");
   const [page, setPage] = useState(1);
 
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, isPlaceholderData, error } = useQuery({
     queryKey: ["admin", "products", { page, search, status }],
     queryFn: () =>
       adminApi.products.list({
@@ -98,7 +98,7 @@ export function ProductsRoute() {
         />
       </div>
 
-      {isPending ? <LoadingState /> : null}
+      {isPending ? <LoadingState variant="table" /> : null}
 
       {error ? (
         <ErrorState
@@ -122,7 +122,13 @@ export function ProductsRoute() {
 
       {data && data.items.length > 0 ? (
         <>
-          <div className="overflow-x-auto rounded-lg border">
+          <div
+            aria-busy={isPlaceholderData}
+            className={cn(
+              "overflow-x-auto rounded-lg border transition-opacity duration-200",
+              isPlaceholderData && "opacity-60",
+            )}
+          >
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50 text-left">
                 <tr>

@@ -125,11 +125,11 @@ export function BrandingRoute() {
     },
   });
 
-  if (isPending) return <LoadingState />;
+  if (isPending) return <LoadingState variant="form" />;
   if (loadError || !data) {
     return <ErrorState message="We could not load your store settings." />;
   }
-  if (!draft) return <LoadingState />;
+  if (!draft) return <LoadingState variant="form" />;
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((current) => (current ? { ...current, [key]: value } : current));

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, MapPin, Package, ShieldOff, User } from "lucide-react";
 import { authApi } from "@/lib/browser-api";
@@ -28,7 +28,7 @@ function SignedOutNotice({ message }: { message: string }) {
 }
 
 export function AccountMenu() {
-  const router = useRouter();
+  const router = useAppRouter();
   const queryClient = useQueryClient();
   const session = useAuth((state) => state.session);
   const signOut = useAuth((state) => state.signOut);

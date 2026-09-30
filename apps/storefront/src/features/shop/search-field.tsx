@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -14,7 +15,7 @@ export function SearchField({
   autoFocus?: boolean;
   onDone?: () => void;
 }) {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const active = searchParams.get("search") ?? "";
   const [term, setTerm] = useState(active);

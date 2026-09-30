@@ -7,6 +7,7 @@ import { formatBDT } from "@urcommerce/api-client";
 import { checkoutApi } from "@/lib/browser-api";
 import { OrderStatusBadge, formatOrderDate } from "./order-status";
 import { Button } from "@/components/ui/button";
+import { ListSkeleton } from "@/components/ui/page-skeletons";
 
 export function OrdersClient() {
   const { data, isPending, isError } = useQuery({
@@ -16,7 +17,7 @@ export function OrdersClient() {
   });
 
   if (isPending) {
-    return <p className="text-muted-foreground">Loading your orders…</p>;
+    return <ListSkeleton label="Loading your orders" />;
   }
 
   if (isError) {

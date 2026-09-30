@@ -130,3 +130,26 @@
 @utility container-page {
   @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8;
 }
+
+@theme {
+  --animate-shimmer: shimmer 1.8s ease-in-out infinite;
+  --animate-fade-in: fade-in 240ms ease-out both;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

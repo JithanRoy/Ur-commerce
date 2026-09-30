@@ -4,6 +4,9 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { themeStyle } from "@/lib/theme";
 import { loadStoreTheme } from "@/lib/load-store";
+import { Suspense } from "react";
+import { NavigationProgress } from "@/components/layout/navigation-progress";
+import { NetworkStatus } from "@/components/ui/network-status";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -42,6 +45,10 @@ export default async function RootLayout({
     >
       <body className="flex min-h-dvh flex-col">
         <Providers>
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
+          <NetworkStatus />
           <SiteHeader storeName={theme.name} logoUrl={store?.logoUrl ?? null} />
           <div className="flex-1">{children}</div>
           <SiteFooter storeName={theme.name} store={store} />

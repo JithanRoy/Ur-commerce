@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AddressForm, toCreateInput } from "./address-form";
 import type { AddressValues } from "./address-form";
+import { ListSkeleton } from "@/components/ui/page-skeletons";
 
 const addressesQueryKey = ["addresses"];
 
@@ -98,7 +99,7 @@ export function AddressesClient() {
   });
 
   if (isPending) {
-    return <p className="text-muted-foreground">Loading your addresses…</p>;
+    return <ListSkeleton rows={2} label="Loading your addresses" />;
   }
 
   if (isError) {

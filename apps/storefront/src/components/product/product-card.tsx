@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/navigation";
 import { Check, ShoppingBag, Zap } from "lucide-react";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
 import type {
@@ -27,7 +27,7 @@ function highestCompareAtPrice(product: ProductCardData): Paisa | null {
 }
 
 export function ProductCard({ product }: { product: ProductCardData }) {
-  const router = useRouter();
+  const router = useAppRouter();
   const session = useAuth((state) => state.session);
   const { addItem } = useCartMutations();
   const [justAdded, setJustAdded] = useState(false);

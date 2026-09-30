@@ -105,7 +105,7 @@ export function CollectionProductsRoute() {
       ),
   });
 
-  if (collection.isPending || catalogue.isPending) return <LoadingState />;
+  if (collection.isPending || catalogue.isPending) return <LoadingState variant="panels" />;
   if (collection.isError || !collection.data) {
     return <ErrorState message="Could not load that collection." />;
   }

@@ -3,12 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { isStaffRole } from "@urcommerce/api-client";
 import { authApi } from "@/lib/api";
+import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/stores/auth";
 
 function VerifyingSession() {
   return (
-    <div className="flex min-h-dvh items-center justify-center">
-      <p className="text-sm text-muted-foreground">Checking your session…</p>
+    <div
+      role="status"
+      className="flex min-h-dvh animate-fade-in flex-col items-center justify-center gap-3 text-muted-foreground"
+    >
+      <Spinner size="md" />
+      <p className="text-sm">Checking your session…</p>
     </div>
   );
 }
@@ -41,7 +46,9 @@ export function RequireStaff() {
   );
 
   if (!session) return redirectToLogin;
-  if (isPending) return <VerifyingSession />;
+  if (isPending) {
+    return isStaffRole(session.role) ? <Outlet /> : <VerifyingSession />;
+  }
   if (isError || !data) return redirectToLogin;
 
   if (!isStaffRole(data.role)) {

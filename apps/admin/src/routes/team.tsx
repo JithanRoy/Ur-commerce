@@ -95,7 +95,7 @@ export function TeamRoute() {
         />
       </div>
 
-      {isPending ? <LoadingState /> : null}
+      {isPending ? <LoadingState variant="table" /> : null}
 
       {loadError ? (
         <ErrorState

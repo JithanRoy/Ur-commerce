@@ -24,7 +24,7 @@ export function OrderDetailRoute() {
     enabled: Boolean(orderId),
   });
 
-  if (isPending) return <LoadingState />;
+  if (isPending) return <LoadingState variant="detail" />;
   if (error || !order) {
     return (
       <ErrorState
