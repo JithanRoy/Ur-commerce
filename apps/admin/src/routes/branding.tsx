@@ -7,6 +7,7 @@ import type {
 } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
+import { TextField } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { ColourField } from "@/features/branding/colour-field";
@@ -69,31 +70,6 @@ function localProblem(draft: Draft): string | null {
     return "Image links must start with https://";
   }
   return null;
-}
-
-const inputClass =
-  "h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none transition-shadow focus-visible:border-foreground/30 focus-visible:ring-4 focus-visible:ring-foreground/5";
-
-function Field({
-  id,
-  label,
-  hint,
-  children,
-}: {
-  id: string;
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-      </label>
-      {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-    </div>
-  );
 }
 
 export function BrandingRoute() {
@@ -159,52 +135,39 @@ export function BrandingRoute() {
           <section className="space-y-4">
             <h2 className="text-sm font-medium">Identity</h2>
 
-            <Field id="displayName" label="Store name">
-              <input
-                id="displayName"
-                value={draft.displayName}
-                onChange={(event) => set("displayName", event.target.value)}
-                className={inputClass}
-              />
-            </Field>
+            <TextField
+              id="displayName"
+              label="Store name"
+              value={draft.displayName}
+              onChange={(event) => set("displayName", event.target.value)}
+            />
 
-            <Field
+            <TextField
               id="tagline"
               label="Tagline"
               hint="Shown under the headline on your homepage."
-            >
-              <input
-                id="tagline"
-                value={draft.tagline}
-                onChange={(event) => set("tagline", event.target.value)}
-                placeholder="Everyday wear, made in Bangladesh"
-                className={inputClass}
-              />
-            </Field>
+              value={draft.tagline}
+              onChange={(event) => set("tagline", event.target.value)}
+              placeholder="Everyday wear, made in Bangladesh"
+            />
 
-            <Field
+            <TextField
               id="logoUrl"
               label="Logo URL"
               hint="Replaces the store name in the header. Must be https."
-            >
-              <input
-                id="logoUrl"
-                value={draft.logoUrl}
-                onChange={(event) => set("logoUrl", event.target.value)}
-                placeholder="https://…"
-                className={inputClass}
-              />
-            </Field>
+              value={draft.logoUrl}
+              onChange={(event) => set("logoUrl", event.target.value)}
+              placeholder="https://…"
+            />
 
-            <Field id="faviconUrl" label="Favicon URL" hint="Must be https.">
-              <input
-                id="faviconUrl"
-                value={draft.faviconUrl}
-                onChange={(event) => set("faviconUrl", event.target.value)}
-                placeholder="https://…"
-                className={inputClass}
-              />
-            </Field>
+            <TextField
+              id="faviconUrl"
+              label="Favicon URL"
+              hint="Must be https."
+              value={draft.faviconUrl}
+              onChange={(event) => set("faviconUrl", event.target.value)}
+              placeholder="https://…"
+            />
           </section>
 
           <section className="space-y-4">
@@ -227,27 +190,20 @@ export function BrandingRoute() {
 
           <section className="space-y-4">
             <h2 className="text-sm font-medium">Support</h2>
-            <Field
+            <TextField
               id="supportEmail"
               label="Email"
               hint="Shown in the storefront footer. Leave blank to hide."
-            >
-              <input
-                id="supportEmail"
-                type="email"
-                value={draft.supportEmail}
-                onChange={(event) => set("supportEmail", event.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <Field id="supportPhone" label="Phone">
-              <input
-                id="supportPhone"
-                value={draft.supportPhone}
-                onChange={(event) => set("supportPhone", event.target.value)}
-                className={inputClass}
-              />
-            </Field>
+              type="email"
+              value={draft.supportEmail}
+              onChange={(event) => set("supportEmail", event.target.value)}
+            />
+            <TextField
+              id="supportPhone"
+              label="Phone"
+              value={draft.supportPhone}
+              onChange={(event) => set("supportPhone", event.target.value)}
+            />
           </section>
 
           {problem ? (

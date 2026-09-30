@@ -8,6 +8,7 @@ import {
 } from "@urcommerce/api-client";
 import type { OrderStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
+import { TextField } from "@/components/ui/field";
 
 type Props = {
   orderId: string;
@@ -78,14 +79,13 @@ export function StatusActions({ orderId, status }: Props) {
 
       {pendingCancel ? (
         <div className="rounded-lg border border-destructive/30 p-4">
-          <label htmlFor="cancelReason" className="text-sm font-medium">
-            Why is this order being cancelled?
-          </label>
-          <input
+          <TextField
             id="cancelReason"
+            label="Why is this order being cancelled?"
+            fieldClassName="space-y-2"
             value={cancelReason}
             onChange={(event) => setCancelReason(event.target.value)}
-            className="mt-2 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+            className="h-9"
           />
           <div className="mt-3 flex gap-2">
             <button

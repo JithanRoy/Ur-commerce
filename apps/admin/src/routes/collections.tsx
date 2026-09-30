@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { adminApi } from "@/lib/api";
 import { TaxonomyPage } from "@/features/taxonomy/taxonomy-page";
 
@@ -12,6 +13,17 @@ export function CollectionsRoute() {
       }
       create={(input) => adminApi.collections.create(input)}
       remove={(id) => adminApi.collections.remove(id)}
+      extraColumn={{
+        heading: "Products",
+        render: (row) => (
+          <Link
+            to={`/collections/${row.id}`}
+            className="text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Manage products
+          </Link>
+        ),
+      }}
       image={{
         scope: "collection",
         label: "Banner",

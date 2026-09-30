@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { AdminBrand, AdminCategoryNode } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
+import { Field } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/input";
 import { slugify } from "./variant-matrix";
 
 type CategoryOption = { id: string; label: string };
@@ -42,9 +44,6 @@ export function useTaxonomy() {
     isPending: categories.isPending || brands.isPending,
   };
 }
-
-const selectClass =
-  "h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm";
 
 function TaxonomyPicker({
   label,
@@ -93,11 +92,14 @@ function TaxonomyPicker({
   };
 
   return (
-    <div className="block text-sm font-medium">
-      {label}
+    <Field
+      label={label}
+      hint={hint}
+      error={error ? <span role="alert">{error}</span> : undefined}
+    >
       {creating ? (
-        <div className="mt-1.5 flex gap-2">
-          <input
+        <div className="flex gap-2">
+          <Input
             value={name}
             autoFocus
             disabled={create.isPending}
@@ -111,7 +113,6 @@ function TaxonomyPicker({
             }}
             placeholder={`New ${label.toLowerCase()} name`}
             aria-label={`New ${label.toLowerCase()} name`}
-            className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm font-normal"
           />
           <button
             type="button"
@@ -140,7 +141,7 @@ function TaxonomyPicker({
           </button>
         </div>
       ) : (
-        <select
+        <Select
           value={value}
           disabled={disabled}
           onChange={(event) => {
@@ -150,27 +151,20 @@ function TaxonomyPicker({
             }
             onChange(event.target.value);
           }}
-          className={`mt-1.5 ${selectClass}`}
-        >
-          <option value="">{emptyLabel}</option>
-          {options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-          <option value={CREATE_NEW}>＋ Create new {label.toLowerCase()}…</option>
-        </select>
+          placeholder={emptyLabel}
+          options={[
+            ...options.map((option) => ({
+              value: option.id,
+              label: option.label,
+            })),
+            {
+              value: CREATE_NEW,
+              label: `＋ Create new ${label.toLowerCase()}…`,
+            },
+          ]}
+        />
       )}
-      {error ? (
-        <p role="alert" className="mt-1 text-xs font-normal text-destructive">
-          {error}
-        </p>
-      ) : (
-        <span className="mt-1 block text-xs font-normal text-muted-foreground">
-          {hint}
-        </span>
-      )}
-    </div>
+    </Field>
   );
 }
 

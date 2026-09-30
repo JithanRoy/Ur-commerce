@@ -12,7 +12,8 @@ import { authApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { clearCartSession } from "@/stores/cart-session";
 import { cartQueryKey } from "@/features/cart/use-cart";
-import { PasswordInput } from "@/components/ui/password-input";
+import { TextField } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/input";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email"),
@@ -94,66 +95,43 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </div>
 
       {mode === "register" ? (
-        <div className="space-y-2">
-          <label htmlFor="name" className="text-sm font-medium">
-            Name
-          </label>
-          <input
-            id="name"
-            autoComplete="name"
-            aria-invalid={Boolean(errors.name)}
-            className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-            {...form.register("name")}
-          />
-          {errors.name ? (
-            <p className="text-sm text-destructive">{errors.name.message}</p>
-          ) : null}
-        </div>
+        <TextField
+          id="name"
+          label="Name"
+          autoComplete="name"
+          error={errors.name?.message}
+          {...form.register("name")}
+        />
       ) : null}
 
-      <div className="space-y-2">
-        <label htmlFor="email" className="text-sm font-medium">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          aria-invalid={Boolean(errors.email)}
-          className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          {...form.register("email")}
-        />
-        {errors.email ? (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
-        ) : null}
-      </div>
+      <TextField
+        id="email"
+        label="Email"
+        type="email"
+        autoComplete="email"
+        error={errors.email?.message}
+        {...form.register("email")}
+      />
 
-      <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium">
-          Password
-        </label>
-        <PasswordInput
-          id="password"
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
-          aria-invalid={Boolean(errors.password)}
-          {...form.register("password")}
-        />
-        {errors.password ? (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
-        ) : null}
-      </div>
+      <TextField
+        id="password"
+        label="Password"
+        type="password"
+        autoComplete={mode === "login" ? "current-password" : "new-password"}
+        error={errors.password?.message}
+        {...form.register("password")}
+      />
 
-      <label className="flex cursor-pointer select-none items-center gap-2.5 text-sm">
-        <input
-          type="checkbox"
-          checked={remember}
-          onChange={(event) => setRemember(event.target.checked)}
-          className="size-4 rounded border-input accent-primary"
-        />
-        <span className="text-muted-foreground">
-          Keep me signed in on this device
-        </span>
-      </label>
+      <Checkbox
+        checked={remember}
+        onChange={(event) => setRemember(event.target.checked)}
+        label={
+          <span className="text-muted-foreground">
+            Keep me signed in on this device
+          </span>
+        }
+        containerClassName="flex select-none items-center"
+      />
 
       {formError ? (
         <p role="alert" className="text-sm text-destructive">

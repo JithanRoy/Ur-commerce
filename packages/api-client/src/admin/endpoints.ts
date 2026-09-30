@@ -5,6 +5,8 @@ import type {
   AdminCategory,
   AdminCategoryNode,
   AdminCollection,
+  AdminCollectionDetail,
+  CollectionProductItem,
   CreateBrandInput,
   CreateCategoryInput,
   CreateCollectionInput,
@@ -129,6 +131,13 @@ export function createAdminApi(client: ApiClient) {
       update: (id: string, input: UpdateCollectionInput) =>
         client.patch<AdminCollection>(`/admin/collections/${id}`, input),
       remove: (id: string) => client.delete<void>(`/admin/collections/${id}`),
+      get: (id: string) =>
+        client.get<AdminCollectionDetail>(`/admin/collections/${id}`),
+      setProducts: (id: string, products: CollectionProductItem[]) =>
+        client.put<AdminCollectionDetail>(
+          `/admin/collections/${id}/products`,
+          { products },
+        ),
     },
     users: {
       list: (query: AdminUserQuery = {}) =>

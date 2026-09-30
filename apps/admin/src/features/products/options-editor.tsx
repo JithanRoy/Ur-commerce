@@ -1,4 +1,5 @@
 import { Plus, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import type { OptionDraft } from "./variant-matrix";
 
 type Props = {
@@ -18,14 +19,14 @@ export function OptionsEditor({ options, onChange }: Props) {
       {options.map((option, index) => (
         <div key={index} className="rounded-lg border p-4">
           <div className="flex items-center gap-3">
-            <input
+            <Input
               value={option.name}
               onChange={(event) =>
                 updateOption(index, { name: event.target.value })
               }
               placeholder="Option name (Size, Colour…)"
               aria-label={`Option ${index + 1} name`}
-              className="h-9 flex-1 rounded-md border border-input bg-transparent px-3 text-sm"
+              className="h-9 flex-1"
             />
             <button
               type="button"
@@ -37,14 +38,14 @@ export function OptionsEditor({ options, onChange }: Props) {
             </button>
           </div>
 
-          <input
+          <Input
             value={option.values.join(", ")}
             onChange={(event) =>
               updateOption(index, { values: event.target.value.split(",") })
             }
             placeholder="Values, comma separated — 40, 42, 44"
             aria-label={`Option ${index + 1} values`}
-            className="mt-3 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+            className="mt-3 h-9"
           />
           <p className="mt-2 text-xs text-muted-foreground">
             Order matters — it sets how sizes sort on the storefront.

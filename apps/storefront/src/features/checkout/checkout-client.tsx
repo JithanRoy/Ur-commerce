@@ -5,13 +5,28 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
-import type { Address } from "@urcommerce/api-client";
+import type { Address, PaymentMethod } from "@urcommerce/api-client";
 import { checkoutApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { useCart, cartQueryKey } from "@/features/cart/use-cart";
 import { AddressForm, toCreateInput } from "@/features/account/address-form";
 import type { AddressValues } from "@/features/account/address-form";
+import { Radio } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+
+type PaymentOption = {
+  value: PaymentMethod;
+  label: string;
+  description: string;
+};
+
+const paymentOptions: [PaymentOption, ...PaymentOption[]] = [
+  {
+    value: "CASH_ON_DELIVERY",
+    label: "Cash on delivery",
+    description: "Pay when your order arrives.",
+  },
+];
 
 export function CheckoutClient() {
   const router = useRouter();
@@ -20,6 +35,9 @@ export function CheckoutClient() {
   const { data: cart, isPending: cartPending } = useCart();
   const [addressId, setAddressId] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    paymentOptions[0].value,
+  );
 
   const { data: addresses } = useQuery({
     queryKey: ["addresses"],
@@ -55,7 +73,7 @@ export function CheckoutClient() {
 
   const placeOrder = useMutation({
     mutationFn: () =>
-      checkoutApi.place(addressId as string, "CASH_ON_DELIVERY"),
+      checkoutApi.place(addressId as string, paymentMethod),
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: cartQueryKey });
       router.push(`/order/${order.orderNumber}`);
@@ -163,16 +181,22 @@ export function CheckoutClient() {
 
         <section>
           <h2 className="mb-4 font-medium">Payment</h2>
-          <div className="rounded-lg border px-4 py-3">
-            <label className="flex items-center gap-3 text-sm">
-              <input type="radio" name="payment" defaultChecked readOnly />
-              <span>
-                <span className="font-medium">Cash on delivery</span>
-                <span className="block text-muted-foreground">
-                  Pay when your order arrives.
-                </span>
-              </span>
-            </label>
+          <div className="space-y-3">
+            {paymentOptions.map((option) => (
+              <div key={option.value} className="rounded-lg border px-4 py-3">
+                <Radio
+                  name="payment"
+                  value={option.value}
+                  checked={paymentMethod === option.value}
+                  onChange={() => setPaymentMethod(option.value)}
+                  label={<span className="font-medium">{option.label}</span>}
+                  description={
+                    <span className="text-sm">{option.description}</span>
+                  }
+                  containerClassName="flex items-center gap-3"
+                />
+              </div>
+            ))}
           </div>
         </section>
       </div>

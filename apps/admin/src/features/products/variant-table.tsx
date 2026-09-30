@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/input";
 import { autoSku } from "./variant-matrix";
 import type { VariantDraft } from "./variant-matrix";
 
@@ -7,8 +8,6 @@ type Props = {
   onChange: (variants: VariantDraft[]) => void;
   productName?: string;
 };
-
-const numericField = "h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm tabular-nums";
 
 export function VariantTable({
   variants,
@@ -53,7 +52,7 @@ export function VariantTable({
                 <td className="px-3 py-2 text-muted-foreground">Single</td>
               ) : null}
               <td className="px-3 py-2">
-                <input
+                <Input
                   value={variant.sku}
                   onChange={(event) => update(index, { sku: event.target.value })}
                   placeholder={
@@ -62,51 +61,51 @@ export function VariantTable({
                       : undefined
                   }
                   aria-label={`SKU for ${variant.key || "variant"}`}
-                  className="h-9 w-36 rounded-md border border-input bg-transparent px-2 text-sm placeholder:text-muted-foreground/50"
+                  className="h-9 w-36 px-2 placeholder:text-muted-foreground/50"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="decimal"
                   value={variant.price}
                   onChange={(event) =>
                     update(index, { price: event.target.value })
                   }
                   aria-label={`Price for ${variant.key || "variant"}`}
-                  className={numericField}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="decimal"
                   value={variant.compareAtPrice}
                   onChange={(event) =>
                     update(index, { compareAtPrice: event.target.value })
                   }
                   aria-label={`Compare at price for ${variant.key || "variant"}`}
-                  className={numericField}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="decimal"
                   value={variant.costPrice}
                   onChange={(event) =>
                     update(index, { costPrice: event.target.value })
                   }
                   aria-label={`Cost price for ${variant.key || "variant"}`}
-                  className={numericField}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="numeric"
                   value={variant.stock}
                   onChange={(event) =>
                     update(index, { stock: event.target.value })
                   }
                   aria-label={`Stock for ${variant.key || "variant"}`}
-                  className={numericField}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
             </tr>

@@ -78,3 +78,22 @@ export type UpdateCollectionInput = Partial<CreateCollectionInput> & {
   imageObjectKey?: string;
   imageUrl?: string | null;
 };
+
+export type CollectionProductEntry = {
+  position: number;
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    status: string;
+  };
+};
+
+export type AdminCollectionDetail = AdminCollection & {
+  products: CollectionProductEntry[];
+};
+
+export type CollectionProductItem = {
+  productId: string;
+  position?: number;
+};

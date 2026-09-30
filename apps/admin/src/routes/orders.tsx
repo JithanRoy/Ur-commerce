@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { StatusBadge } from "@/features/orders/status-badge";
 import { OrderStats } from "@/features/orders/order-stats";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", {
@@ -95,7 +96,7 @@ export function OrdersRoute() {
         )}
       </div>
 
-      <input
+      <Input
         value={search}
         onChange={(event) => {
           setPage(1);
@@ -103,7 +104,7 @@ export function OrdersRoute() {
         }}
         placeholder="Search by order number, name or phone"
         aria-label="Search orders"
-        className="mb-5 h-9 w-full max-w-sm rounded-md border border-input bg-transparent px-3 text-sm"
+        className="mb-5 h-9 max-w-sm"
       />
 
       {isPending ? <LoadingState /> : null}

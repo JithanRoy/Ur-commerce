@@ -1,6 +1,27 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import type { AdminProduct, CreateVariantInput } from "@urcommerce/api-client";
+import { Field } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/input";
+
+function CompactField({
+  id,
+  label,
+  children,
+}: {
+  id: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Field
+      id={id}
+      label={<span className="text-xs text-muted-foreground">{label}</span>}
+    >
+      {children}
+    </Field>
+  );
+}
 
 type Props = {
   product: AdminProduct;
@@ -46,15 +67,8 @@ export function AddVariantForm({ product, onAdd, isPending }: Props) {
   return (
     <form onSubmit={submit} className="flex flex-wrap items-end gap-3">
       {options.map((option) => (
-        <div key={option.id} className="space-y-1.5">
-          <label
-            htmlFor={`add-${option.id}`}
-            className="block text-xs font-medium text-muted-foreground"
-          >
-            {option.name}
-          </label>
-          <select
-            id={`add-${option.id}`}
+        <CompactField key={option.id} id={`add-${option.id}`} label={option.name}>
+          <Select
             value={values[option.name] ?? ""}
             onChange={(event) =>
               setValues((current) => ({
@@ -62,66 +76,40 @@ export function AddVariantForm({ product, onAdd, isPending }: Props) {
                 [option.name]: event.target.value,
               }))
             }
-            className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
-          >
-            <option value="">Choose…</option>
-            {[...option.values]
+            placeholder="Choose…"
+            options={[...option.values]
               .sort((a, b) => a.position - b.position)
-              .map((value) => (
-                <option key={value.id} value={value.value}>
-                  {value.value}
-                </option>
-              ))}
-          </select>
-        </div>
+              .map((value) => ({ value: value.value, label: value.value }))}
+            className="h-9 pl-2"
+          />
+        </CompactField>
       ))}
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="add-sku"
-          className="block text-xs font-medium text-muted-foreground"
-        >
-          SKU
-        </label>
-        <input
-          id="add-sku"
+      <CompactField id="add-sku" label="SKU">
+        <Input
           value={sku}
           onChange={(event) => setSku(event.target.value)}
-          className="h-9 w-36 rounded-md border border-input bg-transparent px-2 text-sm"
+          className="h-9 w-36 px-2"
         />
-      </div>
+      </CompactField>
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="add-price"
-          className="block text-xs font-medium text-muted-foreground"
-        >
-          Price ৳
-        </label>
-        <input
-          id="add-price"
+      <CompactField id="add-price" label="Price ৳">
+        <Input
           inputMode="decimal"
           value={price}
           onChange={(event) => setPrice(event.target.value)}
-          className="h-9 w-24 rounded-md border border-input bg-transparent px-2 text-sm tabular-nums"
+          className="h-9 w-24 px-2 tabular-nums"
         />
-      </div>
+      </CompactField>
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="add-stock"
-          className="block text-xs font-medium text-muted-foreground"
-        >
-          Stock
-        </label>
-        <input
-          id="add-stock"
+      <CompactField id="add-stock" label="Stock">
+        <Input
           inputMode="numeric"
           value={stock}
           onChange={(event) => setStock(event.target.value)}
-          className="h-9 w-20 rounded-md border border-input bg-transparent px-2 text-sm tabular-nums"
+          className="h-9 w-20 px-2 tabular-nums"
         />
-      </div>
+      </CompactField>
 
       <button
         type="submit"

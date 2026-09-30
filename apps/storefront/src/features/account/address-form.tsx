@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Address, CreateAddressInput } from "@urcommerce/api-client";
+import { TextField } from "@/components/ui/field";
 
 export const addressSchema = z.object({
   fullName: z.string().min(2, "Enter at least 2 characters"),
@@ -70,42 +71,6 @@ export function valuesFromAddress(address: Address): AddressValues {
   };
 }
 
-const inputClass =
-  "h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm";
-
-function Field({
-  id,
-  label,
-  error,
-  optional,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  optional?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-        {optional ? (
-          <span className="ml-1 font-normal text-muted-foreground">
-            (optional)
-          </span>
-        ) : null}
-      </label>
-      {children}
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 export function AddressForm({
   address,
   submitLabel,
@@ -137,103 +102,89 @@ export function AddressForm({
       noValidate
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="fullName" label="Full name" error={errors.fullName?.message}>
-          <input
-            id="fullName"
-            autoComplete="name"
-            className={inputClass}
-            {...form.register("fullName")}
-          />
-        </Field>
-        <Field id="phone" label="Phone" error={errors.phone?.message}>
-          <input
-            id="phone"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="01XXXXXXXXX"
-            className={inputClass}
-            {...form.register("phone")}
-          />
-        </Field>
+        <TextField
+          id="fullName"
+          label="Full name"
+          autoComplete="name"
+          error={errors.fullName?.message}
+          {...form.register("fullName")}
+        />
+        <TextField
+          id="phone"
+          label="Phone"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="01XXXXXXXXX"
+          error={errors.phone?.message}
+          {...form.register("phone")}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field id="division" label="Division" error={errors.division?.message}>
-          <input
-            id="division"
-            className={inputClass}
-            {...form.register("division")}
-          />
-        </Field>
-        <Field id="district" label="District" error={errors.district?.message}>
-          <input
-            id="district"
-            className={inputClass}
-            {...form.register("district")}
-          />
-        </Field>
-        <Field id="thana" label="Thana" error={errors.thana?.message}>
-          <input
-            id="thana"
-            className={inputClass}
-            {...form.register("thana")}
-          />
-        </Field>
+        <TextField
+          id="division"
+          label="Division"
+          error={errors.division?.message}
+          {...form.register("division")}
+        />
+        <TextField
+          id="district"
+          label="District"
+          error={errors.district?.message}
+          {...form.register("district")}
+        />
+        <TextField
+          id="thana"
+          label="Thana"
+          error={errors.thana?.message}
+          {...form.register("thana")}
+        />
       </div>
 
-      <Field
+      <TextField
         id="addressLine"
         label="Address"
+        autoComplete="street-address"
+        placeholder="House, road, block"
         error={errors.addressLine?.message}
-      >
-        <input
-          id="addressLine"
-          autoComplete="street-address"
-          placeholder="House, road, block"
-          className={inputClass}
-          {...form.register("addressLine")}
-        />
-      </Field>
+        {...form.register("addressLine")}
+      />
 
       {showOptionalFields ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="area" label="Area" optional>
-              <input
-                id="area"
-                placeholder="Gulshan 2"
-                className={inputClass}
-                {...form.register("area")}
-              />
-            </Field>
-            <Field id="postCode" label="Post code" optional>
-              <input
-                id="postCode"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                className={inputClass}
-                {...form.register("postCode")}
-              />
-            </Field>
+            <TextField
+              id="area"
+              label="Area"
+              optional
+              placeholder="Gulshan 2"
+              {...form.register("area")}
+            />
+            <TextField
+              id="postCode"
+              label="Post code"
+              optional
+              inputMode="numeric"
+              autoComplete="postal-code"
+              {...form.register("postCode")}
+            />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="landmark" label="Landmark" optional>
-              <input
-                id="landmark"
-                placeholder="Beside the circle"
-                className={inputClass}
-                {...form.register("landmark")}
-              />
-            </Field>
-            <Field id="label" label="Label" optional>
-              <input
-                id="label"
-                placeholder="Home, Office"
-                className={inputClass}
-                {...form.register("label")}
-              />
-            </Field>
+            <TextField
+              id="landmark"
+              label="Landmark"
+              optional
+              placeholder="Beside the circle"
+              {...form.register("landmark")}
+            />
+            <TextField
+              id="label"
+              label="Label"
+              optional
+              placeholder="Home, Office"
+              {...form.register("label")}
+            />
           </div>
         </>
       ) : null}

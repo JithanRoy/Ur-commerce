@@ -10,6 +10,7 @@ import type {
 } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
+import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import {
   EditVariantTable,
@@ -191,42 +192,27 @@ export function ProductEditRoute() {
         <h2 className="mb-4 font-medium">Details</h2>
         <div className="grid max-w-2xl gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label htmlFor="name" className="text-sm font-medium">
-                Name
-              </label>
-              <input
-                id="name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="slug" className="text-sm font-medium">
-                Slug
-              </label>
-              <input
-                id="slug"
-                value={slug}
-                onChange={(event) => setSlug(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="description" className="text-sm font-medium">
-              Description
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={3}
-              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+            <TextField
+              id="name"
+              label="Name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+            <TextField
+              id="slug"
+              label="Slug"
+              value={slug}
+              onChange={(event) => setSlug(event.target.value)}
             />
           </div>
+
+          <TextareaField
+            id="description"
+            label="Description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={3}
+          />
 
           <TaxonomyFields
             categoryId={categoryId}
@@ -236,23 +222,20 @@ export function ProductEditRoute() {
             disabled={saveDetails.isPending}
           />
 
-          <div className="space-y-1.5">
-            <label htmlFor="status" className="text-sm font-medium">
-              Status
-            </label>
-            <select
-              id="status"
-              value={status}
-              onChange={(event) =>
-                setStatus(event.target.value as ProductStatus)
-              }
-              className="h-10 w-48 rounded-md border border-input bg-transparent px-3 text-sm"
-            >
-              <option value="DRAFT">Draft</option>
-              <option value="ACTIVE">Active</option>
-              <option value="ARCHIVED">Archived</option>
-            </select>
-          </div>
+          <SelectField
+            id="status"
+            label="Status"
+            containerClassName="w-48"
+            value={status}
+            onChange={(event) =>
+              setStatus(event.target.value as ProductStatus)
+            }
+            options={[
+              { value: "DRAFT", label: "Draft" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "ARCHIVED", label: "Archived" },
+            ]}
+          />
 
           <div>
             <button

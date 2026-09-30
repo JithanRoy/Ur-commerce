@@ -1,5 +1,6 @@
 import { Trash2 } from "lucide-react";
 import type { AdminProduct, AdminVariant } from "@urcommerce/api-client";
+import { Input } from "@/components/ui/input";
 
 export type VariantEdit = {
   id: string;
@@ -27,9 +28,6 @@ export function optionSummary(
     .map((link) => link.optionValue.value)
     .join(" / ");
 }
-
-const field =
-  "h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm tabular-nums";
 
 type Props = {
   rows: VariantEdit[];
@@ -73,55 +71,55 @@ export function EditVariantTable({
                 {labels[row.id] ?? "—"}
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   value={row.sku}
                   onChange={(event) => update(index, { sku: event.target.value })}
                   aria-label={`SKU for ${labels[row.id] ?? row.id}`}
-                  className="h-9 w-36 rounded-md border border-input bg-transparent px-2 text-sm"
+                  className="h-9 w-36 px-2"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="decimal"
                   value={row.price}
                   onChange={(event) =>
                     update(index, { price: event.target.value })
                   }
                   aria-label={`Price for ${labels[row.id] ?? row.id}`}
-                  className={field}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="decimal"
                   value={row.compareAtPrice}
                   onChange={(event) =>
                     update(index, { compareAtPrice: event.target.value })
                   }
                   aria-label={`Compare at price for ${labels[row.id] ?? row.id}`}
-                  className={field}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="decimal"
                   value={row.costPrice}
                   onChange={(event) =>
                     update(index, { costPrice: event.target.value })
                   }
                   aria-label={`Cost price for ${labels[row.id] ?? row.id}`}
-                  className={field}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
-                <input
+                <Input
                   inputMode="numeric"
                   value={row.stock}
                   onChange={(event) =>
                     update(index, { stock: event.target.value })
                   }
                   aria-label={`Stock for ${labels[row.id] ?? row.id}`}
-                  className={field}
+                  className="h-9 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">

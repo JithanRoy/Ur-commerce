@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { ImageOff, Plus } from "lucide-react";
+import { ImageOff, Plus, Search } from "lucide-react";
 import { formatPriceRange, paisa } from "@urcommerce/api-client";
 import type { AdminProduct, ProductStatus } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
+import { Input, Select } from "@/components/ui/input";
 
 const statusStyles: Record<ProductStatus, string> = {
   ACTIVE: "bg-success/10 text-success",
@@ -63,7 +64,7 @@ export function ProductsRoute() {
       />
 
       <div className="mb-5 flex flex-wrap gap-3">
-        <input
+        <Input
           value={search}
           onChange={(event) => {
             setPage(1);
@@ -71,22 +72,30 @@ export function ProductsRoute() {
           }}
           placeholder="Search products"
           aria-label="Search products"
-          className="h-9 min-w-56 flex-1 rounded-md border border-input bg-transparent px-3 text-sm"
+          leading={<Search aria-hidden />}
+          onClear={() => {
+            setPage(1);
+            setSearch("");
+          }}
+          containerClassName="min-w-56 flex-1"
+          className="h-9"
         />
-        <select
+        <Select
           value={status}
           onChange={(event) => {
             setPage(1);
             setStatus(event.target.value as ProductStatus | "");
           }}
           aria-label="Filter by status"
-          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-        >
-          <option value="">All statuses</option>
-          <option value="ACTIVE">Active</option>
-          <option value="DRAFT">Draft</option>
-          <option value="ARCHIVED">Archived</option>
-        </select>
+          containerClassName="w-auto"
+          className="h-9 w-auto"
+          options={[
+            { value: "", label: "All statuses" },
+            { value: "ACTIVE", label: "Active" },
+            { value: "DRAFT", label: "Draft" },
+            { value: "ARCHIVED", label: "Archived" },
+          ]}
+        />
       </div>
 
       {isPending ? <LoadingState /> : null}

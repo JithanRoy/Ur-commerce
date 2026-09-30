@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/layout/admin-shell";
 import { BrandsRoute } from "@/routes/brands";
 import { CategoriesRoute } from "@/routes/categories";
 import { CollectionsRoute } from "@/routes/collections";
+import { CollectionProductsRoute } from "@/routes/collection-products";
 import { LoginRoute } from "@/routes/login";
 import { NotFoundRoute } from "@/routes/not-found";
 import { ProductEditRoute } from "@/routes/product-edit";
@@ -49,6 +50,10 @@ export function App() {
               <Route path="categories" element={<CategoriesRoute />} />
               <Route path="brands" element={<BrandsRoute />} />
               <Route path="collections" element={<CollectionsRoute />} />
+              <Route
+                path="collections/:collectionId"
+                element={<CollectionProductsRoute />}
+              />
               <Route path="team" element={<TeamRoute />} />
               <Route path="branding" element={<BrandingRoute />} />
               <Route path="*" element={<NotFoundRoute />} />

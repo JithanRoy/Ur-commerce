@@ -20,6 +20,8 @@ import type { AdminVariant } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Field } from "@/components/ui/field";
+import { Select } from "@/components/ui/input";
 
 type PendingUpload = {
   id: string;
@@ -388,9 +390,15 @@ export function ImageManager({
               </div>
 
               <div className="border-t p-2.5">
-                <label className="block text-xs font-medium text-muted-foreground">
-                  Shown for
-                  <select
+                <Field
+                  label={
+                    <span className="text-xs text-muted-foreground">
+                      Shown for
+                    </span>
+                  }
+                  className="space-y-1"
+                >
+                  <Select
                     value={image.variantId ?? ""}
                     disabled={busy}
                     onChange={(event) =>
@@ -399,16 +407,14 @@ export function ImageManager({
                         variantId: event.target.value || null,
                       })
                     }
-                    className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm text-foreground"
-                  >
-                    <option value="">All variants</option>
-                    {variants.map((variant) => (
-                      <option key={variant.id} value={variant.id}>
-                        {variant.sku}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    placeholder="All variants"
+                    options={variants.map((variant) => ({
+                      value: variant.id,
+                      label: variant.sku,
+                    }))}
+                    className="h-9 pl-2"
+                  />
+                </Field>
                 <p className="sr-only">
                   {variantLabel(image.variantId, variants)}
                 </p>

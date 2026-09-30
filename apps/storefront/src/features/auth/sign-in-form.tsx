@@ -11,8 +11,8 @@ import { authApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { clearCartSession } from "@/stores/cart-session";
 import { cartQueryKey } from "@/features/cart/use-cart";
-import { TextField } from "@/components/ui/text-field";
-import { PasswordInput } from "@/components/ui/password-input";
+import { TextField } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/input";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),
@@ -69,25 +69,25 @@ export function SignInForm({
         {...form.register("email")}
       />
 
-      <TextField label="Password" error={errors.password?.message}>
-        <PasswordInput
-          autoComplete="current-password"
-          placeholder="••••••••"
-          {...form.register("password")}
-        />
-      </TextField>
+      <TextField
+        label="Password"
+        type="password"
+        autoComplete="current-password"
+        placeholder="••••••••"
+        error={errors.password?.message}
+        {...form.register("password")}
+      />
 
-      <label className="flex cursor-pointer select-none items-center gap-2.5 text-sm">
-        <input
-          type="checkbox"
-          checked={remember}
-          onChange={(event) => setRemember(event.target.checked)}
-          className="size-4 rounded border-input accent-primary"
-        />
-        <span className="text-muted-foreground">
-          Keep me signed in on this device
-        </span>
-      </label>
+      <Checkbox
+        checked={remember}
+        onChange={(event) => setRemember(event.target.checked)}
+        label={
+          <span className="text-muted-foreground">
+            Keep me signed in on this device
+          </span>
+        }
+        containerClassName="flex select-none items-center"
+      />
 
       {formError ? (
         <p role="alert" className="text-sm text-destructive">

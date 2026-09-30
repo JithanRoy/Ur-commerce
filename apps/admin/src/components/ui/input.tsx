@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { ChevronDown, Eye, EyeOff, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -7,7 +5,7 @@ import { useFieldControl } from "./field-context";
 
 export type ControlSize = "sm" | "md" | "lg";
 
-const DEFAULT_SIZE: ControlSize = "lg";
+const DEFAULT_SIZE: ControlSize = "md";
 
 const controlClass =
   "w-full min-w-0 border border-input bg-transparent outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/60 focus-visible:border-foreground/30 focus-visible:ring-4 focus-visible:ring-foreground/5 aria-invalid:border-destructive/60 aria-invalid:focus-visible:ring-destructive/10 disabled:cursor-not-allowed disabled:opacity-50";
@@ -103,7 +101,6 @@ export type InputProps = Omit<React.ComponentProps<"input">, "size"> &
     trailing?: React.ReactNode;
     revealable?: boolean;
     onClear?: () => void;
-    clearLabel?: string;
   };
 
 export function Input({
@@ -114,7 +111,6 @@ export function Input({
   trailing,
   revealable = true,
   onClear,
-  clearLabel = "Clear",
   className,
   type = "text",
   id,
@@ -154,12 +150,7 @@ export function Input({
   }
   if (showClear) {
     trailingItems.push(
-      <SlotButton
-        key="clear"
-        label={clearLabel}
-        size={size}
-        onClick={onClear}
-      >
+      <SlotButton key="clear" label="Clear" size={size} onClick={onClear}>
         <X aria-hidden />
       </SlotButton>,
     );

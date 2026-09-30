@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import type { CreateStaffInput, StaffRole } from "@urcommerce/api-client";
+import { SelectField, TextField } from "@/components/ui/field";
+import type { SelectOption } from "@/components/ui/input";
 
 type Props = {
   onAdd: (input: CreateStaffInput) => void;
   isPending: boolean;
 };
 
-const field = "h-9 rounded-md border border-input bg-transparent px-2 text-sm";
+const ROLE_OPTIONS: SelectOption[] = [
+  { value: "TENANT_STAFF", label: "Staff" },
+  { value: "TENANT_OWNER", label: "Owner" },
+];
 
 export function AddStaffForm({ onAdd, isPending }: Props) {
   const [name, setName] = useState("");
@@ -35,59 +40,43 @@ export function AddStaffForm({ onAdd, isPending }: Props) {
 
   return (
     <form onSubmit={submit} className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1.5">
-        <label htmlFor="staff-name" className="block text-xs font-medium text-muted-foreground">
-          Name
-        </label>
-        <input
-          id="staff-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          className={`${field} w-40`}
-        />
-      </div>
+      <TextField
+        id="staff-name"
+        label="Name"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        className="h-9 w-40"
+      />
 
-      <div className="space-y-1.5">
-        <label htmlFor="staff-email" className="block text-xs font-medium text-muted-foreground">
-          Email
-        </label>
-        <input
-          id="staff-email"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className={`${field} w-56`}
-        />
-      </div>
+      <TextField
+        id="staff-email"
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        className="h-9 w-56"
+      />
 
-      <div className="space-y-1.5">
-        <label htmlFor="staff-password" className="block text-xs font-medium text-muted-foreground">
-          Password
-        </label>
-        <input
-          id="staff-password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="8+ characters"
-          className={`${field} w-40`}
-        />
-      </div>
+      <TextField
+        id="staff-password"
+        label="Password"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        placeholder="8+ characters"
+        className="h-9"
+        containerClassName="w-40"
+      />
 
-      <div className="space-y-1.5">
-        <label htmlFor="staff-role" className="block text-xs font-medium text-muted-foreground">
-          Role
-        </label>
-        <select
-          id="staff-role"
-          value={role}
-          onChange={(event) => setRole(event.target.value as StaffRole)}
-          className={`${field} w-32`}
-        >
-          <option value="TENANT_STAFF">Staff</option>
-          <option value="TENANT_OWNER">Owner</option>
-        </select>
-      </div>
+      <SelectField
+        id="staff-role"
+        label="Role"
+        value={role}
+        onChange={(event) => setRole(event.target.value as StaffRole)}
+        className="h-9"
+        containerClassName="w-32"
+        options={ROLE_OPTIONS}
+      />
 
       <button
         type="submit"

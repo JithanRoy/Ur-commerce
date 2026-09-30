@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { AddStaffForm } from "@/features/team/add-staff-form";
 import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/input";
 
 export function TeamRoute() {
   const queryClient = useQueryClient();
@@ -141,7 +142,8 @@ export function TeamRoute() {
                       {member.email}
                     </td>
                     <td className="px-4 py-3">
-                      <select
+                      <Select
+                        size="sm"
                         value={member.role}
                         disabled={isSelf || setRole.isPending}
                         onChange={(event) =>
@@ -151,7 +153,8 @@ export function TeamRoute() {
                           })
                         }
                         aria-label={`Role for ${member.name}`}
-                        className="h-8 rounded-md border border-input bg-transparent px-2 text-sm disabled:opacity-60"
+                        containerClassName="w-fit"
+                        className="w-auto text-sm disabled:opacity-60"
                       >
                         <option value="TENANT_STAFF">
                           {STAFF_ROLE_LABELS.TENANT_STAFF}
@@ -159,7 +162,7 @@ export function TeamRoute() {
                         <option value="TENANT_OWNER">
                           {STAFF_ROLE_LABELS.TENANT_OWNER}
                         </option>
-                      </select>
+                      </Select>
                     </td>
                     <td className="px-4 py-3">
                       <span

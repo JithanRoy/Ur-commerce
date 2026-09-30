@@ -7,7 +7,8 @@ import { Loader2, Lock, ShieldCheck } from "lucide-react";
 import { isApiError, isStaffRole } from "@urcommerce/api-client";
 import { authApi } from "@/lib/api";
 import { useAuth } from "@/stores/auth";
-import { PasswordInput } from "@/components/ui/password-input";
+import { TextField } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/input";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),
@@ -114,44 +115,28 @@ export function LoginRoute() {
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                autoFocus
-                placeholder="you@store.com"
-                aria-invalid={Boolean(errors.email)}
-                className="h-11 w-full rounded-lg border border-input bg-transparent px-3.5 text-sm outline-none transition-shadow placeholder:text-muted-foreground/50 focus-visible:border-foreground/30 focus-visible:ring-4 focus-visible:ring-foreground/5 aria-invalid:border-destructive/60"
-                {...form.register("email")}
-              />
-              {errors.email ? (
-                <p className="text-sm text-destructive">
-                  {errors.email.message}
-                </p>
-              ) : null}
-            </div>
+            <TextField
+              label="Email"
+              id="email"
+              type="email"
+              size="lg"
+              autoComplete="email"
+              autoFocus
+              placeholder="you@store.com"
+              error={errors.email?.message}
+              {...form.register("email")}
+            />
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <PasswordInput
-                id="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                aria-invalid={Boolean(errors.password)}
-                {...form.register("password")}
-              />
-              {errors.password ? (
-                <p className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
-              ) : null}
-            </div>
+            <TextField
+              label="Password"
+              id="password"
+              type="password"
+              size="lg"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              error={errors.password?.message}
+              {...form.register("password")}
+            />
           </div>
 
           {formError ?? bounceMessage ? (
@@ -164,17 +149,16 @@ export function LoginRoute() {
             </p>
           ) : null}
 
-          <label className="mt-5 flex cursor-pointer select-none items-center gap-2.5 text-sm">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(event) => setRemember(event.target.checked)}
-              className="size-4 rounded border-input accent-primary"
-            />
-            <span className="text-muted-foreground">
-              Keep me signed in on this device
-            </span>
-          </label>
+          <Checkbox
+            checked={remember}
+            onChange={(event) => setRemember(event.target.checked)}
+            containerClassName="mt-5 flex select-none items-center"
+            label={
+              <span className="text-muted-foreground">
+                Keep me signed in on this device
+              </span>
+            }
+          />
 
           <button
             type="submit"

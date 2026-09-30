@@ -8,6 +8,7 @@ import { ImageField } from "./image-field";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { slugify } from "@/features/products/variant-matrix";
+import { Input } from "@/components/ui/input";
 
 export type TaxonomyRow = {
   id: string;
@@ -120,12 +121,12 @@ export function TaxonomyPage<T extends TaxonomyRow>({
       />
 
       <form onSubmit={onSubmit} className="mb-6 flex flex-wrap gap-3">
-        <input
+        <Input
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder={`New ${title.toLowerCase().replace(/s$/, "")} name`}
           aria-label={`New ${title.toLowerCase().replace(/s$/, "")} name`}
-          className="h-10 min-w-56 flex-1 rounded-md border border-input bg-transparent px-3 text-sm"
+          className="min-w-56 flex-1"
         />
         <button
           type="submit"

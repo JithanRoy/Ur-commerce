@@ -1,3 +1,6 @@
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 export function ColourField({
@@ -16,10 +19,12 @@ export function ColourField({
   const valid = HEX.test(value);
 
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-      </label>
+    <Field
+      id={id}
+      label={label}
+      hint={hint}
+      error={valid ? undefined : "Use a six-digit hex value such as #0F766E."}
+    >
       <div className="flex items-center gap-2">
         <input
           type="color"
@@ -28,22 +33,14 @@ export function ColourField({
           onChange={(event) => onChange(event.target.value.toUpperCase())}
           className="size-10 shrink-0 cursor-pointer rounded-md border border-input bg-transparent p-1"
         />
-        <input
-          id={id}
+        <Input
           value={value}
           onChange={(event) => onChange(event.target.value)}
           spellCheck={false}
           aria-invalid={!valid}
-          className="h-10 w-full rounded-md border border-input bg-transparent px-3 font-mono text-sm uppercase outline-none transition-shadow focus-visible:border-foreground/30 focus-visible:ring-4 focus-visible:ring-foreground/5 aria-invalid:border-destructive/60"
+          className="font-mono uppercase"
         />
       </div>
-      {!valid ? (
-        <p className="text-xs text-destructive">
-          Use a six-digit hex value such as #0F766E.
-        </p>
-      ) : hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      ) : null}
-    </div>
+    </Field>
   );
 }

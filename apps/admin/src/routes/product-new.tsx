@@ -6,6 +6,7 @@ import { isApiError, takaToPaisa } from "@urcommerce/api-client";
 import type { CreateProductInput, ProductStatus } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api";
+import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ImageDropzone, type UploadedImage } from "@/components/ui/image-dropzone";
 import { OptionsEditor } from "@/features/products/options-editor";
 import { VariantTable } from "@/features/products/variant-table";
@@ -28,9 +29,6 @@ const singleVariant: VariantDraft = {
   costPrice: "",
   stock: "0",
 };
-
-const inputClass =
-  "h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none transition-shadow focus-visible:border-foreground/30 focus-visible:ring-4 focus-visible:ring-foreground/5";
 
 function toPaisaOrUndefined(value: string): number | undefined {
   const trimmed = value.trim();
@@ -172,52 +170,35 @@ export function ProductNewRoute() {
         >
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label htmlFor="name" className="text-sm font-medium">
-                  Name
-                </label>
-                <input
-                  id="name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  required
-                  placeholder="Classic Cotton Panjabi"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="slug" className="text-sm font-medium">
-                  Slug
-                </label>
-                <input
-                  id="slug"
-                  value={slug}
-                  onChange={(event) => {
-                    setSlugTouched(true);
-                    setSlug(event.target.value);
-                  }}
-                  required
-                  className={inputClass}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Fills in from the name. Part of the product URL.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="description" className="text-sm font-medium">
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                rows={3}
-                placeholder="What makes it worth buying?"
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none transition-shadow focus-visible:border-foreground/30 focus-visible:ring-4 focus-visible:ring-foreground/5"
+              <TextField
+                id="name"
+                label="Name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+                placeholder="Classic Cotton Panjabi"
+              />
+              <TextField
+                id="slug"
+                label="Slug"
+                hint="Fills in from the name. Part of the product URL."
+                value={slug}
+                onChange={(event) => {
+                  setSlugTouched(true);
+                  setSlug(event.target.value);
+                }}
+                required
               />
             </div>
+
+            <TextareaField
+              id="description"
+              label="Description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={3}
+              placeholder="What makes it worth buying?"
+            />
 
             <TaxonomyFields
               categoryId={categoryId}
@@ -227,22 +208,19 @@ export function ProductNewRoute() {
               disabled={mutation.isPending}
             />
 
-            <div className="max-w-xs space-y-1.5">
-              <label htmlFor="status" className="text-sm font-medium">
-                Status
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as ProductStatus)
-                }
-                className={inputClass}
-              >
-                <option value="DRAFT">Draft — hidden from shoppers</option>
-                <option value="ACTIVE">Active — visible in the shop</option>
-              </select>
-            </div>
+            <SelectField
+              id="status"
+              label="Status"
+              fieldClassName="max-w-xs"
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value as ProductStatus)
+              }
+              options={[
+                { value: "DRAFT", label: "Draft — hidden from shoppers" },
+                { value: "ACTIVE", label: "Active — visible in the shop" },
+              ]}
+            />
           </div>
         </FormSection>
 
