@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router";
-import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Boxes, Image as ImageIcon, Layers } from "lucide-react";
 import { isApiError, takaToPaisa } from "@urcommerce/api-client";
 import type { CreateProductInput, ProductStatus } from "@urcommerce/api-client";
-import { toast } from "sonner";
-import { adminApi } from "@/lib/api";
+import { useCreateProduct } from "@/api/products";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ImageDropzone, type UploadedImage } from "@/components/ui/image-dropzone";
@@ -94,10 +92,9 @@ export function ProductNewRoute() {
     [options],
   );
 
-  const mutation = useMutation({
-    mutationFn: (input: CreateProductInput) => adminApi.products.create(input),
-    onSuccess: (created) => {
-      toast.success(`${created.name} created.`);
+  const mutation = useCreateProduct({
+    success: (created) => `${created.name} created.`,
+    onSuccess: () => {
       navigate("/products");
     },
     onError: (error) => {

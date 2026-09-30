@@ -1,5 +1,4 @@
 import { Link, useParams } from "react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { formatBDT } from "@urcommerce/api-client";
 import type { OrderStatus } from "@urcommerce/api-client";
@@ -8,10 +7,7 @@ import { useBackToList } from "@/lib/list-params";
 import { StatusBadge } from "@/features/orders/status-badge";
 import { StatusActions } from "@/features/orders/status-actions";
 import { StatusTimeline } from "@/features/orders/status-timeline";
-import {
-  findOrderInLists,
-  orderDetailQuery,
-} from "@/features/orders/queries";
+import { useListedOrder, useOrder } from "@/api/orders";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", {
@@ -55,16 +51,11 @@ function OrderHeader({
 
 export function OrderDetailRoute() {
   const { orderId = "" } = useParams<{ orderId: string }>();
-  const queryClient = useQueryClient();
   const backTo = useBackToList("/orders");
-
-  const { data: order, isPending, error } = useQuery({
-    ...orderDetailQuery(orderId),
-    enabled: Boolean(orderId),
-  });
+  const { data: order, isPending, error } = useOrder(orderId);
+  const listed = useListedOrder(orderId);
 
   if (isPending) {
-    const listed = findOrderInLists(queryClient, orderId);
     if (!listed) return <LoadingState variant="detail" />;
     return (
       <>

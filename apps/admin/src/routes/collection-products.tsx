@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
   ArrowLeft,
@@ -9,10 +8,10 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { AdminProduct } from "@urcommerce/api-client";
-import { adminApi } from "@/lib/api";
+import { useCollectionCatalogue } from "@/api/products";
+import { useCollection, useSetCollectionProducts } from "@/api/taxonomy";
 import { Button, IconButton } from "@/components/ui/button";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
@@ -30,21 +29,14 @@ function moveId(ids: string[], id: string, delta: number): string[] {
 }
 
 export function CollectionProductsRoute() {
-  const { collectionId } = useParams();
-  const queryClient = useQueryClient();
+  const { collectionId = "" } = useParams<{ collectionId: string }>();
   const [selectedIds, setSelectedIds] = useState<string[] | null>(null);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const collection = useQuery({
-    queryKey: ["admin", "collections", collectionId],
-    queryFn: () => adminApi.collections.get(collectionId as string),
-    enabled: Boolean(collectionId),
-  });
+  const collection = useCollection(collectionId);
 
-  const catalogue = useQuery({
-    queryKey: ["admin", "products", "all-for-collections"],
-    queryFn: () => adminApi.products.list({ limit: 100 }),
+  const catalogue = useCollectionCatalogue({
     select: (page) =>
       page.items.filter(
         (product) => !product.slug.includes("__archived_"),
@@ -82,20 +74,13 @@ export function CollectionProductsRoute() {
   );
   const isDirty = chosen.join("|") !== initialIds.join("|");
 
-  const save = useMutation({
-    mutationFn: () =>
-      adminApi.collections.setProducts(
-        collectionId as string,
-        chosen.map((productId, index) => ({ productId, position: index })),
-      ),
+  const save = useSetCollectionProducts(collectionId, {
+    success: () =>
+      chosen.length === 0
+        ? "Collection emptied."
+        : `Collection saved with ${chosen.length} product${chosen.length === 1 ? "" : "s"}.`,
     onSuccess: () => {
       setError(null);
-      toast.success(
-        chosen.length === 0
-          ? "Collection emptied."
-          : `Collection saved with ${chosen.length} product${chosen.length === 1 ? "" : "s"}.`,
-      );
-      queryClient.invalidateQueries({ queryKey: ["admin", "collections"] });
     },
     onError: (cause) =>
       setError(
@@ -131,7 +116,11 @@ export function CollectionProductsRoute() {
           </p>
         </div>
         <Button
-          onClick={() => save.mutate()}
+          onClick={() =>
+            save.mutate(
+              chosen.map((productId, index) => ({ productId, position: index })),
+            )
+          }
           disabled={!isDirty}
           loading={save.isPending}
           loadingText="Saving…"

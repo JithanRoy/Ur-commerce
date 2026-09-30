@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   GripVertical,
@@ -14,11 +13,18 @@ import {
   UploadError,
   describeFileRejection,
   isApiError,
-  putToStorage,
 } from "@urcommerce/api-client";
 import type { AdminVariant } from "@urcommerce/api-client";
 import { toast } from "sonner";
-import { adminApi } from "@/lib/api";
+import {
+  useAttachProductImages,
+  usePinProductImage,
+  useProductImages,
+  useRefreshProductImages,
+  useRemoveProductImage,
+  useReorderProductImages,
+} from "@/api/products";
+import { useProductImageUploader } from "@/api/uploads";
 import { cn } from "@/lib/utils";
 import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/input";
@@ -39,10 +45,6 @@ type PendingUpload = {
   status: "uploading" | "failed";
   message?: string;
 };
-
-function imagesQueryKey(productId: string) {
-  return ["admin", "products", productId, "images"];
-}
 
 function failureText(error: unknown, fallback: string): string {
   if (error instanceof UploadError) return error.message;
@@ -94,7 +96,6 @@ export function ImageManager({
   productId: string;
   variants: AdminVariant[];
 }) {
-  const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -103,41 +104,25 @@ export function ImageManager({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
-  const { data: images, isPending } = useQuery({
-    queryKey: imagesQueryKey(productId),
-    queryFn: () => adminApi.products.images.list(productId),
-  });
-
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: imagesQueryKey(productId) });
+  const { data: images, isPending } = useProductImages(productId);
+  const refresh = useRefreshProductImages(productId);
+  const uploadToStorage = useProductImageUploader();
+  const attachImages = useAttachProductImages(productId);
 
   const stageOne = async (
     file: File,
     entryId: string,
   ): Promise<StagedUpload> => {
-    const ticket = await adminApi.uploads.productImageTicket({
-      fileName: file.name,
-      contentType: file.type,
-      contentLength: file.size,
-    });
-    await putToStorage(ticket, file);
+    const objectKey = await uploadToStorage(file);
     return {
       entryId,
-      objectKey: ticket.objectKey,
+      objectKey,
       alt: altFromFileName(file.name),
     };
   };
 
-  const attachStaged = async (staged: StagedUpload[]) => {
-    const [only] = staged;
-    if (staged.length === 1 && only) {
-      await adminApi.products.images.attach(productId, toAttachInput(only));
-      return;
-    }
-    await adminApi.products.images.attachMany(productId, {
-      images: staged.map(toAttachInput),
-    });
-  };
+  const attachStaged = (staged: StagedUpload[]) =>
+    attachImages(staged.map(toAttachInput));
 
   const settleEntries = (entryIds: string[]) => {
     setPending((current) => {
@@ -235,34 +220,20 @@ export function ImageManager({
     await refresh();
   };
 
-  const reorder = useMutation({
-    mutationFn: (imageIds: string[]) =>
-      adminApi.products.images.reorder(productId, imageIds),
-    onSuccess: () => refresh(),
+  const reorder = useReorderProductImages(productId, {
+    success: "Gallery order saved.",
     onError: (cause) =>
       setError(failureText(cause, "Could not reorder the gallery.")),
   });
 
-  const pinVariant = useMutation({
-    mutationFn: ({
-      imageId,
-      variantId,
-    }: {
-      imageId: string;
-      variantId: string | null;
-    }) => adminApi.products.images.update(productId, imageId, { variantId }),
-    onSuccess: () => refresh(),
+  const pinVariant = usePinProductImage(productId, {
+    success: "Image variant updated.",
     onError: (cause) =>
       setError(failureText(cause, "Could not update that image.")),
   });
 
-  const remove = useMutation({
-    mutationFn: (imageId: string) =>
-      adminApi.products.images.remove(productId, imageId),
-    onSuccess: () => {
-      toast.success("Image removed.");
-      refresh();
-    },
+  const remove = useRemoveProductImage(productId, {
+    success: "Image removed.",
     onError: (cause) =>
       setError(failureText(cause, "Could not remove that image.")),
   });

@@ -1,6 +1,6 @@
 import { LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/stores/auth";
-import { authApi } from "@/lib/api";
+import { useLogout } from "@/api/auth";
 import { Button, IconButton } from "@/components/ui/button";
 
 function initials(name: string): string {
@@ -15,10 +15,11 @@ function initials(name: string): string {
 export function Topbar({ onOpenNav }: { onOpenNav?: () => void }) {
   const user = useAuth((state) => state.user);
   const signOut = useAuth((state) => state.signOut);
+  const logout = useLogout();
 
   async function onSignOut() {
     try {
-      await authApi.logout();
+      await logout();
     } catch {
       // signing out locally is what matters
     }

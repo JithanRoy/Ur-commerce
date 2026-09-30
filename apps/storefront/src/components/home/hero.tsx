@@ -8,7 +8,7 @@ const assurances = [
   { icon: RotateCcw, label: "7-day exchange" },
 ];
 
-export function Hero({
+export function StaticHero({
   storeName,
   tagline,
 }: {
@@ -87,5 +87,23 @@ export function Hero({
         </div>
       </div>
     </section>
+  );
+}
+
+export function HeroAssurances() {
+  return (
+    <div className="container-page">
+      <ul className="flex flex-wrap justify-center gap-x-8 gap-y-2 border-b py-4 sm:justify-start">
+        {assurances.map((item) => (
+          <li
+            key={item.label}
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+          >
+            <item.icon className="size-4 text-primary/70" aria-hidden />
+            {item.label}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

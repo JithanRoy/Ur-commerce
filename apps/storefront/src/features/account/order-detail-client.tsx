@@ -1,20 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
-import { checkoutApi } from "@/lib/browser-api";
+import { useOrder } from "@/api/orders";
 import { OrderStatusBadge, formatOrderDate } from "./order-status";
 import { Button } from "@/components/ui/button";
 import { CartSkeleton } from "@/components/ui/page-skeletons";
 
 export function OrderDetailClient({ orderId }: { orderId: string }) {
-  const { data: order, isPending, error } = useQuery({
-    queryKey: ["orders", orderId],
-    queryFn: () => checkoutApi.order(orderId),
-    retry: false,
-  });
+  const { data: order, isPending, error } = useOrder(orderId);
 
   if (isPending) {
     return <CartSkeleton label="Loading your order" />;

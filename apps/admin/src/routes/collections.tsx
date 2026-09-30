@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { adminApi } from "@/lib/api";
+import { collectionResource } from "@/api/taxonomy";
 import { TaxonomyPage } from "@/features/taxonomy/taxonomy-page";
 
 export function CollectionsRoute() {
@@ -7,12 +7,7 @@ export function CollectionsRoute() {
     <TaxonomyPage
       title="Collections"
       description="Curated groupings, independent of category."
-      queryKey="collections"
-      load={() =>
-        adminApi.collections.list({ limit: 100 }).then((page) => page.items)
-      }
-      create={(input) => adminApi.collections.create(input)}
-      remove={(id) => adminApi.collections.remove(id)}
+      resource={collectionResource}
       extraColumn={{
         heading: "Products",
         render: (row) => (
@@ -28,9 +23,6 @@ export function CollectionsRoute() {
         scope: "collection",
         label: "Banner",
         urlOf: (row) => row.imageUrl,
-        setKey: (id, objectKey) =>
-          adminApi.collections.update(id, { imageObjectKey: objectKey }),
-        clear: (id) => adminApi.collections.update(id, { imageUrl: null }),
       }}
     />
   );

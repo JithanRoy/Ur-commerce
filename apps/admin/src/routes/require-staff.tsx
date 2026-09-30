@@ -1,8 +1,7 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { isStaffRole } from "@urcommerce/api-client";
-import { authApi } from "@/lib/api";
+import { useCurrentUser } from "@/api/auth";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/stores/auth";
 
@@ -24,13 +23,8 @@ export function RequireStaff() {
   const signOut = useAuth((state) => state.signOut);
   const location = useLocation();
 
-  const { data, isPending, isError } = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: () => authApi.me(),
+  const { data, isPending, isError } = useCurrentUser({
     enabled: Boolean(session),
-    retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60_000,
   });
 
   useEffect(() => {

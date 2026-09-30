@@ -1,9 +1,15 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { isApiError } from "@urcommerce/api-client";
 import type { UploadScope } from "@urcommerce/api-client";
+import {
+  useCreateTaxonomyEntry,
+  useDeleteTaxonomyEntry,
+  useTaxonomyImage,
+  useTaxonomyList,
+  type TaxonomyResource,
+  type TaxonomyRow,
+} from "@/api/taxonomy";
 import { ImageField } from "@/components/ui/image-field";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
@@ -11,58 +17,35 @@ import { slugify } from "@/features/products/variant-matrix";
 import { Input } from "@/components/ui/input";
 import { Button, IconButton } from "@/components/ui/button";
 
-export type TaxonomyRow = {
-  id: string;
-  name: string;
-  slug: string;
-};
-
 type Props<T extends TaxonomyRow> = {
   title: string;
   description: string;
-  queryKey: string;
-  load: () => Promise<T[]>;
-  create: (input: { name: string; slug: string }) => Promise<unknown>;
-  remove: (id: string) => Promise<unknown>;
+  resource: TaxonomyResource<T>;
   extraColumn?: { heading: string; render: (row: T) => React.ReactNode };
   image?: {
     scope: UploadScope;
     label: string;
     urlOf: (row: T) => string | null;
-    setKey: (id: string, objectKey: string) => Promise<unknown>;
-    clear: (id: string) => Promise<unknown>;
   };
 };
 
 export function TaxonomyPage<T extends TaxonomyRow>({
   title,
   description,
-  queryKey,
-  load,
-  create,
-  remove,
+  resource,
   extraColumn,
   image,
 }: Props<T>) {
-  const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["admin", queryKey] });
+  const { data, isPending, error } = useTaxonomyList(resource);
 
-  const { data, isPending, error } = useQuery({
-    queryKey: ["admin", queryKey],
-    queryFn: load,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: create,
-    onSuccess: (_created, input) => {
+  const createMutation = useCreateTaxonomyEntry(resource, {
+    success: (_created, input) => `${input.name} created.`,
+    onSuccess: () => {
       setName("");
       setFormError(null);
-      toast.success(`${input.name} created.`);
-      invalidate();
     },
     onError: (mutationError) => {
       setFormError(
@@ -73,17 +56,9 @@ export function TaxonomyPage<T extends TaxonomyRow>({
     },
   });
 
-  const imageMutation = useMutation({
-    mutationFn: (input: { id: string; objectKey: string | null }) => {
-      if (!image) return Promise.resolve();
-      return input.objectKey === null
-        ? image.clear(input.id)
-        : image.setKey(input.id, input.objectKey);
-    },
-    onSuccess: (_result, input) => {
-      toast.success(input.objectKey === null ? "Image removed." : "Image saved.");
-      invalidate();
-    },
+  const imageMutation = useTaxonomyImage(resource, {
+    success: (_result, input) =>
+      input.objectKey === null ? "Image removed." : "Image saved.",
     onError: (mutationError) => {
       setFormError(
         isApiError(mutationError)
@@ -93,12 +68,8 @@ export function TaxonomyPage<T extends TaxonomyRow>({
     },
   });
 
-  const removeMutation = useMutation({
-    mutationFn: remove,
-    onSuccess: () => {
-      toast.success("Deleted.");
-      invalidate();
-    },
+  const removeMutation = useDeleteTaxonomyEntry(resource, {
+    success: "Deleted.",
     onError: (mutationError) => {
       setFormError(
         isApiError(mutationError) ? mutationError.message : "Could not delete.",

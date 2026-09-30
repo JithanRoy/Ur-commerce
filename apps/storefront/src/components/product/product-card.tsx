@@ -11,7 +11,7 @@ import type {
   ProductCard as ProductCardData,
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
-import { useCartMutations } from "@/features/cart/use-cart";
+import { useCartMutations } from "@/api/cart";
 import {
   LazySignInDialog,
   preloadSignInDialog,
@@ -181,44 +181,53 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             Out of stock
           </Button>
         ) : (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="md"
-              shape="rounded"
-              onClick={onAddToBag}
-              loading={addItem.isPending}
-              leading={
-                justAdded ? <Check aria-hidden /> : <ShoppingBag aria-hidden />
-              }
-              className={cn(
-                "min-w-0 flex-1 shrink gap-1.5 px-2 shadow-none",
-                justAdded
-                  ? "border-success bg-success text-white hover:bg-success hover:text-white"
-                  : "hover:border-foreground/40 hover:bg-accent/40",
-              )}
-            >
-              <span className="truncate">
-                {justAdded
-                  ? "Added"
-                  : needsChoice
-                    ? "Choose options"
-                    : "Add to bag"}
-              </span>
-            </Button>
+          <div className="@container">
+            <div className="flex flex-col gap-2 @[18.5rem]:flex-row">
+              <Button
+                variant="outline"
+                size="md"
+                shape="rounded"
+                onClick={onAddToBag}
+                loading={addItem.isPending}
+                leading={
+                  justAdded ? (
+                    <Check aria-hidden />
+                  ) : (
+                    <ShoppingBag
+                      aria-hidden
+                      className={cn(needsChoice && "@max-[9rem]:hidden")}
+                    />
+                  )
+                }
+                className={cn(
+                  "w-full min-w-0 shrink gap-1.5 px-2 shadow-none @[18.5rem]:w-auto @[18.5rem]:flex-1",
+                  justAdded
+                    ? "border-success bg-success text-white hover:bg-success hover:text-white"
+                    : "hover:border-foreground/40 hover:bg-accent/40",
+                )}
+              >
+                <span className="truncate">
+                  {justAdded
+                    ? "Added"
+                    : needsChoice
+                      ? "Choose options"
+                      : "Add to bag"}
+                </span>
+              </Button>
 
-            <Button
-              size="md"
-              shape="rounded"
-              onClick={onBuyNow}
-              onPointerEnter={warmSignIn}
-              onFocus={warmSignIn}
-              disabled={addItem.isPending}
-              leading={<Zap aria-hidden />}
-              className="min-w-0 flex-1 shrink gap-1.5 px-2 hover:bg-primary hover:shadow-md hover:shadow-primary/20"
-            >
-              <span className="truncate">Buy now</span>
-            </Button>
+              <Button
+                size="md"
+                shape="rounded"
+                onClick={onBuyNow}
+                onPointerEnter={warmSignIn}
+                onFocus={warmSignIn}
+                disabled={addItem.isPending}
+                leading={<Zap aria-hidden />}
+                className="w-full min-w-0 shrink gap-1.5 px-2 hover:bg-primary hover:shadow-md hover:shadow-primary/20 @[18.5rem]:w-auto @[18.5rem]:flex-1"
+              >
+                <span className="truncate">Buy now</span>
+              </Button>
+            </div>
           </div>
         )}
 

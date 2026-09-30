@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { isApiError, paisaToTakaInput } from "@urcommerce/api-client";
 import type {
   AdminProduct,
   AdminVariant,
-  CreateVariantInput,
   ProductStatus,
 } from "@urcommerce/api-client";
-import { toast } from "sonner";
-import { adminApi } from "@/lib/api";
 import { useBackToList } from "@/lib/list-params";
 import {
-  findProductInLists,
-  invalidateProductLists,
-  productDetailQuery,
-} from "@/features/products/queries";
+  useAddVariant,
+  useProduct,
+  useRemoveVariant,
+  useUpdateProduct,
+  useUpdateVariants,
+} from "@/api/products";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ErrorState, LoadingState } from "@/components/ui/states";
@@ -59,9 +57,7 @@ function toPaisa(value: string): number | undefined {
 
 export function ProductEditRoute() {
   const { productId = "" } = useParams<{ productId: string }>();
-  const queryClient = useQueryClient();
   const backToList = useBackToList("/products");
-  const detailQuery = productDetailQuery(productId);
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -79,11 +75,7 @@ export function ProductEditRoute() {
     isPending,
     isPlaceholderData,
     error: loadError,
-  } = useQuery({
-    ...detailQuery,
-    enabled: Boolean(productId),
-    placeholderData: () => findProductInLists(queryClient, productId),
-  });
+  } = useProduct(productId);
 
   const serverProduct = isPlaceholderData ? undefined : product;
 
@@ -104,85 +96,68 @@ export function ProductEditRoute() {
     setSeededFor(serverProduct.id);
   }, [serverProduct, seededFor]);
 
-  const storeProduct = (updated: AdminProduct) => {
-    queryClient.setQueryData(detailQuery.queryKey, updated);
-    void invalidateProductLists(queryClient, productId);
-  };
-
-  const refetchAfterVariantChange = () => {
-    void queryClient.invalidateQueries({ queryKey: detailQuery.queryKey });
-    void invalidateProductLists(queryClient, productId);
-  };
-
   const failed = (fallback: string) => (mutationError: unknown) => {
     setError(isApiError(mutationError) ? mutationError.message : fallback);
   };
 
-  const saveDetails = useMutation({
-    mutationFn: () =>
-      adminApi.products.update(productId, {
-        name: name.trim(),
-        slug: slug.trim(),
-        description: description.trim(),
-        status,
-        categoryId: categoryId || null,
-        brandId: brandId || null,
-      }),
+  const saveDetails = useUpdateProduct(productId, {
+    success: "Details saved.",
     onSuccess: (updated) => {
       setError(null);
-      storeProduct(updated);
       seedDetails(updated);
-      toast.success("Details saved.");
     },
     onError: failed("Could not save the product."),
   });
 
-  const saveVariants = useMutation({
-    mutationFn: () =>
-      adminApi.products.updateVariants(
-        productId,
-        rows.map((row) => ({
-          id: row.id,
-          sku: row.sku.trim(),
-          price: toPaisa(row.price) ?? 0,
-          compareAtPrice: toPaisa(row.compareAtPrice),
-          costPrice: toPaisa(row.costPrice),
-          stock: Number(row.stock) || 0,
-        })),
-      ),
+  const saveVariants = useUpdateVariants(productId, {
+    success: "Variants saved.",
     onSuccess: (updated) => {
       setError(null);
-      storeProduct(updated);
       setRows(toRow(updated));
-      toast.success("Variants saved.");
     },
     onError: failed("Could not save the variants."),
   });
 
-  const addVariant = useMutation({
-    mutationFn: (input: CreateVariantInput) =>
-      adminApi.products.addVariant(productId, input),
+  const addVariant = useAddVariant(productId, {
+    success: "Variant added.",
     onSuccess: (variant) => {
       setError(null);
       setRows((current) => [...current, toVariantRow(variant)]);
-      refetchAfterVariantChange();
-      toast.success("Variant added.");
     },
     onError: failed("Could not add the variant."),
   });
 
-  const removeVariant = useMutation({
-    mutationFn: (variantId: string) =>
-      adminApi.products.removeVariant(productId, variantId),
+  const removeVariant = useRemoveVariant(productId, {
+    success: "Variant removed.",
     onSuccess: (_result, variantId) => {
       setError(null);
       setRows((current) => current.filter((row) => row.id !== variantId));
-      refetchAfterVariantChange();
-      toast.success("Variant removed.");
     },
     onError: failed("Could not remove the variant."),
     onSettled: () => setRemovingId(null),
   });
+
+  const submitDetails = () =>
+    saveDetails.mutate({
+      name: name.trim(),
+      slug: slug.trim(),
+      description: description.trim(),
+      status,
+      categoryId: categoryId || null,
+      brandId: brandId || null,
+    });
+
+  const submitVariants = () =>
+    saveVariants.mutate(
+      rows.map((row) => ({
+        id: row.id,
+        sku: row.sku.trim(),
+        price: toPaisa(row.price) ?? 0,
+        compareAtPrice: toPaisa(row.compareAtPrice),
+        costPrice: toPaisa(row.costPrice),
+        stock: Number(row.stock) || 0,
+      })),
+    );
 
   if (isPending) return <LoadingState variant="form" />;
   if (!product) {
@@ -293,7 +268,7 @@ export function ProductEditRoute() {
 
           <div>
             <Button
-              onClick={() => saveDetails.mutate()}
+              onClick={submitDetails}
               loading={saveDetails.isPending}
               loadingText="Saving…"
               className="px-5"
@@ -317,7 +292,7 @@ export function ProductEditRoute() {
             </p>
           </div>
           <Button
-            onClick={() => saveVariants.mutate()}
+            onClick={submitVariants}
             disabled={rows.length === 0}
             loading={saveVariants.isPending}
             loadingText="Saving…"

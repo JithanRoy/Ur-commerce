@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useLocation, useNavigate } from "react-router";
 import { Lock, ShieldCheck } from "lucide-react";
 import { isApiError, isStaffRole } from "@urcommerce/api-client";
-import { authApi } from "@/lib/api";
+import { useLogin } from "@/api/auth";
 import { useAuth } from "@/stores/auth";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export function LoginRoute() {
   const navigate = useNavigate();
   const location = useLocation();
   const signIn = useAuth((state) => state.signIn);
+  const login = useLogin();
   const routerState = location.state as {
     from?: { pathname: string };
     reason?: string;
@@ -42,7 +43,7 @@ export function LoginRoute() {
   async function onSubmit(values: FormValues) {
     setFormError(null);
     try {
-      const session = await authApi.login(values);
+      const session = await login(values);
       if (!isStaffRole(session.role)) {
         setFormError("This account cannot access the admin panel.");
         return;

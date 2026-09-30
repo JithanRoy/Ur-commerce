@@ -1,15 +1,13 @@
 import { useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 import {
   ACCEPTED_IMAGE_TYPES,
   UploadError,
   describeFileRejection,
   isApiError,
-  putToStorage,
 } from "@urcommerce/api-client";
 import type { UploadScope } from "@urcommerce/api-client";
-import { adminApi } from "@/lib/api";
+import { useUploadImage } from "@/api/uploads";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
@@ -49,17 +47,7 @@ export function ImageField({
   const [preview, setPreview] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  const upload = useMutation({
-    mutationFn: async (file: File) => {
-      const ticket = await adminApi.uploads.imageTicket({
-        scope,
-        fileName: file.name,
-        contentType: file.type,
-        contentLength: file.size,
-      });
-      await putToStorage(ticket, file);
-      return ticket.objectKey;
-    },
+  const upload = useUploadImage(scope, {
     onMutate: (file: File) => {
       setError(null);
       const previewUrl = URL.createObjectURL(file);

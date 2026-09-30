@@ -37,3 +37,10 @@ export {
 export type * from "./admin/orders";
 export { STAFF_ROLE_LABELS } from "./admin/users";
 export type * from "./admin/users";
+export {
+  HERO_ALT_MAX_LENGTH,
+  HERO_INTERVAL_MAX_MS,
+  HERO_INTERVAL_MIN_MS,
+  HERO_MAX_SLIDES,
+} from "./hero";
+export type * from "./hero";

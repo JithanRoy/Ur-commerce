@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isApiError } from "@urcommerce/api-client";
 import type {
   StoreSettings,
   UpdateStoreSettingsInput,
 } from "@urcommerce/api-client";
-import { toast } from "sonner";
-import { adminApi } from "@/lib/api";
+import { useStoreSettings, useUpdateStoreSettings } from "@/api/settings";
 import { TextField } from "@/components/ui/field";
 import { ImageField } from "@/components/ui/image-field";
 import { Button } from "@/components/ui/button";
@@ -91,32 +89,20 @@ function localProblem(draft: Draft): string | null {
 }
 
 export function BrandingRoute() {
-  const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    data,
-    isPending,
-    error: loadError,
-  } = useQuery({
-    queryKey: ["admin", "settings"],
-    queryFn: () => adminApi.settings.get(),
-    retry: false,
-  });
+  const { data, isPending, error: loadError } = useStoreSettings();
 
   useEffect(() => {
     if (data) setDraft(toDraft(data));
   }, [data]);
 
-  const save = useMutation({
-    mutationFn: (patch: UpdateStoreSettingsInput) =>
-      adminApi.settings.update(patch),
+  const save = useUpdateStoreSettings({
+    success: "Branding saved. Your storefront is updated.",
     onSuccess: (updated) => {
       setError(null);
-      toast.success("Branding saved. Your storefront is updated.");
       setDraft(toDraft(updated));
-      queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
     },
     onError: (cause) => {
       setError(

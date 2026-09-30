@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  queryOptions,
   useMutation,
   useMutationState,
   useQuery,
@@ -9,22 +10,35 @@ import {
 } from "@tanstack/react-query";
 import type { Cart, CartLine, Paisa } from "@urcommerce/api-client";
 import { cartApi } from "@/lib/browser-api";
-
-export const cartQueryKey = ["cart"];
-const cartMutationKey = ["cart"];
-
-function cartLineMutationKey(lineId: string) {
-  return [...cartMutationKey, "line", lineId];
-}
+import { mutationKeys, queryKeys, type QueryOverrides } from "./query-keys";
 
 type CartSnapshot = { previous: Cart | undefined };
 
-export function useCart() {
-  return useQuery({
+type AddCartItemInput = {
+  variantId: string;
+  quantity: number;
+};
+
+const cartQueryKey = queryKeys.cart.detail();
+const cartMutationKey = mutationKeys.cart.all;
+
+export function cartQuery() {
+  return queryOptions({
     queryKey: cartQueryKey,
     queryFn: () => cartApi.get(),
     retry: false,
   });
+}
+
+export function useCart(
+  options?: QueryOverrides<Cart, ReturnType<typeof queryKeys.cart.detail>>,
+) {
+  return useQuery({ ...cartQuery(), ...options });
+}
+
+export function useInvalidateCart() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: cartQueryKey });
 }
 
 function withQuantity(line: CartLine, quantity: number): CartLine {
@@ -81,13 +95,8 @@ export function useCartMutations() {
   return {
     addItem: useMutation({
       mutationKey: cartMutationKey,
-      mutationFn: ({
-        variantId,
-        quantity,
-      }: {
-        variantId: string;
-        quantity: number;
-      }) => cartApi.addItem(variantId, quantity),
+      mutationFn: ({ variantId, quantity }: AddCartItemInput) =>
+        cartApi.addItem(variantId, quantity),
       onMutate: () => queryClient.cancelQueries({ queryKey: cartQueryKey }),
       onSuccess: (cart) => writeConfirmedCart(queryClient, cart),
       onError: () =>
@@ -98,7 +107,7 @@ export function useCartMutations() {
 
 export function useCartLineMutations(lineId: string) {
   const queryClient = useQueryClient();
-  const mutationKey = cartLineMutationKey(lineId);
+  const mutationKey = mutationKeys.cart.line(lineId);
   const scope = { id: mutationKey.join(":") };
 
   const updateItem = useMutation<Cart, Error, number, CartSnapshot>({

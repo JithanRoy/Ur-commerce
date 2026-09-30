@@ -1,9 +1,8 @@
 import { Link } from "react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import { ImageOff, Plus, Search } from "lucide-react";
 import { formatPriceRange, paisa } from "@urcommerce/api-client";
 import type { AdminProduct, ProductStatus } from "@urcommerce/api-client";
-import { adminApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
@@ -14,7 +13,7 @@ import {
   useListLinkState,
   useListParams,
 } from "@/lib/list-params";
-import { usePrefetchProductDetail } from "@/features/products/queries";
+import { useProducts, usePrefetchProductDetail } from "@/api/products";
 
 const PRODUCT_STATUSES: readonly ProductStatus[] = [
   "ACTIVE",
@@ -40,23 +39,18 @@ export function ProductsRoute() {
   const linkState = useListLinkState();
   const prefetchProduct = usePrefetchProductDetail();
 
-  const { data, isPending, isPlaceholderData, error } = useQuery({
-    queryKey: ["admin", "products", { page, search, status }],
-    queryFn: () =>
-      adminApi.products.list({
-        page,
-        limit: 20,
-        ...(search ? { search } : {}),
-        ...(status ? { status } : {}),
+  const { data, isPending, isPlaceholderData, error } = useProducts(
+    { page, search, status },
+    {
+      placeholderData: keepPreviousData,
+      select: (page) => ({
+        ...page,
+        items: page.items.filter(
+          (product) => !product.slug.includes("__archived_"),
+        ),
       }),
-    placeholderData: keepPreviousData,
-    select: (page) => ({
-      ...page,
-      items: page.items.filter(
-        (product) => !product.slug.includes("__archived_"),
-      ),
-    }),
-  });
+    },
+  );
 
   const newProductLink = (
     <Button asChild className="h-9 gap-1.5">

@@ -13,7 +13,7 @@ async function go(ctx, path) {
 
 // --- signed OUT ---
 let ctx = await browser.newContext();
-for (const path of ["/products", "/categories", "/brands", "/collections", "/products/new", "/dashboard", "/totally-made-up", "/"]) {
+for (const path of ["/products", "/categories", "/brands", "/collections", "/products/new", "/hero", "/dashboard", "/totally-made-up", "/"]) {
   const page = await go(ctx, path);
   const url = new URL(page.url());
   ok(url.pathname === "/login", `signed out: ${path} → /login (got ${url.pathname})`);

@@ -1,3 +1,4 @@
+import type { Hero } from "../hero";
 import type { Paisa } from "../money";
 
 export type ProductCardBrand = {
@@ -73,6 +74,7 @@ export type HomeSection =
   | BrandStripSection;
 
 export type HomeResponse = {
+  hero: Hero;
   sections: HomeSection[];
   generatedAt: string;
 };

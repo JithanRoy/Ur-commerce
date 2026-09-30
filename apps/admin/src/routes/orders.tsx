@@ -1,8 +1,7 @@
 import { Link } from "react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import { formatBDT, ORDER_STATUS_LABELS, ORDER_STATUSES } from "@urcommerce/api-client";
 import type { OrderStatus } from "@urcommerce/api-client";
-import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
@@ -15,7 +14,11 @@ import {
   useListLinkState,
   useListParams,
 } from "@/lib/list-params";
-import { usePrefetchOrderDetail } from "@/features/orders/queries";
+import {
+  useOrderCounts,
+  useOrders,
+  usePrefetchOrderDetail,
+} from "@/api/orders";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", {
@@ -60,22 +63,12 @@ export function OrdersRoute() {
   const linkState = useListLinkState();
   const prefetchOrder = usePrefetchOrderDetail();
 
-  const { data: counts } = useQuery({
-    queryKey: ["admin", "orders", "counts"],
-    queryFn: () => adminApi.orders.counts(),
-  });
+  const { data: counts } = useOrderCounts();
 
-  const { data, isPending, isPlaceholderData, error } = useQuery({
-    queryKey: ["admin", "orders", { page, status, search }],
-    queryFn: () =>
-      adminApi.orders.list({
-        page,
-        limit: 20,
-        ...(status ? { status } : {}),
-        ...(search ? { search } : {}),
-      }),
-    placeholderData: keepPreviousData,
-  });
+  const { data, isPending, isPlaceholderData, error } = useOrders(
+    { page, status, search },
+    { placeholderData: keepPreviousData },
+  );
 
   return (
     <>

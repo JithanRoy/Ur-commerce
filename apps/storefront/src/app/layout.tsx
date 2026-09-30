@@ -13,8 +13,7 @@ import "./globals.css";
 const display = Fraunces({
   subsets: ["latin"],
   variable: "--font-display-loaded",
-  weight: ["500", "600"],
-  style: ["normal"],
+  axes: ["opsz"],
   display: "swap",
 });
 

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAppRouter } from "@/lib/navigation";
 import { isApiError } from "@urcommerce/api-client";
-import { useCartMutations } from "@/features/cart/use-cart";
+import { useCartMutations } from "@/api/cart";
 import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
 import type { ProductDetail } from "@urcommerce/api-client";
 import {

@@ -3,12 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAppRouter } from "@/lib/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, MapPin, Package, ShieldOff, User } from "lucide-react";
-import { authApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
-import { clearCartSession } from "@/stores/cart-session";
-import { cartQueryKey } from "@/features/cart/use-cart";
+import { useSignOut } from "@/api/auth";
 import { IconButton } from "@/components/ui/button";
 
 const links = [
@@ -29,9 +26,8 @@ function SignedOutNotice({ message }: { message: string }) {
 
 export function AccountMenu() {
   const router = useAppRouter();
-  const queryClient = useQueryClient();
   const session = useAuth((state) => state.session);
-  const signOut = useAuth((state) => state.signOut);
+  const { revokeThisDevice, revokeAllDevices, endLocalSession } = useSignOut();
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -80,9 +76,7 @@ export function AccountMenu() {
   }
 
   async function clearLocalSession() {
-    signOut();
-    clearCartSession();
-    await queryClient.invalidateQueries({ queryKey: cartQueryKey });
+    await endLocalSession();
     setOpen(false);
     setSigningOut(false);
     router.push("/");
@@ -91,11 +85,7 @@ export function AccountMenu() {
 
   async function onSignOut() {
     setSigningOut(true);
-    try {
-      await authApi.logout();
-    } catch {
-      // signing out locally is what matters
-    }
+    await revokeThisDevice();
     await clearLocalSession();
   }
 
@@ -105,12 +95,10 @@ export function AccountMenu() {
     );
     if (!confirmed) return;
     setSigningOut(true);
-    try {
-      const result = await authApi.logoutAll();
+    const result = await revokeAllDevices();
+    if (result) {
       const count = result.revokedSessions;
       setNotice(`Signed out of ${count} device${count === 1 ? "" : "s"}.`);
-    } catch {
-      // signing out locally is what matters
     }
     await clearLocalSession();
   }

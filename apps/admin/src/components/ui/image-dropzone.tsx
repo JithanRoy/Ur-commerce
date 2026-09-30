@@ -1,14 +1,13 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { AlertCircle, ImagePlus, Loader2, X } from "lucide-react";
 import {
   ACCEPTED_IMAGE_TYPES,
   UploadError,
   describeFileRejection,
   isApiError,
-  putToStorage,
 } from "@urcommerce/api-client";
 import type { UploadScope } from "@urcommerce/api-client";
-import { adminApi } from "@/lib/api";
+import { useImageUploader } from "@/api/uploads";
 import { cn } from "@/lib/utils";
 import { Button, IconButton } from "@/components/ui/button";
 
@@ -26,6 +25,12 @@ type PendingFile = {
   message?: string;
 };
 
+export type LimitDetails = { maxImages: number; room: number; skipped: number };
+
+function defaultLimitMessage({ maxImages, room }: LimitDetails): string {
+  return `Up to ${maxImages} images. ${room} more can be added.`;
+}
+
 function failureText(error: unknown, fallback: string): string {
   if (error instanceof UploadError) return error.message;
   if (isApiError(error)) return error.message;
@@ -38,12 +43,18 @@ export function ImageDropzone({
   onChange,
   maxImages = 8,
   disabled,
+  disabledReason,
+  hint,
+  limitMessage = defaultLimitMessage,
 }: {
   scope: UploadScope;
   images: UploadedImage[];
   onChange: (images: UploadedImage[]) => void;
   maxImages?: number;
   disabled?: boolean;
+  disabledReason?: ReactNode;
+  hint?: ReactNode;
+  limitMessage?: (details: LimitDetails) => string;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<PendingFile[]>([]);
@@ -51,17 +62,13 @@ export function ImageDropzone({
   const [unavailable, setUnavailable] = useState(false);
   const [dragDepth, setDragDepth] = useState(0);
 
+  const uploadImage = useImageUploader(scope);
+
   const uploadOne = async (file: File, entryId: string) => {
-    const ticket = await adminApi.uploads.imageTicket({
-      scope,
-      fileName: file.name,
-      contentType: file.type,
-      contentLength: file.size,
-    });
-    await putToStorage(ticket, file);
+    const objectKey = await uploadImage(file);
     setPending((current) => current.filter((entry) => entry.id !== entryId));
     return {
-      objectKey: ticket.objectKey,
+      objectKey,
       fileName: file.name,
     };
   };
@@ -70,10 +77,13 @@ export function ImageDropzone({
     if (disabled || files.length === 0) return;
     setError(null);
 
-    const room = maxImages - images.length - pending.length;
+    const room = Math.max(maxImages - images.length - pending.length, 0);
+    const problems: string[] = [];
     if (files.length > room) {
-      setError(`Up to ${maxImages} images. ${Math.max(room, 0)} more can be added.`);
-      files = files.slice(0, Math.max(room, 0));
+      problems.push(
+        limitMessage({ maxImages, room, skipped: files.length - room }),
+      );
+      files = files.slice(0, room);
     }
 
     const rejected: string[] = [];
@@ -96,7 +106,8 @@ export function ImageDropzone({
       });
     }
 
-    if (rejected.length > 0) setError(rejected.join(" · "));
+    problems.push(...rejected);
+    if (problems.length > 0) setError(problems.join(" · "));
     if (accepted.length === 0) return;
 
     setPending((current) => [...current, ...accepted.map((item) => item.entry)]);
@@ -147,7 +158,7 @@ export function ImageDropzone({
     <div>
       <div
         onDragEnter={(event) => {
-          if (event.dataTransfer.types.includes("Files"))
+          if (!disabled && event.dataTransfer.types.includes("Files"))
             setDragDepth((depth) => depth + 1);
         }}
         onDragOver={(event) => {
@@ -165,7 +176,7 @@ export function ImageDropzone({
           dragDepth > 0
             ? "border-primary bg-primary/5"
             : "border-border hover:border-foreground/25",
-          disabled && "pointer-events-none opacity-50",
+          disabled && "cursor-not-allowed opacity-50 hover:border-border",
         )}
       >
         <ImagePlus
@@ -183,6 +194,7 @@ export function ImageDropzone({
           <Button
             variant="link"
             size="xs"
+            disabled={disabled}
             onClick={() => fileInput.current?.click()}
             className="align-baseline underline underline-offset-2"
           >
@@ -190,12 +202,22 @@ export function ImageDropzone({
           </Button>{" "}
           · JPEG, PNG, WebP or AVIF up to 10 MB
         </p>
+        {hint ? (
+          <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        ) : null}
       </div>
+
+      {disabled && disabledReason ? (
+        <p role="status" className="mt-2 text-sm text-muted-foreground">
+          {disabledReason}
+        </p>
+      ) : null}
 
       <input
         ref={fileInput}
         type="file"
         multiple
+        disabled={disabled}
         accept={ACCEPTED_IMAGE_TYPES.join(",")}
         className="hidden"
         onChange={(event) => {

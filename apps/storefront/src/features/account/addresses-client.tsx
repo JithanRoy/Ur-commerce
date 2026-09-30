@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MapPin } from "lucide-react";
-import { isApiError } from "@urcommerce/api-client";
 import type { Address } from "@urcommerce/api-client";
-import { checkoutApi } from "@/lib/browser-api";
+import {
+  useAddresses,
+  useCreateAddress,
+  useRemoveAddress,
+  useSetDefaultAddress,
+  useUpdateAddress,
+} from "@/api/addresses";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AddressForm, toCreateInput } from "./address-form";
-import type { AddressValues } from "./address-form";
 import { ListSkeleton } from "@/components/ui/page-skeletons";
-
-const addressesQueryKey = ["addresses"];
 
 function formatAddressLines(address: Address): string[] {
   const locality = [address.area, address.thana, address.district]
@@ -27,25 +28,13 @@ function formatAddressLines(address: Address): string[] {
   );
 }
 
-function errorMessage(error: unknown, fallback: string): string {
-  return isApiError(error) ? error.message : fallback;
-}
-
 export function AddressesClient() {
-  const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const { data, isPending, isError } = useQuery({
-    queryKey: addressesQueryKey,
-    queryFn: () => checkoutApi.addresses.list(),
-    retry: false,
-  });
-
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: addressesQueryKey });
+  const { data, isPending, isError } = useAddresses();
 
   const closeForms = () => {
     setIsAdding(false);
@@ -53,49 +42,34 @@ export function AddressesClient() {
     setActionError(null);
   };
 
-  const createAddress = useMutation({
-    mutationFn: (values: AddressValues) =>
-      checkoutApi.addresses.create(toCreateInput(values)),
-    onSuccess: () => {
-      refresh();
-      closeForms();
-    },
-    onError: (error) =>
-      setActionError(errorMessage(error, "Could not save this address.")),
+  const createAddress = useCreateAddress({
+    onSuccess: closeForms,
+    error: "Could not save this address.",
+    onErrorMessage: setActionError,
   });
 
-  const updateAddress = useMutation({
-    mutationFn: ({ id, values }: { id: string; values: AddressValues }) =>
-      checkoutApi.addresses.update(id, toCreateInput(values)),
-    onSuccess: () => {
-      refresh();
-      closeForms();
-    },
-    onError: (error) =>
-      setActionError(errorMessage(error, "Could not update this address.")),
+  const updateAddress = useUpdateAddress({
+    onSuccess: closeForms,
+    error: "Could not update this address.",
+    onErrorMessage: setActionError,
   });
 
-  const removeAddress = useMutation({
-    mutationFn: (id: string) => checkoutApi.addresses.remove(id),
+  const removeAddress = useRemoveAddress({
     onSuccess: () => {
-      refresh();
       setPendingDeleteId(null);
       setActionError(null);
     },
-    onError: (error) => {
+    error: "Could not remove this address.",
+    onErrorMessage: (message) => {
       setPendingDeleteId(null);
-      setActionError(errorMessage(error, "Could not remove this address."));
+      setActionError(message);
     },
   });
 
-  const setDefaultAddress = useMutation({
-    mutationFn: (id: string) => checkoutApi.addresses.setDefault(id),
-    onSuccess: () => {
-      refresh();
-      setActionError(null);
-    },
-    onError: (error) =>
-      setActionError(errorMessage(error, "Could not change your default.")),
+  const setDefaultAddress = useSetDefaultAddress({
+    onSuccess: () => setActionError(null),
+    error: "Could not change your default.",
+    onErrorMessage: setActionError,
   });
 
   if (isPending) {
@@ -157,7 +131,10 @@ export function AddressesClient() {
                 pending={updateAddress.isPending}
                 error={actionError}
                 onSubmit={(values) =>
-                  updateAddress.mutate({ id: address.id, values })
+                  updateAddress.mutate({
+                    id: address.id,
+                    input: toCreateInput(values),
+                  })
                 }
                 onCancel={closeForms}
               />
@@ -269,7 +246,7 @@ export function AddressesClient() {
             submitLabel="Save address"
             pending={createAddress.isPending}
             error={actionError}
-            onSubmit={(values) => createAddress.mutate(values)}
+            onSubmit={(values) => createAddress.mutate(toCreateInput(values))}
             onCancel={closeForms}
           />
         </div>

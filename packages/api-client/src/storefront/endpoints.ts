@@ -1,4 +1,5 @@
 import type { ApiClient } from "../client";
+import type { Hero } from "../hero";
 import type { Paginated } from "../types";
 import type {
   HomeResponse,
@@ -23,6 +24,7 @@ function toQuery(query: ProductQuery): Record<string, string | number | undefine
 export function createStorefrontApi(client: ApiClient) {
   return {
     home: () => client.get<HomeResponse>("/home"),
+    hero: () => client.get<Hero>("/hero"),
     store: () => client.get<StoreProfile>("/store"),
     products: (query: ProductQuery = {}) =>
       client.get<Paginated<ProductCard>>("/products", { query: toQuery(query) }),

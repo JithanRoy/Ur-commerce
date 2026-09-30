@@ -1,4 +1,12 @@
 import type { ApiClient } from "../client";
+import type {
+  AdminHero,
+  AdminHeroSlide,
+  CreateHeroSlideInput,
+  HeroSettings,
+  UpdateHeroSettingsInput,
+  UpdateHeroSlideInput,
+} from "../hero";
 import type { Paginated } from "../types";
 import type {
   AdminBrand,
@@ -99,6 +107,19 @@ export function createAdminApi(client: ApiClient) {
         remove: (id: string, imageId: string) =>
           client.delete<void>(`/admin/products/${id}/images/${imageId}`),
       },
+    },
+    hero: {
+      get: () => client.get<AdminHero>("/admin/hero"),
+      addSlide: (input: CreateHeroSlideInput) =>
+        client.post<AdminHeroSlide>("/admin/hero/slides", input),
+      updateSlide: (id: string, input: UpdateHeroSlideInput) =>
+        client.patch<AdminHeroSlide>(`/admin/hero/slides/${id}`, input),
+      removeSlide: (id: string) =>
+        client.delete<void>(`/admin/hero/slides/${id}`),
+      reorder: (slideIds: string[]) =>
+        client.put<AdminHeroSlide[]>("/admin/hero/slides/order", { slideIds }),
+      updateSettings: (input: UpdateHeroSettingsInput) =>
+        client.patch<HeroSettings>("/admin/hero/settings", input),
     },
     settings: {
       get: () => client.get<StoreSettings>("/admin/settings"),

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
-import { useCart } from "./use-cart";
+import { useCart } from "@/api/cart";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/button";
 

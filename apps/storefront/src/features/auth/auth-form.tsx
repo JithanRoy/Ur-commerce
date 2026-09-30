@@ -7,12 +7,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
-import { isApiError } from "@urcommerce/api-client";
-import { authApi } from "@/lib/browser-api";
-import { useAuth } from "@/stores/auth";
-import { clearCartSession } from "@/stores/cart-session";
-import { cartQueryKey } from "@/features/cart/use-cart";
+import { useRegister, useSignIn } from "@/api/auth";
+import { apiErrorMessage } from "@/api/use-api-mutation";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,8 +28,8 @@ type Mode = "login" | "register";
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useAppRouter();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const signIn = useAuth((state) => state.signIn);
+  const register = useRegister();
+  const signIn = useSignIn();
   const [formError, setFormError] = useState<string | null>(null);
   const [remember, setRemember] = useState(true);
 
@@ -53,27 +49,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setFormError(null);
     try {
       if (mode === "register") {
-        await authApi.register({
+        await register.mutateAsync({
           name: values.name ?? "",
           email: values.email,
           password: values.password,
         });
       }
 
-      const session = await authApi.login({
+      await signIn.mutateAsync({
         email: values.email,
         password: values.password,
+        remember,
       });
-
-      signIn(session, remember);
-      clearCartSession();
-      await queryClient.invalidateQueries({ queryKey: cartQueryKey });
       router.push(returnTo);
       router.refresh();
     } catch (error) {
-      setFormError(
-        isApiError(error) ? error.message : "Something went wrong. Try again.",
-      );
+      setFormError(apiErrorMessage(error));
     }
   }
 

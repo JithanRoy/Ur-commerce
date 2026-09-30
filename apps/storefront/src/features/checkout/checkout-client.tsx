@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useAppRouter } from "@/lib/navigation";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
-import type { Address, PaymentMethod } from "@urcommerce/api-client";
-import { checkoutApi } from "@/lib/browser-api";
+import type { PaymentMethod } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
-import { useCart, cartQueryKey } from "@/features/cart/use-cart";
+import { useCart } from "@/api/cart";
+import { useAddresses, useCreateAddress } from "@/api/addresses";
+import { useCheckoutQuote, usePlaceOrder } from "@/api/checkout";
+import { apiErrorMessage } from "@/api/use-api-mutation";
 import { AddressForm, toCreateInput } from "@/features/account/address-form";
-import type { AddressValues } from "@/features/account/address-form";
 import { Radio } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,9 +30,16 @@ const paymentOptions: [PaymentOption, ...PaymentOption[]] = [
   },
 ];
 
+const SOLD_OUT_DURING_CHECKOUT =
+  "Something in your cart sold out while you were checking out. Your cart has been refreshed — please adjust it and try again.";
+
+function placeOrderErrorMessage(error: unknown): string {
+  if (isApiError(error) && error.isConflict) return SOLD_OUT_DURING_CHECKOUT;
+  return apiErrorMessage(error, "Could not place your order.");
+}
+
 export function CheckoutClient() {
   const router = useAppRouter();
-  const queryClient = useQueryClient();
   const session = useAuth((state) => state.session);
   const { data: cart, isPending: cartPending } = useCart();
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -41,12 +48,7 @@ export function CheckoutClient() {
     paymentOptions[0].value,
   );
 
-  const { data: addresses } = useQuery({
-    queryKey: ["addresses"],
-    queryFn: () => checkoutApi.addresses.list(),
-    enabled: Boolean(session),
-    retry: false,
-  });
+  const { data: addresses } = useAddresses({ enabled: Boolean(session) });
 
   useEffect(() => {
     if (addressId || !addresses?.length) return;
@@ -54,44 +56,15 @@ export function CheckoutClient() {
     if (preferred) setAddressId(preferred.id);
   }, [addresses, addressId]);
 
-  const { data: quote } = useQuery({
-    queryKey: ["checkout", "quote", addressId],
-    queryFn: () => checkoutApi.quote(addressId as string),
-    enabled: Boolean(addressId),
-    retry: false,
+  const { data: quote } = useCheckoutQuote(addressId);
+
+  const createAddress = useCreateAddress({
+    onSuccess: (address) => setAddressId(address.id),
   });
 
-  const createAddress = useMutation({
-    mutationFn: (values: AddressValues) =>
-      checkoutApi.addresses.create({
-        ...toCreateInput(values),
-        isDefault: true,
-      }),
-    onSuccess: (address: Address) => {
-      setAddressId(address.id);
-      queryClient.invalidateQueries({ queryKey: ["addresses"] });
-    },
-  });
-
-  const placeOrder = useMutation({
-    mutationFn: () =>
-      checkoutApi.place(addressId as string, paymentMethod),
-    onSuccess: (order) => {
-      queryClient.invalidateQueries({ queryKey: cartQueryKey });
-      router.push(`/order/${order.orderNumber}`);
-    },
-    onError: (error) => {
-      if (isApiError(error) && error.isConflict) {
-        setCheckoutError(
-          "Something in your cart sold out while you were checking out. Your cart has been refreshed — please adjust it and try again.",
-        );
-        queryClient.invalidateQueries({ queryKey: cartQueryKey });
-        return;
-      }
-      setCheckoutError(
-        isApiError(error) ? error.message : "Could not place your order.",
-      );
-    },
+  const placeOrder = usePlaceOrder({
+    onSuccess: (order) => router.push(`/order/${order.orderNumber}`),
+    onError: (error) => setCheckoutError(placeOrderErrorMessage(error)),
   });
 
   if (!session) {
@@ -170,7 +143,9 @@ export function CheckoutClient() {
               submitLabel="Save address"
               pending={createAddress.isPending}
               showOptionalFields={false}
-              onSubmit={(values) => createAddress.mutate(values)}
+              onSubmit={(values) =>
+                createAddress.mutate({ ...toCreateInput(values), isDefault: true })
+              }
             />
           ) : null}
         </section>
@@ -248,7 +223,9 @@ export function CheckoutClient() {
 
         <Button
           fullWidth
-          onClick={() => placeOrder.mutate()}
+          onClick={() => {
+            if (addressId) placeOrder.mutate({ addressId, paymentMethod });
+          }}
           disabled={!addressId || hasStockProblem}
           loading={placeOrder.isPending}
           loadingText="Placing order…"

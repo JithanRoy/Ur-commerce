@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isApiError, STAFF_ROLE_LABELS } from "@urcommerce/api-client";
-import type { CreateStaffInput, StaffRole } from "@urcommerce/api-client";
-import { toast } from "sonner";
-import { adminApi } from "@/lib/api";
+import type { StaffRole } from "@urcommerce/api-client";
+import {
+  useAddStaff,
+  useSetStaffAccess,
+  useSetStaffRole,
+  useTeam,
+} from "@/api/team";
 import { useAuth } from "@/stores/auth";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
@@ -13,52 +16,33 @@ import { Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export function TeamRoute() {
-  const queryClient = useQueryClient();
   const currentUser = useAuth((state) => state.user);
   const [error, setError] = useState<string | null>(null);
-
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
 
   const failed = (fallback: string) => (mutationError: unknown) => {
     setError(isApiError(mutationError) ? mutationError.message : fallback);
   };
 
-  const { data, isPending, error: loadError } = useQuery({
-    queryKey: ["admin", "users"],
-    queryFn: () => adminApi.users.list({ limit: 100 }),
-    retry: false,
-  });
+  const { data, isPending, error: loadError } = useTeam();
 
-  const addStaff = useMutation({
-    mutationFn: (input: CreateStaffInput) => adminApi.users.create(input),
-    onSuccess: () => {
-      setError(null);
-      toast.success("Team member added.");
-      invalidate();
-    },
+  const clearError = () => setError(null);
+
+  const addStaff = useAddStaff({
+    success: "Team member added.",
+    onSuccess: clearError,
     onError: failed("Could not add the team member."),
   });
 
-  const setActive = useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      adminApi.users.update(id, { isActive }),
-    onSuccess: (_result, variables) => {
-      setError(null);
-      toast.success(variables.isActive ? "Access restored." : "Access revoked.");
-      invalidate();
-    },
+  const setActive = useSetStaffAccess({
+    success: (_result, variables) =>
+      variables.isActive ? "Access restored." : "Access revoked.",
+    onSuccess: clearError,
     onError: failed("Could not update access."),
   });
 
-  const setRole = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: StaffRole }) =>
-      adminApi.users.update(id, { role }),
-    onSuccess: () => {
-      setError(null);
-      toast.success("Role updated.");
-      invalidate();
-    },
+  const setRole = useSetStaffRole({
+    success: "Role updated.",
+    onSuccess: clearError,
     onError: failed("Could not change the role."),
   });
 

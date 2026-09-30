@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Check, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { formatBDT } from "@urcommerce/api-client";
 import type { CartLine, Paisa } from "@urcommerce/api-client";
-import { useCart, useCartLineMutations } from "./use-cart";
+import { useCart, useCartLineMutations } from "@/api/cart";
 import { Button, IconButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CartSkeleton } from "@/components/ui/page-skeletons";

@@ -1,17 +1,11 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   isApiError,
   nextStatuses,
   ORDER_STATUS_LABELS,
 } from "@urcommerce/api-client";
 import type { OrderStatus } from "@urcommerce/api-client";
-import { adminApi } from "@/lib/api";
-import {
-  invalidateOrderLists,
-  orderDetailQuery,
-} from "@/features/orders/queries";
+import { useUpdateOrderStatus } from "@/api/orders";
 import { TextField } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 
@@ -21,23 +15,17 @@ type Props = {
 };
 
 export function StatusActions({ orderId, status }: Props) {
-  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [pendingCancel, setPendingCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
 
-  const mutation = useMutation({
-    mutationFn: (next: { status: OrderStatus; cancelReason?: string }) =>
-      adminApi.orders.changeStatus(orderId, next),
-    onSuccess: (updated) => {
-      queryClient.setQueryData(orderDetailQuery(orderId).queryKey, updated);
-      void invalidateOrderLists(queryClient, orderId);
+  const mutation = useUpdateOrderStatus(orderId, {
+    success: (updated) =>
+      `Order marked ${ORDER_STATUS_LABELS[updated.status].toLowerCase()}.`,
+    onSuccess: () => {
       setError(null);
       setPendingCancel(false);
       setCancelReason("");
-      toast.success(
-        `Order marked ${ORDER_STATUS_LABELS[updated.status].toLowerCase()}.`,
-      );
     },
     onError: (mutationError) =>
       setError(

@@ -4,12 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
-import { isApiError } from "@urcommerce/api-client";
-import { authApi } from "@/lib/browser-api";
-import { useAuth } from "@/stores/auth";
-import { clearCartSession } from "@/stores/cart-session";
-import { cartQueryKey } from "@/features/cart/use-cart";
+import { useSignIn } from "@/api/auth";
+import { apiErrorMessage } from "@/api/use-api-mutation";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,8 +26,7 @@ export function SignInForm({
   submitLabel?: string;
   autoFocus?: boolean;
 }) {
-  const queryClient = useQueryClient();
-  const signIn = useAuth((state) => state.signIn);
+  const signIn = useSignIn();
   const [formError, setFormError] = useState<string | null>(null);
   const [remember, setRemember] = useState(true);
 
@@ -43,15 +38,10 @@ export function SignInForm({
   async function onSubmit(values: Values) {
     setFormError(null);
     try {
-      const session = await authApi.login(values);
-      signIn(session, remember);
-      clearCartSession();
-      await queryClient.invalidateQueries({ queryKey: cartQueryKey });
+      await signIn.mutateAsync({ ...values, remember });
       onSignedIn();
     } catch (error) {
-      setFormError(
-        isApiError(error) ? error.message : "Something went wrong. Try again.",
-      );
+      setFormError(apiErrorMessage(error));
     }
   }
 

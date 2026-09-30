@@ -114,7 +114,21 @@ filters slugs containing `__archived_` as a workaround.)
 
 ---
 
+## 7. 🟡 Hero slides cannot take an uploaded mobile image
+
+`CreateHeroSlideDto` / `UpdateHeroSlideDto` accept `mobileImageUrl` only as a
+URL. The admin panel never takes pasted URLs (every image is uploaded), so
+the phone crop cannot be set and the storefront always crops the desktop
+banner. Please add `mobileImageObjectKey` (scope `store`), resolved to
+`mobileImageUrl` on read, exactly like `imageObjectKey`.
+
+---
+
 ## Delivered since the last version of this doc — thank you
+
+- **Homepage hero carousel** — `/home.hero`, `/hero` and the six
+  `/admin/hero` endpoints (verified 2026-09-30). Storefront carousel and admin
+  manager are built.
 
 - **Order status history** — `statusHistory[]` (status, time, who, note)
   replaces the missing PROCESSING/REFUNDED timestamps; the admin order

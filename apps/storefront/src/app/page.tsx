@@ -1,4 +1,4 @@
-import { Hero } from "@/components/home/hero";
+import { HomeHero } from "@/components/home/home-hero";
 import { EmptyStorefront } from "@/components/home/empty-storefront";
 import { StorefrontUnavailable } from "@/components/home/storefront-unavailable";
 import { SectionRenderer } from "@/components/home/section-renderer";
@@ -26,7 +26,11 @@ export default async function HomePage() {
 
   return (
     <main>
-      <Hero storeName={theme.name} tagline={theme.tagline} />
+      <HomeHero
+        hero={state.status === "loaded" ? state.home.hero : null}
+        storeName={theme.name}
+        tagline={theme.tagline}
+      />
       {state.status === "unavailable" ? (
         <StorefrontUnavailable />
       ) : state.home.sections.length === 0 ? (
