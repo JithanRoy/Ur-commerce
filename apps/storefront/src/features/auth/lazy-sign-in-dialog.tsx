@@ -1,21 +1,49 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import type { ComponentProps } from "react";
-import type { SignInDialog } from "./sign-in-dialog";
+import { useEffect, useState, type ComponentProps } from "react";
+import type { SignInDialog as SignInDialogComponent } from "./sign-in-dialog";
 
-type SignInDialogProps = ComponentProps<typeof SignInDialog>;
+type SignInDialogType = typeof SignInDialogComponent;
+type SignInDialogProps = ComponentProps<SignInDialogType>;
 
-const loadSignInDialog = () =>
-  import("./sign-in-dialog").then((module) => module.SignInDialog);
+let loadedDialog: SignInDialogType | null = null;
+let pendingLoad: Promise<SignInDialogType> | null = null;
 
-export function preloadSignInDialog() {
-  void loadSignInDialog();
+function loadSignInDialog(): Promise<SignInDialogType> {
+  pendingLoad ??= import("./sign-in-dialog").then((module) => {
+    loadedDialog = module.SignInDialog;
+    return module.SignInDialog;
+  });
+  return pendingLoad;
 }
 
-const DeferredSignInDialog = dynamic(loadSignInDialog, { ssr: false });
+export function preloadSignInDialog() {
+  void loadSignInDialog().catch(() => {
+    pendingLoad = null;
+  });
+}
 
 export function LazySignInDialog(props: SignInDialogProps) {
-  if (!props.open) return null;
-  return <DeferredSignInDialog {...props} />;
+  const [, setLoaded] = useState(false);
+  const Dialog = loadedDialog;
+  const { open, onClose } = props;
+
+  useEffect(() => {
+    if (!open || Dialog) return;
+    let active = true;
+    loadSignInDialog()
+      .then(() => {
+        if (active) setLoaded(true);
+      })
+      .catch(() => {
+        pendingLoad = null;
+        if (active) onClose();
+      });
+    return () => {
+      active = false;
+    };
+  }, [open, onClose, Dialog]);
+
+  if (!open || !Dialog) return null;
+  return <Dialog {...props} />;
 }
