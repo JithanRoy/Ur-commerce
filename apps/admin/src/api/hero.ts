@@ -10,6 +10,7 @@ import type {
   CreateHeroSlideInput,
   HeroSettings,
   UpdateHeroSettingsInput,
+  UpdateHeroSlideInput,
 } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { mutationKeys, queryKeys, type QueryOverrides } from "./query-keys";
@@ -17,7 +18,10 @@ import { useApiMutation, type ApiMutationOverrides } from "./use-api-mutation";
 
 type HeroKey = ReturnType<typeof queryKeys.hero.detail>;
 
-export type UpdateHeroSlideVariables = { slideId: string; alt: string | null };
+export type UpdateHeroSlideVariables = {
+  slideId: string;
+  input: UpdateHeroSlideInput;
+};
 
 type ReorderSnapshot = { previous: AdminHero | undefined };
 
@@ -69,13 +73,13 @@ export function useUpdateHeroSlide(
   const queryClient = useQueryClient();
   return useApiMutation({
     ...options,
-    mutationFn: ({ slideId, alt }: UpdateHeroSlideVariables) =>
-      adminApi.hero.updateSlide(slideId, { alt }),
+    mutationFn: ({ slideId, input }: UpdateHeroSlideVariables) =>
+      adminApi.hero.updateSlide(slideId, input),
     onSuccess: (updated, variables, onMutateResult, context) => {
       patchHero(queryClient, (hero) => ({
         ...hero,
         slides: hero.slides.map((slide) =>
-          slide.id === updated.id ? { ...slide, alt: updated.alt } : slide,
+          slide.id === updated.id ? { ...slide, ...updated } : slide,
         ),
       }));
       return options.onSuccess?.(updated, variables, onMutateResult, context);

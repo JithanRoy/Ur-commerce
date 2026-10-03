@@ -2,9 +2,14 @@ import { useEffect, useState, type ComponentProps } from "react";
 import { ArrowDown, ArrowUp, EyeOff, GripVertical, Trash2 } from "lucide-react";
 import { HERO_ALT_MAX_LENGTH } from "@urcommerce/api-client";
 import type { AdminHeroSlide } from "@urcommerce/api-client";
-import { useRemoveHeroSlide, useUpdateHeroSlide } from "@/api/hero";
+import {
+  useRemoveHeroSlide,
+  useUpdateHeroSlide,
+  type UpdateHeroSlideVariables,
+} from "@/api/hero";
 import { Button, IconButton } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
+import { ImageField } from "@/components/ui/image-field";
 import { cn } from "@/lib/utils";
 
 export type SlideDragHandleProps = Pick<
@@ -40,7 +45,7 @@ function AltTextField({ slide }: { slide: AdminHeroSlide }) {
       setDraft(slide.alt ?? "");
       return;
     }
-    save.mutate({ slideId: slide.id, alt });
+    save.mutate({ slideId: slide.id, input: { alt } });
   };
 
   return (
@@ -65,6 +70,38 @@ function AltTextField({ slide }: { slide: AdminHeroSlide }) {
         }
       }}
       className="h-9"
+    />
+  );
+}
+
+function phoneImageMessage(
+  _slide: AdminHeroSlide,
+  { input }: UpdateHeroSlideVariables,
+): string {
+  return input.mobileImageUrl === null
+    ? "Phone image removed. Phones now show the main image."
+    : "Phone image saved.";
+}
+
+function PhoneImageField({ slide }: { slide: AdminHeroSlide }) {
+  const save = useUpdateHeroSlide({ success: phoneImageMessage });
+
+  return (
+    <ImageField
+      scope="store"
+      label="phone image"
+      currentUrl={slide.mobileImageUrl}
+      disabled={save.isPending}
+      hint="Taller crop for phones (1080 × 1350). Falls back to the main image."
+      onUploaded={(objectKey) =>
+        save.mutate({
+          slideId: slide.id,
+          input: { mobileImageObjectKey: objectKey },
+        })
+      }
+      onCleared={() =>
+        save.mutate({ slideId: slide.id, input: { mobileImageUrl: null } })
+      }
     />
   );
 }
@@ -217,6 +254,8 @@ export function HeroSlideCard({
         </div>
 
         <AltTextField slide={slide} />
+
+        <PhoneImageField slide={slide} />
 
         {confirming ? (
           <RemoveConfirmation

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { GalleryHorizontal } from "lucide-react";
 import { HERO_MAX_SLIDES, isApiError } from "@urcommerce/api-client";
-import type { AdminHeroSlide } from "@urcommerce/api-client";
+import type { AdminHero, AdminHeroSlide } from "@urcommerce/api-client";
 import { toast } from "sonner";
 import { useAddHeroSlide, useHero, useReorderHeroSlides } from "@/api/hero";
 import {
@@ -14,10 +14,13 @@ import { ErrorState, LoadingState } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 import { HeroSettingsCard } from "./hero-settings-card";
 import { HeroSlideCard } from "./hero-slide-card";
+import { HeroStaticEditor } from "./hero-static-editor";
+import { liveHeroStyle } from "./hero-style";
+import { HeroStylePicker } from "./hero-style-picker";
 
 const TITLE = "Homepage hero";
 const DESCRIPTION =
-  "Banner images at the top of your homepage. The first slide loads first; drag to reorder.";
+  "The first thing shoppers see on your homepage. Pick a style, then fill it in.";
 const SIZE_HINT =
   "Wide banners work best — 2400 × 1000 px. Keep key text near the centre; phones crop the sides.";
 
@@ -75,8 +78,8 @@ function EmptyIntro() {
       <div>
         <h2 className="font-medium">No slides yet</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your storefront shows its default hero until you add a slide. Drop
-          one or more banners below; they appear in the order you add them.
+          Your homepage shows the headline hero until you add a slide. Drop one
+          or more banners below; they appear in the order you add them.
         </p>
       </div>
     </div>
@@ -182,7 +185,6 @@ function SlideList({ slides }: { slides: AdminHeroSlide[] }) {
 
 export function HeroManager() {
   const { data: hero, isPending, error } = useHero();
-  const { adding, createSlides } = useSlideCreation();
 
   if (isPending) {
     return (
@@ -208,58 +210,105 @@ export function HeroManager() {
     );
   }
 
+  return <HeroWorkspace hero={hero} />;
+}
+
+function SlidesSection({ hero }: { hero: AdminHero }) {
+  const { adding, createSlides } = useSlideCreation();
   const slides = hero.slides;
   const empty = slides.length === 0;
   const full = slides.length >= HERO_MAX_SLIDES;
   const room = Math.max(HERO_MAX_SLIDES - slides.length - adding, 0);
+  const inUse = hero.style === "CAROUSEL";
+
+  return (
+    <section
+      aria-labelledby="hero-slides-heading"
+      className="flex min-w-0 flex-col gap-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 id="hero-slides-heading" className="text-sm font-medium">
+            Slides
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {inUse
+              ? "The first slide loads first; drag to reorder."
+              : "Kept for when you choose “Image slideshow”."}
+          </p>
+        </div>
+        <SlideCount count={slides.length} />
+      </div>
+
+      {empty ? <EmptyIntro /> : null}
+
+      <div
+        aria-label="Add slides"
+        role="group"
+        className={cn(!empty && "order-last pt-2")}
+      >
+        {!empty ? (
+          <h3 className="mb-2 text-sm font-medium">Add slides</h3>
+        ) : null}
+        <ImageDropzone
+          scope="store"
+          images={[]}
+          onChange={(uploaded) => void createSlides(uploaded)}
+          maxImages={room}
+          disabled={room === 0}
+          disabledReason={
+            full
+              ? `Your hero has the maximum of ${HERO_MAX_SLIDES} slides. Remove one to add another.`
+              : undefined
+          }
+          hint={SIZE_HINT}
+          limitMessage={limitMessage}
+        />
+        {adding > 0 ? (
+          <p role="status" className="mt-2 text-sm text-muted-foreground">
+            Adding {adding} {plural(adding, "slide", "slides")} to your hero…
+          </p>
+        ) : null}
+      </div>
+
+      {!empty ? <SlideList slides={slides} /> : null}
+    </section>
+  );
+}
+
+function OffNotice() {
+  return (
+    <p className="rounded-xl border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+      Your homepage has no hero right now. Your slides and headline are kept,
+      so you can switch back at any time.
+    </p>
+  );
+}
+
+function HeroWorkspace({ hero }: { hero: AdminHero }) {
+  const live = liveHeroStyle(hero.style, hero.slides);
+  const staticEditor = (
+    <HeroStaticEditor content={hero.static} style={hero.style} live={live} />
+  );
+  const slidesFirst = hero.style === "CAROUSEL";
 
   return (
     <>
-      <PageHeader
-        title={TITLE}
-        description={DESCRIPTION}
-        action={<SlideCount count={slides.length} />}
-      />
+      <PageHeader title={TITLE} description={DESCRIPTION} />
+
+      <HeroStylePicker style={hero.style} slides={hero.slides} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="flex min-w-0 flex-col gap-4">
-          {empty ? <EmptyIntro /> : null}
-
-          <section
-            aria-label="Add slides"
-            className={cn(!empty && "order-last pt-2")}
-          >
-            {!empty ? (
-              <h2 className="mb-2 text-sm font-medium">Add slides</h2>
-            ) : null}
-            <ImageDropzone
-              scope="store"
-              images={[]}
-              onChange={(uploaded) => void createSlides(uploaded)}
-              maxImages={room}
-              disabled={room === 0}
-              disabledReason={
-                full
-                  ? `Your hero has the maximum of ${HERO_MAX_SLIDES} slides. Remove one to add another.`
-                  : undefined
-              }
-              hint={SIZE_HINT}
-              limitMessage={limitMessage}
-            />
-            {adding > 0 ? (
-              <p role="status" className="mt-2 text-sm text-muted-foreground">
-                Adding {adding} {plural(adding, "slide", "slides")} to your
-                hero…
-              </p>
-            ) : null}
-          </section>
-
-          {!empty ? <SlideList slides={slides} /> : null}
+        <div className="flex min-w-0 flex-col gap-8">
+          {hero.style === "OFF" ? <OffNotice /> : null}
+          {slidesFirst ? <SlidesSection hero={hero} /> : staticEditor}
+          {slidesFirst ? staticEditor : <SlidesSection hero={hero} />}
         </div>
 
         <aside className="space-y-4">
           <HeroSettingsCard
             settings={{ autoplay: hero.autoplay, intervalMs: hero.intervalMs }}
+            enabled={hero.style === "CAROUSEL"}
           />
         </aside>
       </div>

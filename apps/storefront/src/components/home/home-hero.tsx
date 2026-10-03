@@ -1,5 +1,5 @@
 import type { Hero } from "@urcommerce/api-client";
-import { HeroAssurances, StaticHero } from "./hero";
+import { StaticHero } from "./hero";
 import { HeroCarousel } from "./hero-carousel";
 
 export function HomeHero({
@@ -11,10 +11,16 @@ export function HomeHero({
   storeName: string;
   tagline?: string | null;
 }) {
-  const fallback = <StaticHero storeName={storeName} tagline={tagline} />;
-  if (!hero?.slides?.length) return fallback;
+  if (hero?.style === "OFF") return null;
 
-  return (
-    <HeroCarousel hero={hero} fallback={fallback} footer={<HeroAssurances />} />
+  const fallback = (
+    <StaticHero
+      content={hero?.static ?? null}
+      storeName={storeName}
+      tagline={tagline}
+    />
   );
+  if (hero?.style !== "CAROUSEL" || !hero.slides.length) return fallback;
+
+  return <HeroCarousel hero={hero} fallback={fallback} />;
 }

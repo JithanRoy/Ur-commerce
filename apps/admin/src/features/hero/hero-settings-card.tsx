@@ -12,6 +12,9 @@ import { useUpdateHeroSettings } from "@/api/hero";
 import { SelectField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
 import type { SelectOption } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
+export type RotationSettings = Pick<HeroSettings, "autoplay" | "intervalMs">;
 
 const INTERVAL_PRESETS_MS = [3000, 5000, 8000, 10000];
 
@@ -47,16 +50,22 @@ function savedMessage(
 }
 
 function displayedSettings(
-  saved: HeroSettings,
+  saved: RotationSettings,
   pending: UpdateHeroSettingsInput | undefined,
-): HeroSettings {
+): RotationSettings {
   return {
     autoplay: pending?.heroAutoplay ?? saved.autoplay,
     intervalMs: pending?.heroIntervalMs ?? saved.intervalMs,
   };
 }
 
-export function HeroSettingsCard({ settings }: { settings: HeroSettings }) {
+export function HeroSettingsCard({
+  settings,
+  enabled,
+}: {
+  settings: RotationSettings;
+  enabled: boolean;
+}) {
   const [unsaved, setUnsaved] = useState<UpdateHeroSettingsInput>();
   const save = useUpdateHeroSettings({ success: savedMessage });
   const shown = displayedSettings(settings, unsaved);
@@ -67,7 +76,13 @@ export function HeroSettingsCard({ settings }: { settings: HeroSettings }) {
   };
 
   return (
-    <section className="rounded-xl border bg-card p-5">
+    <section
+      aria-label="Rotation"
+      className={cn(
+        "rounded-xl border bg-card p-5 transition-opacity",
+        !enabled && "bg-muted/30",
+      )}
+    >
       <div className="mb-4 flex items-center gap-2.5">
         <span className="inline-flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <Timer className="size-4" aria-hidden />
@@ -75,17 +90,27 @@ export function HeroSettingsCard({ settings }: { settings: HeroSettings }) {
         <div>
           <h2 className="text-sm font-medium">Rotation</h2>
           <p className="text-xs text-muted-foreground">
-            Changes save as you make them.
+            {enabled
+              ? "Changes save as you make them."
+              : "Only used by the image slideshow."}
           </p>
         </div>
       </div>
 
-      <div className="space-y-4">
+      {!enabled ? (
+        <p className="mb-4 rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground">
+          Your homepage is not showing the slideshow, so these settings have no
+          effect. Choose “Image slideshow” above to use them.
+        </p>
+      ) : null}
+
+      <div className={cn("space-y-4", !enabled && "opacity-60")}>
         <Checkbox
           id="heroAutoplay"
           label="Rotate slides automatically"
           description="When off, shoppers move between slides with the arrows."
           checked={shown.autoplay}
+          disabled={!enabled}
           onChange={(event) => change({ heroAutoplay: event.target.checked })}
         />
 
@@ -93,13 +118,13 @@ export function HeroSettingsCard({ settings }: { settings: HeroSettings }) {
           id="heroIntervalMs"
           label="Time on each slide"
           hint={
-            shown.autoplay
+            !enabled || shown.autoplay
               ? "Long enough to read any text in the image."
               : "Turn on autoplay to choose a timing."
           }
           options={intervalOptions(shown.intervalMs)}
           value={String(shown.intervalMs)}
-          disabled={!shown.autoplay}
+          disabled={!enabled || !shown.autoplay}
           onChange={(event) =>
             change({ heroIntervalMs: Number(event.target.value) })
           }

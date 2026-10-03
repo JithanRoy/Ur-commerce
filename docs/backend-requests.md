@@ -1,6 +1,6 @@
 # Backend Requests — from the frontend team
 
-Everything below was verified against the running API on **2026-09-30**
+Everything below was verified against the running API on **2026-10-01**
 (`localhost:3002`, tenant `demo.localhost`, seeded demo store). Each item has a
 runnable reproduce block. Ordered by what blocks frontend work soonest.
 
@@ -114,18 +114,38 @@ filters slugs containing `__archived_` as a workaround.)
 
 ---
 
-## 7. 🟡 Hero slides cannot take an uploaded mobile image
+## 7. 🔴 Hero button links accept `javascript:` URLs (stored XSS)
 
-`CreateHeroSlideDto` / `UpdateHeroSlideDto` accept `mobileImageUrl` only as a
-URL. The admin panel never takes pasted URLs (every image is uploaded), so
-the phone crop cannot be set and the storefront always crops the desktop
-banner. Please add `mobileImageObjectKey` (scope `store`), resolved to
-`mobileImageUrl` on read, exactly like `imageObjectKey`.
+`PATCH /admin/hero/settings` saved `heroPrimaryUrl: "javascript:alert(1)"`
+(verified 2026-10-01, reverted immediately). Any client that renders it as
+an `href` runs script on every shopper's homepage. The admin form and the
+storefront now both refuse such links, but the API is the real boundary.
+
+### Request
+
+Validate `heroPrimaryUrl`, `heroSecondaryUrl` and the per-slide
+`primaryUrl` / `secondaryUrl`: allow only a site-relative path (`/…`, not
+`//…`) or `https://…`, and add a length cap (the admin limits them to 500).
+
+---
+
+## 8. 🟡 No way back in after a forgotten password
+
+There is no password-reset endpoint, so a store owner who forgets their
+password is locked out with no self-service fix. On 2026-09-30 both demo
+staff passwords changed and recovering them took a direct database write.
+Please add a reset-by-email flow (`POST /auth/forgot-password`,
+`POST /auth/reset-password` with a single-use, short-lived token); the
+admin login will get a "Forgot password?" screen.
 
 ---
 
 ## Delivered since the last version of this doc — thank you
 
+- **Hero styles and uploaded phone images** — `heroStyle`
+  (`STATIC` / `CAROUSEL` / `OFF`), the editable static hero, and
+  `mobileImageObjectKey` on slides (verified 2026-10-01). The admin manager
+  exposes all three.
 - **Homepage hero carousel** — `/home.hero`, `/hero` and the six
   `/admin/hero` endpoints (verified 2026-09-30). Storefront carousel and admin
   manager are built.
