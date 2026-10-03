@@ -140,6 +140,20 @@ admin login will get a "Forgot password?" screen.
 
 ---
 
+## 9. 🟡 Customers cannot see when their order entered PROCESSING
+
+`statusHistory[]` is admin-only (by design — it carries who and notes), and
+the customer `GET /orders/:id` has timestamps only for placed / confirmed /
+shipped / delivered / cancelled. So the shopper's tracker can show "Being
+prepared" as the current step but never its date.
+
+### Request
+
+Add a customer-safe history to `GET /orders/:id`: `statusHistory[]` with
+`{ status, at }` only — no actor, no notes — or at least `processingAt`.
+
+---
+
 ## Delivered since the last version of this doc — thank you
 
 - **Hero styles and uploaded phone images** — `heroStyle`

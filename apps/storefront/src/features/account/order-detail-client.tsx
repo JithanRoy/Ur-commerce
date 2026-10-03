@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
 import { useOrder } from "@/api/orders";
 import { OrderStatusBadge, formatOrderDate } from "./order-status";
+import { OrderProgress } from "./order-progress";
 import { Button } from "@/components/ui/button";
 import { CartSkeleton } from "@/components/ui/page-skeletons";
 
@@ -33,14 +34,6 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
       </div>
     );
   }
-
-  const timeline = [
-    { label: "Order placed", at: order.placedAt },
-    { label: "Confirmed", at: order.confirmedAt },
-    { label: "Shipped", at: order.shippedAt },
-    { label: "Delivered", at: order.deliveredAt },
-    { label: "Cancelled", at: order.cancelledAt },
-  ].filter((entry) => entry.at);
 
   return (
     <>
@@ -89,22 +82,10 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
             </ul>
           </section>
 
-          {timeline.length > 0 ? (
-            <section>
-              <h2 className="mb-3 font-medium">Progress</h2>
-              <ol className="space-y-3">
-                {timeline.map((entry) => (
-                  <li key={entry.label} className="flex items-baseline gap-3">
-                    <span className="size-1.5 shrink-0 rounded-full bg-foreground" />
-                    <span className="text-sm">{entry.label}</span>
-                    <span className="ml-auto text-sm text-muted-foreground">
-                      {formatOrderDate(entry.at as string)}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ) : null}
+          <section>
+            <h2 className="mb-3 font-medium">Progress</h2>
+            <OrderProgress order={order} />
+          </section>
 
           {order.cancelReason ? (
             <p className="text-sm text-muted-foreground">
