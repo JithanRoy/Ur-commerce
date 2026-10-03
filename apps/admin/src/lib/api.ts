@@ -2,6 +2,7 @@ import {
   createAdminApi,
   createApiClient,
   createAuthApi,
+  createProfileApi,
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
 
@@ -21,3 +22,4 @@ const client = createApiClient({
 
 export const authApi = createAuthApi(client);
 export const adminApi = createAdminApi(client);
+export const profileApi = createProfileApi(client);

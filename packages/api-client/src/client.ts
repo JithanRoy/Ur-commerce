@@ -29,6 +29,7 @@ export type RequestOptions = {
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined | null>;
   withCartSession?: boolean;
+  rejectsCredentials?: boolean;
   signal?: AbortSignal;
 };
 
@@ -46,7 +47,12 @@ function buildPath(
   return qs ? `${path}?${qs}` : path;
 }
 
-const AUTH_ENDPOINTS_WITHOUT_REFRESH = ["/auth/login", "/auth/refresh", "/auth/logout"];
+const AUTH_ENDPOINTS_WITHOUT_REFRESH = [
+  "/auth/login",
+  "/auth/two-factor",
+  "/auth/refresh",
+  "/auth/logout",
+];
 
 function isAuthEndpoint(path: string): boolean {
   return AUTH_ENDPOINTS_WITHOUT_REFRESH.some((endpoint) =>
@@ -144,7 +150,7 @@ export function createApiClient(config: ClientConfig) {
             return request<T>(path, options, true);
           }
         }
-        config.onUnauthenticated?.();
+        if (!options.rejectsCredentials) config.onUnauthenticated?.();
       }
 
       throw new ApiError(

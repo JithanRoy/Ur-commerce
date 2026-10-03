@@ -1,4 +1,6 @@
+import { Link } from "react-router";
 import { LogOut, Menu } from "lucide-react";
+import { preloadRouteFor } from "@/routes/lazy";
 import { useAuth } from "@/stores/auth";
 import { useLogout } from "@/api/auth";
 import { Button, IconButton } from "@/components/ui/button";
@@ -40,7 +42,13 @@ export function Topbar({ onOpenNav }: { onOpenNav?: () => void }) {
 
       <div className="ml-auto flex items-center gap-3">
         {user ? (
-          <div className="flex items-center gap-2.5">
+          <Link
+            to="/account"
+            aria-label={`Your account: ${user.name}`}
+            onMouseEnter={() => preloadRouteFor("/account")}
+            onFocus={() => preloadRouteFor("/account")}
+            className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-muted"
+          >
             <span
               aria-hidden
               className="inline-flex size-8 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground"
@@ -53,7 +61,7 @@ export function Topbar({ onOpenNav }: { onOpenNav?: () => void }) {
                 {user.role === "TENANT_OWNER" ? "Owner" : "Staff"}
               </p>
             </div>
-          </div>
+          </Link>
         ) : null}
 
         <Button

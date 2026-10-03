@@ -14,6 +14,7 @@ import {
   CollectionsRoute,
   HeroRoute,
   SectionsRoute,
+  AccountRoute,
   LoginRoute,
   NotFoundRoute,
   OrderDetailRoute,
@@ -75,6 +76,7 @@ export function App() {
               <Route path="branding" element={<BrandingRoute />} />
               <Route path="hero" element={<HeroRoute />} />
               <Route path="sections" element={<SectionsRoute />} />
+              <Route path="account" element={<AccountRoute />} />
               <Route path="*" element={<NotFoundRoute />} />
             </Route>
           </Route>

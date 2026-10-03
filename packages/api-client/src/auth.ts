@@ -1,5 +1,5 @@
 import type { ApiClient } from "./client";
-import type { LoginResponse, Role } from "./types";
+import type { LoginResponse, LoginResult, Role } from "./types";
 
 export type LoginInput = {
   email: string;
@@ -10,6 +10,11 @@ export type RegisterInput = {
   name: string;
   email: string;
   password: string;
+};
+
+export type TwoFactorLoginInput = {
+  challengeToken: string;
+  code: string;
 };
 
 export type CurrentUser = {
@@ -29,8 +34,13 @@ export function createAuthApi(client: ApiClient) {
         input,
       ),
     login: (input: LoginInput) =>
-      client.post<LoginResponse>("/auth/login", input, {
+      client.post<LoginResult>("/auth/login", input, {
         withCartSession: true,
+      }),
+    completeTwoFactor: (input: TwoFactorLoginInput) =>
+      client.post<LoginResponse>("/auth/two-factor", input, {
+        withCartSession: true,
+        rejectsCredentials: true,
       }),
     me: () => client.get<CurrentUser>("/auth/me"),
     logout: () =>

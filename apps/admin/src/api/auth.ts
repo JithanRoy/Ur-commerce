@@ -1,5 +1,9 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import type { CurrentUser, LoginInput } from "@urcommerce/api-client";
+import type {
+  CurrentUser,
+  LoginInput,
+  TwoFactorLoginInput,
+} from "@urcommerce/api-client";
 import { authApi } from "@/lib/api";
 import { queryKeys, type QueryOverrides } from "./query-keys";
 import { useApiRequest } from "./use-api-mutation";
@@ -22,6 +26,12 @@ export function useCurrentUser(
 
 export function useLogin() {
   return useApiRequest((input: LoginInput) => authApi.login(input));
+}
+
+export function useCompleteTwoFactor() {
+  return useApiRequest((input: TwoFactorLoginInput) =>
+    authApi.completeTwoFactor(input),
+  );
 }
 
 export function useLogout() {

@@ -9,6 +9,7 @@ const ordersRoot = ["orders"] as const;
 const addressesRoot = ["addresses"] as const;
 const checkoutRoot = ["checkout"] as const;
 const productsRoot = ["products"] as const;
+const profileRoot = ["profile"] as const;
 
 export const queryKeys = {
   cart: {
@@ -23,6 +24,11 @@ export const queryKeys = {
   addresses: {
     all: addressesRoot,
     list: () => addressesRoot,
+  },
+  profile: {
+    all: profileRoot,
+    detail: () => profileRoot,
+    twoFactor: () => [...profileRoot, "two-factor"] as const,
   },
   products: {
     all: productsRoot,

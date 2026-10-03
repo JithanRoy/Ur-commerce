@@ -9,10 +9,30 @@ export {
   takaToPaisa,
 } from "./money";
 export type { Paisa } from "./money";
-export { isStaffRole } from "./types";
-export type { LoginResponse, Paginated, Role } from "./types";
+export { isStaffRole, isTwoFactorChallenge } from "./types";
+export type {
+  LoginResponse,
+  LoginResult,
+  Paginated,
+  Role,
+  TwoFactorChallenge,
+} from "./types";
 export { createAuthApi } from "./auth";
-export type { CurrentUser, LoginInput, RegisterInput } from "./auth";
+export type {
+  CurrentUser,
+  LoginInput,
+  RegisterInput,
+  TwoFactorLoginInput,
+} from "./auth";
+export {
+  GENDERS,
+  GENDER_LABELS,
+  PASSWORD_MIN_LENGTH,
+  PROFILE_NAME_MAX_LENGTH,
+  PROFILE_NAME_MIN_LENGTH,
+  createProfileApi,
+} from "./profile";
+export type * from "./profile";
 export { createAdminApi } from "./admin/endpoints";
 export type { AdminApi, AdminProductQuery } from "./admin/endpoints";
 export type * from "./admin/types";

@@ -38,6 +38,10 @@ export const BrandingRoute = lazyRoute(
   "BrandingRoute",
 );
 export const HeroRoute = lazyRoute(() => import("./hero"), "HeroRoute");
+export const AccountRoute = lazyRoute(
+  () => import("./account"),
+  "AccountRoute",
+);
 export const SectionsRoute = lazyRoute(
   () => import("./sections"),
   "SectionsRoute",
@@ -61,6 +65,7 @@ const allRoutes = [
   BrandingRoute,
   HeroRoute,
   SectionsRoute,
+  AccountRoute,
   NotFoundRoute,
 ];
 
@@ -78,6 +83,7 @@ const routesByNavPath: Record<string, Preloadable> = {
   "/branding": BrandingRoute,
   "/hero": HeroRoute,
   "/sections": SectionsRoute,
+  "/account": AccountRoute,
 };
 
 export function preloadRouteFor(path: string) {

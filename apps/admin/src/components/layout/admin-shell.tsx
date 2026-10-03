@@ -7,6 +7,7 @@ import { Topbar } from "./topbar";
 import { IconButton } from "@/components/ui/button";
 import { preloadAllRoutes } from "@/routes/lazy";
 import { RouteFallback } from "./route-fallback";
+import { TwoFactorReminder } from "@/features/account/two-factor-reminder";
 
 const STORE_NAME = "Store admin";
 
@@ -60,6 +61,7 @@ export function AdminShell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onOpenNav={() => setNavOpen(true)} />
+        <TwoFactorReminder />
         <main className="flex-1 overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
           <Suspense fallback={<RouteFallback />}>
             <Outlet />

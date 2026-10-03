@@ -11,11 +11,14 @@ type Session = {
   role: Role;
 };
 
+export type SignOutNotice = { reason: "password-changed"; email: string };
+
 type AuthState = {
   session: Session | null;
   user: CurrentUser | null;
+  signOutNotice: SignOutNotice | null;
   signIn: (session: Session, remember: boolean) => void;
-  signOut: () => void;
+  signOut: (notice?: SignOutNotice) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: CurrentUser | null) => void;
 };
@@ -25,12 +28,13 @@ export const useAuth = create<AuthState>()(
     (set) => ({
       session: null,
       user: null,
+      signOutNotice: null,
       signIn: (session, remember) => {
         claimStorageFor(STORAGE_KEY, remember);
-        set({ session });
+        set({ session, signOutNotice: null });
       },
-      signOut: () => {
-        set({ session: null, user: null });
+      signOut: (notice) => {
+        set({ session: null, user: null, signOutNotice: notice ?? null });
         useAuth.persist.clearStorage();
       },
       setTokens: (accessToken, refreshToken) =>

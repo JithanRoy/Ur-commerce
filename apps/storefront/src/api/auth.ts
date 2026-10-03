@@ -1,21 +1,22 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { isTwoFactorChallenge } from "@urcommerce/api-client";
 import type {
   LoginInput,
   LoginResponse,
+  LoginResult,
   RegisterInput,
+  TwoFactorLoginInput,
 } from "@urcommerce/api-client";
 import { authApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { clearCartSession } from "@/stores/cart-session";
 import { queryKeys } from "./query-keys";
-import {
-  useApiMutation,
-  type ApiMutationOverrides,
-} from "./use-api-mutation";
+import { useApiMutation, type ApiMutationOverrides } from "./use-api-mutation";
 
 type SignInVariables = LoginInput & { remember: boolean };
+type TwoFactorVariables = TwoFactorLoginInput & { remember: boolean };
 
 function useRefetchCartForNewSession() {
   const queryClient = useQueryClient();
@@ -39,7 +40,7 @@ export function useRegister(
 }
 
 export function useSignIn(
-  options: ApiMutationOverrides<LoginResponse, SignInVariables> = {},
+  options: ApiMutationOverrides<LoginResult, SignInVariables> = {},
 ) {
   const signIn = useAuth((state) => state.signIn);
   const refetchCart = useRefetchCartForNewSession();
@@ -48,6 +49,26 @@ export function useSignIn(
     ...options,
     mutationFn: ({ email, password }: SignInVariables) =>
       authApi.login({ email, password }),
+    onSuccess: async (result, variables, ...rest) => {
+      if (!isTwoFactorChallenge(result)) {
+        signIn(result, variables.remember);
+        await refetchCart();
+      }
+      return options.onSuccess?.(result, variables, ...rest);
+    },
+  });
+}
+
+export function useCompleteTwoFactor(
+  options: ApiMutationOverrides<LoginResponse, TwoFactorVariables> = {},
+) {
+  const signIn = useAuth((state) => state.signIn);
+  const refetchCart = useRefetchCartForNewSession();
+  return useApiMutation({
+    networkMode: "always",
+    ...options,
+    mutationFn: ({ challengeToken, code }: TwoFactorVariables) =>
+      authApi.completeTwoFactor({ challengeToken, code }),
     onSuccess: async (session, variables, ...rest) => {
       signIn(session, variables.remember);
       await refetchCart();

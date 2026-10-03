@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isTwoFactorChallenge } from "@urcommerce/api-client";
 import { useSignIn } from "@/api/auth";
 import { apiErrorMessage } from "@/api/use-api-mutation";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { TwoFactorStep } from "./two-factor-step";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),
@@ -29,6 +31,7 @@ export function SignInForm({
   const signIn = useSignIn();
   const [formError, setFormError] = useState<string | null>(null);
   const [remember, setRemember] = useState(true);
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -38,7 +41,11 @@ export function SignInForm({
   async function onSubmit(values: Values) {
     setFormError(null);
     try {
-      await signIn.mutateAsync({ ...values, remember });
+      const result = await signIn.mutateAsync({ ...values, remember });
+      if (isTwoFactorChallenge(result)) {
+        setChallengeToken(result.challengeToken);
+        return;
+      }
       onSignedIn();
     } catch (error) {
       setFormError(apiErrorMessage(error));
@@ -46,6 +53,20 @@ export function SignInForm({
   }
 
   const { errors, isSubmitting } = form.formState;
+
+  if (challengeToken) {
+    return (
+      <TwoFactorStep
+        challengeToken={challengeToken}
+        remember={remember}
+        onSignedIn={onSignedIn}
+        onBack={() => {
+          setChallengeToken(null);
+          form.setValue("password", "");
+        }}
+      />
+    );
+  }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>

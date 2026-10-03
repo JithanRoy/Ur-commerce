@@ -9,6 +9,7 @@ import { useSignOut } from "@/api/auth";
 import { IconButton } from "@/components/ui/button";
 
 const links = [
+  { href: "/account", label: "Your account", icon: User },
   { href: "/account/orders", label: "Your orders", icon: Package },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
 ];

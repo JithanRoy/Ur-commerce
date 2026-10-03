@@ -4,12 +4,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation, useNavigate } from "react-router";
 import { Lock, ShieldCheck } from "lucide-react";
-import { isApiError, isStaffRole } from "@urcommerce/api-client";
+import {
+  isApiError,
+  isStaffRole,
+  isTwoFactorChallenge,
+} from "@urcommerce/api-client";
+import type { LoginResponse } from "@urcommerce/api-client";
 import { useLogin } from "@/api/auth";
 import { useAuth } from "@/stores/auth";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { TwoFactorStep } from "@/features/auth/two-factor-step";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),
@@ -32,24 +38,36 @@ export function LoginRoute() {
     routerState?.reason === "not-staff"
       ? "That account cannot access the admin panel."
       : null;
+  const signOutNotice = useAuth((state) => state.signOutNotice);
+  const passwordChanged = signOutNotice?.reason === "password-changed";
   const [formError, setFormError] = useState<string | null>(null);
   const [remember, setRemember] = useState(true);
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: signOutNotice?.email ?? "", password: "" },
   });
+
+  function enter(session: LoginResponse) {
+    if (!isStaffRole(session.role)) {
+      setChallengeToken(null);
+      setFormError("This account cannot access the admin panel.");
+      return;
+    }
+    signIn(session, remember);
+    navigate(from ?? "/products", { replace: true });
+  }
 
   async function onSubmit(values: FormValues) {
     setFormError(null);
     try {
-      const session = await login(values);
-      if (!isStaffRole(session.role)) {
-        setFormError("This account cannot access the admin panel.");
+      const result = await login(values);
+      if (isTwoFactorChallenge(result)) {
+        setChallengeToken(result.challengeToken);
         return;
       }
-      signIn(session, remember);
-      navigate(from ?? "/products", { replace: true });
+      enter(result);
     } catch (error) {
       if (isApiError(error)) {
         setFormError(
@@ -99,81 +117,102 @@ export function LoginRoute() {
       </section>
 
       <section className="flex items-center justify-center px-6 py-12">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full max-w-sm"
-          noValidate
-        >
-          <div className="mb-8">
-            <div className="mb-6 inline-flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground lg:hidden">
-              <ShieldCheck className="size-5" aria-hidden />
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Store admin
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Sign in to manage your store.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <TextField
-              label="Email"
-              id="email"
-              type="email"
-              size="lg"
-              autoComplete="email"
-              autoFocus
-              placeholder="you@store.com"
-              error={errors.email?.message}
-              {...form.register("email")}
-            />
-
-            <TextField
-              label="Password"
-              id="password"
-              type="password"
-              size="lg"
-              autoComplete="current-password"
-              placeholder="••••••••"
-              error={errors.password?.message}
-              {...form.register("password")}
-            />
-          </div>
-
-          {formError ?? bounceMessage ? (
-            <p
-              role="alert"
-              className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-sm text-destructive"
-            >
-              <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-              {formError ?? bounceMessage}
-            </p>
-          ) : null}
-
-          <Checkbox
-            checked={remember}
-            onChange={(event) => setRemember(event.target.checked)}
-            containerClassName="mt-5 flex select-none items-center"
-            label={
-              <span className="text-muted-foreground">
-                Keep me signed in on this device
-              </span>
-            }
+        {challengeToken ? (
+          <TwoFactorStep
+            challengeToken={challengeToken}
+            onVerified={enter}
+            onBack={() => {
+              setChallengeToken(null);
+              form.setValue("password", "");
+            }}
           />
-
-          <Button
-            type="submit"
-            size="lg"
-            shape="rounded"
-            fullWidth
-            loading={isSubmitting}
-            loadingText="Signing in…"
-            className="mt-4"
+        ) : (
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="w-full max-w-sm"
+            noValidate
           >
-            Sign in
-          </Button>
-        </form>
+            <div className="mb-8">
+              <div className="mb-6 inline-flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground lg:hidden">
+                <ShieldCheck className="size-5" aria-hidden />
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Store admin
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Sign in to manage your store.
+              </p>
+            </div>
+
+            {passwordChanged ? (
+              <p
+                role="status"
+                className="mb-5 rounded-lg border border-success/30 bg-success/5 px-3.5 py-3 text-sm"
+              >
+                Your password was changed and every device was signed out. Sign
+                in with your new password.
+              </p>
+            ) : null}
+
+            <div className="space-y-4">
+              <TextField
+                label="Email"
+                id="email"
+                type="email"
+                size="lg"
+                autoComplete="email"
+                autoFocus
+                placeholder="you@store.com"
+                error={errors.email?.message}
+                {...form.register("email")}
+              />
+
+              <TextField
+                label="Password"
+                id="password"
+                type="password"
+                size="lg"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                error={errors.password?.message}
+                {...form.register("password")}
+              />
+            </div>
+
+            {(formError ?? bounceMessage) ? (
+              <p
+                role="alert"
+                className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/25 bg-destructive/5 px-3.5 py-3 text-sm text-destructive"
+              >
+                <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
+                {formError ?? bounceMessage}
+              </p>
+            ) : null}
+
+            <Checkbox
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+              containerClassName="mt-5 flex select-none items-center"
+              label={
+                <span className="text-muted-foreground">
+                  Keep me signed in on this device
+                </span>
+              }
+            />
+
+            <Button
+              type="submit"
+              size="lg"
+              shape="rounded"
+              fullWidth
+              loading={isSubmitting}
+              loadingText="Signing in…"
+              className="mt-4"
+            >
+              Sign in
+            </Button>
+          </form>
+        )}
       </section>
     </main>
   );

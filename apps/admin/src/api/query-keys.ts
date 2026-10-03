@@ -27,6 +27,7 @@ const teamRoot = ["admin", "users"] as const;
 const settingsRoot = ["admin", "settings"] as const;
 const heroRoot = ["admin", "hero"] as const;
 const sectionsRoot = ["admin", "sections"] as const;
+const profileRoot = ["profile"] as const;
 
 export const queryKeys = {
   auth: {
@@ -78,6 +79,11 @@ export const queryKeys = {
   sections: {
     all: sectionsRoot,
     list: () => sectionsRoot,
+  },
+  profile: {
+    all: profileRoot,
+    detail: () => profileRoot,
+    twoFactor: () => [...profileRoot, "two-factor"] as const,
   },
 };
 

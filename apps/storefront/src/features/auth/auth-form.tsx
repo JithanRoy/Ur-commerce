@@ -7,11 +7,13 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isTwoFactorChallenge } from "@urcommerce/api-client";
 import { useRegister, useSignIn } from "@/api/auth";
 import { apiErrorMessage } from "@/api/use-api-mutation";
 import { TextField } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { TwoFactorStep } from "./two-factor-step";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email"),
@@ -32,14 +34,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const signIn = useSignIn();
   const [formError, setFormError] = useState<string | null>(null);
   const [remember, setRemember] = useState(true);
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
 
   const returnTo = searchParams.get("returnTo") ?? "/";
+  const prefilledEmail = searchParams.get("email") ?? "";
+  const passwordChanged = searchParams.get("reason") === "password-changed";
   const schema = mode === "login" ? loginSchema : registerSchema;
 
   const form = useForm<{ name?: string; email: string; password: string }>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", password: "" },
+    defaultValues: { name: "", email: prefilledEmail, password: "" },
   });
+
+  function finishSignIn() {
+    router.push(returnTo);
+    router.refresh();
+  }
 
   async function onSubmit(values: {
     name?: string;
@@ -56,19 +66,38 @@ export function AuthForm({ mode }: { mode: Mode }) {
         });
       }
 
-      await signIn.mutateAsync({
+      const result = await signIn.mutateAsync({
         email: values.email,
         password: values.password,
         remember,
       });
-      router.push(returnTo);
-      router.refresh();
+      if (isTwoFactorChallenge(result)) {
+        setChallengeToken(result.challengeToken);
+        return;
+      }
+      finishSignIn();
     } catch (error) {
       setFormError(apiErrorMessage(error));
     }
   }
 
   const { errors, isSubmitting } = form.formState;
+
+  if (challengeToken) {
+    return (
+      <div className="w-full max-w-sm">
+        <TwoFactorStep
+          challengeToken={challengeToken}
+          remember={remember}
+          onSignedIn={finishSignIn}
+          onBack={() => {
+            setChallengeToken(null);
+            form.setValue("password", "");
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <form
@@ -86,6 +115,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
             : "It only takes a moment."}
         </p>
       </div>
+
+      {mode === "login" && passwordChanged ? (
+        <p
+          role="status"
+          className="rounded-lg border border-success/30 bg-success/5 px-3.5 py-3 text-sm"
+        >
+          Your password was changed and every device was signed out. Sign in
+          with your new password.
+        </p>
+      ) : null}
 
       {mode === "register" ? (
         <TextField
