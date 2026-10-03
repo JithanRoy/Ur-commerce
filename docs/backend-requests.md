@@ -12,52 +12,7 @@ validation. Withdrawn.
 
 ---
 
-## 1. 🔴 Server-rendered storefront pages cannot name their tenant in production
-
-Launch blocker, found 2026-09-30 while profiling. The storefront renders
-product, shop and home pages on its Node server, which then calls the API.
-That server-to-server request carries the **API's** `Host`, not the shopper's.
-`tenant.middleware.ts` honours `X-Tenant-Host` only outside production, and
-the fallback tenant must be unset in production. So in production every
-server-rendered page either resolves no tenant, or, worse, a build-time
-prerender caches one tenant's page for all hostnames.
-
-### Request
-
-Accept the original shopper host from the storefront server in production,
-but only from a trusted caller. Pick one:
-
-- `X-Forwarded-Host`, honoured only behind a trusted proxy (`app.set("trust proxy", …)`), or
-- `X-Tenant-Host` plus a shared secret header (`X-Internal-Key`) known only
-  to the storefront server.
-
-The frontend will forward `headers().get("host")` on every server fetch and
-cache per host.
-
----
-
-## 2. 🟡 CORS preflight is re-sent every 5 seconds
-
-`enableCors` sets no `maxAge`, so Chrome caches the preflight for 5 s. Every
-cart call (it sends the custom `X-Cart-Session` header) pays an extra
-`OPTIONS` round trip, about 570 ms on 3G. One line in `main.ts`:
-
-```ts
-app.enableCors({ ..., maxAge: 7200 });
-```
-
----
-
-## 3. 🟡 Uploaded images are served without `Cache-Control`
-
-MinIO objects come back with no `Cache-Control`, so repeat visits revalidate
-every product image. The keys are unique UUIDs and never overwritten, so set
-`Cache-Control: public, max-age=31536000, immutable` on upload (a
-`Cache-Control` field in the presigned PUT, or a bucket policy).
-
----
-
-## 4. 🟠 Product card payload has no option names — blocks on-card quick-add
+## 1. 🟠 Product card payload has no option names — blocks on-card quick-add
 
 Business gap. The storefront's product cards now carry "Add to bag / Buy now"
 buttons. For a **single-variant** product this works end to end. For a
@@ -85,7 +40,7 @@ Names and values only — the card does not need the full variant join.
 
 ---
 
-## 5. 🟡 Order responses have no schema in Swagger
+## 2. 🟡 Order responses have no schema in Swagger
 
 `statusHistory[]` and `adminNote` shipped (backend commit 95ca7dd) but the
 admin order endpoints publish no response schema, so `docs-json` cannot
@@ -94,7 +49,7 @@ Please add the response DTOs so the contract is checkable.
 
 ---
 
-## 6. 🟡 Deleted products keep their SKUs reserved forever
+## 3. 🟡 Deleted products keep their SKUs reserved forever
 
 `DELETE /admin/products/:id` soft-deletes, and the dead product's SKUs stay
 unique-constrained. Recreating a product after deleting it fails with
@@ -114,22 +69,7 @@ filters slugs containing `__archived_` as a workaround.)
 
 ---
 
-## 7. 🔴 Hero button links accept `javascript:` URLs (stored XSS)
-
-`PATCH /admin/hero/settings` saved `heroPrimaryUrl: "javascript:alert(1)"`
-(verified 2026-10-01, reverted immediately). Any client that renders it as
-an `href` runs script on every shopper's homepage. The admin form and the
-storefront now both refuse such links, but the API is the real boundary.
-
-### Request
-
-Validate `heroPrimaryUrl`, `heroSecondaryUrl` and the per-slide
-`primaryUrl` / `secondaryUrl`: allow only a site-relative path (`/…`, not
-`//…`) or `https://…`, and add a length cap (the admin limits them to 500).
-
----
-
-## 8. 🟡 No way back in after a forgotten password
+## 4. 🟡 No way back in after a forgotten password
 
 There is no password-reset endpoint, so a store owner who forgets their
 password is locked out with no self-service fix. On 2026-09-30 both demo
@@ -140,21 +80,23 @@ admin login will get a "Forgot password?" screen.
 
 ---
 
-## 9. 🟡 Customers cannot see when their order entered PROCESSING
-
-`statusHistory[]` is admin-only (by design — it carries who and notes), and
-the customer `GET /orders/:id` has timestamps only for placed / confirmed /
-shipped / delivered / cancelled. So the shopper's tracker can show "Being
-prepared" as the current step but never its date.
-
-### Request
-
-Add a customer-safe history to `GET /orders/:id`: `statusHistory[]` with
-`{ status, at }` only — no actor, no notes — or at least `processingAt`.
-
----
-
 ## Delivered since the last version of this doc — thank you
+
+Verified 2026-10-03 against backend `b66bcb0`:
+
+- **Tenant from the storefront server in production** — `X-Tenant-Host` is
+  trusted in production when sent with `X-Internal-Key` matching the API's
+  `INTERNAL_API_KEY`. The storefront server now forwards the shopper's host
+  and the key on every server fetch. **Deploy step:** set the same
+  `INTERNAL_API_KEY` on the API and the storefront server.
+- **CORS `maxAge: 7200`** — preflights are cached for two hours.
+- **`Cache-Control: public, max-age=31536000, immutable`** on uploads — the
+  header is signed into the presigned PUT; browser uploads verified working.
+- **Safe hero links** — `javascript:`, `data:` and `//…` are now refused
+  with a clear message (verified live).
+- **Customer order timeline** — `GET /orders/:id` returns
+  `timeline: [{ status, at }]` without actor or notes; the shopper's tracker
+  shows the date of every step, including "Being prepared".
 
 - **Hero styles and uploaded phone images** — `heroStyle`
   (`STATIC` / `CAROUSEL` / `OFF`), the editable static hero, and

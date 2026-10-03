@@ -50,12 +50,14 @@ export type HomeBrand = {
 };
 
 export type CategoryGridSection = {
+  id: string;
   type: "CATEGORY_GRID";
   title: string;
   categories: HomeCategory[];
 };
 
 export type ProductCarouselSection = {
+  id: string;
   type: "PRODUCT_CAROUSEL";
   title: string;
   seeAllUrl: string;
@@ -63,6 +65,7 @@ export type ProductCarouselSection = {
 };
 
 export type BrandStripSection = {
+  id: string;
   type: "BRAND_STRIP";
   title: string;
   brands: HomeBrand[];
@@ -131,7 +134,12 @@ export type ProductDetail = {
   ratingCount: number;
 };
 
-export type ProductSort = "newest" | "price-asc" | "price-desc" | "discount";
+export type ProductSort =
+  | "newest"
+  | "best-sellers"
+  | "price-asc"
+  | "price-desc"
+  | "discount";
 
 export type ProductQuery = {
   page?: number;

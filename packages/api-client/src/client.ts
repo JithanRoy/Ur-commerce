@@ -19,6 +19,7 @@ export type ClientConfig = {
   getRefreshToken?: () => string | null | undefined;
   getCartSession?: () => string | null | undefined;
   devTenantHost?: string;
+  tenantHeaders?: () => Record<string, string> | Promise<Record<string, string>>;
   onRefreshed?: (accessToken: string, refreshToken: string) => void;
   onUnauthenticated?: () => void;
 };
@@ -62,7 +63,7 @@ export function createApiClient(config: ClientConfig) {
 
     const response = await fetch(`${config.baseUrl}/auth/refresh`, {
       method: "POST",
-      headers: tenantHeaders({ "Content-Type": "application/json" }),
+      headers: await tenantHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ refreshToken }),
     });
 
@@ -78,10 +79,16 @@ export function createApiClient(config: ClientConfig) {
     return true;
   }
 
-  function tenantHeaders(base: Record<string, string> = {}): Headers {
+  async function tenantHeaders(
+    base: Record<string, string> = {},
+  ): Promise<Headers> {
     const headers = new Headers(base);
     if (config.devTenantHost) {
       headers.set("X-Tenant-Host", config.devTenantHost);
+    }
+    const extra = await config.tenantHeaders?.();
+    for (const [name, value] of Object.entries(extra ?? {})) {
+      headers.set(name, value);
     }
     return headers;
   }
@@ -91,17 +98,13 @@ export function createApiClient(config: ClientConfig) {
     options: RequestOptions = {},
     isRetry = false,
   ): Promise<T> {
-    const headers = new Headers();
+    const headers = await tenantHeaders();
     if (options.body !== undefined) {
       headers.set("Content-Type", "application/json");
     }
 
     const token = config.getAccessToken?.();
     if (token) headers.set("Authorization", `Bearer ${token}`);
-
-    if (config.devTenantHost) {
-      headers.set("X-Tenant-Host", config.devTenantHost);
-    }
 
     if (options.withCartSession) {
       const cartSession = config.getCartSession?.();

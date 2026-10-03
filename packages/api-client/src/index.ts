@@ -49,3 +49,14 @@ export {
   HERO_STYLES,
 } from "./hero";
 export type * from "./hero";
+export {
+  SECTION_KINDS,
+  SECTION_MAX_COUNT,
+  SECTION_MAX_ITEMS,
+  SECTION_MIN_ITEMS,
+  SECTION_SOURCES,
+  SECTION_TITLE_MAX_LENGTH,
+  isSingletonSectionKind,
+  sectionNeedsSource,
+} from "./sections";
+export type * from "./sections";

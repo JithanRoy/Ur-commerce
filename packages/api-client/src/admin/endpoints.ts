@@ -7,6 +7,11 @@ import type {
   UpdateHeroSettingsInput,
   UpdateHeroSlideInput,
 } from "../hero";
+import type {
+  AdminSection,
+  CreateSectionInput,
+  UpdateSectionInput,
+} from "../sections";
 import type { Paginated } from "../types";
 import type {
   AdminBrand,
@@ -120,6 +125,16 @@ export function createAdminApi(client: ApiClient) {
         client.put<AdminHeroSlide[]>("/admin/hero/slides/order", { slideIds }),
       updateSettings: (input: UpdateHeroSettingsInput) =>
         client.patch<HeroSettings>("/admin/hero/settings", input),
+    },
+    sections: {
+      list: () => client.get<AdminSection[]>("/admin/sections"),
+      create: (input: CreateSectionInput) =>
+        client.post<AdminSection>("/admin/sections", input),
+      update: (id: string, input: UpdateSectionInput) =>
+        client.patch<AdminSection>(`/admin/sections/${id}`, input),
+      remove: (id: string) => client.delete<void>(`/admin/sections/${id}`),
+      reorder: (sectionIds: string[]) =>
+        client.put<AdminSection[]>("/admin/sections/order", { sectionIds }),
     },
     settings: {
       get: () => client.get<StoreSettings>("/admin/settings"),

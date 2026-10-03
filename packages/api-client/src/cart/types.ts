@@ -122,6 +122,11 @@ export type OrderItem = {
   variantId: string | null;
 };
 
+export type OrderTimelineEntry = {
+  status: OrderStatus;
+  at: string;
+};
+
 export type Order = {
   id: string;
   orderNumber: string;
@@ -140,6 +145,7 @@ export type Order = {
   shippedAt: string | null;
   deliveredAt: string | null;
   cancelledAt: string | null;
+  timeline: OrderTimelineEntry[];
   cancelReason: string | null;
   items: OrderItem[];
   shippingAddress: ShippingAddressSnapshot;

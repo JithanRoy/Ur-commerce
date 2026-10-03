@@ -26,6 +26,7 @@ const collectionsRoot = ["admin", "collections"] as const;
 const teamRoot = ["admin", "users"] as const;
 const settingsRoot = ["admin", "settings"] as const;
 const heroRoot = ["admin", "hero"] as const;
+const sectionsRoot = ["admin", "sections"] as const;
 
 export const queryKeys = {
   auth: {
@@ -74,11 +75,18 @@ export const queryKeys = {
     all: heroRoot,
     detail: () => heroRoot,
   },
+  sections: {
+    all: sectionsRoot,
+    list: () => sectionsRoot,
+  },
 };
 
 export const mutationKeys = {
   hero: {
     reorder: () => [...heroRoot, "reorder"] as const,
+  },
+  sections: {
+    reorder: () => [...sectionsRoot, "reorder"] as const,
   },
 };
 

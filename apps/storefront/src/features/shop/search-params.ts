@@ -1,6 +1,12 @@
 import type { ProductQuery, ProductSort } from "@urcommerce/api-client";
 
-const SORTS: ProductSort[] = ["newest", "price-asc", "price-desc", "discount"];
+const SORTS: ProductSort[] = [
+  "newest",
+  "best-sellers",
+  "price-asc",
+  "price-desc",
+  "discount",
+];
 
 export type ShopSearchParams = Record<string, string | string[] | undefined>;
 

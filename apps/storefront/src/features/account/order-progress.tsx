@@ -17,18 +17,26 @@ const STEP_LABELS: Record<FlowStatus | "PLACED", string> = {
   DELIVERED: "Delivered",
 };
 
+function enteredAt(order: Order, status: OrderStatus): string | null {
+  const entries = (order.timeline ?? []).filter(
+    (entry) => entry.status === status,
+  );
+  return entries.at(-1)?.at ?? null;
+}
+
 function stepsFor(order: Order): Step[] {
-  const dates: Partial<Record<FlowStatus, string | null>> = {
-    CONFIRMED: order.confirmedAt,
-    SHIPPED: order.shippedAt,
-    DELIVERED: order.deliveredAt,
+  const dates: Record<FlowStatus, string | null> = {
+    CONFIRMED: enteredAt(order, "CONFIRMED") ?? order.confirmedAt,
+    PROCESSING: enteredAt(order, "PROCESSING"),
+    SHIPPED: enteredAt(order, "SHIPPED") ?? order.shippedAt,
+    DELIVERED: enteredAt(order, "DELIVERED") ?? order.deliveredAt,
   };
   return [
     { status: "PLACED", label: STEP_LABELS.PLACED, at: order.placedAt },
     ...FLOW.map((status) => ({
       status,
       label: STEP_LABELS[status],
-      at: dates[status] ?? null,
+      at: dates[status],
     })),
   ];
 }
@@ -56,7 +64,7 @@ export function OrderProgress({ order }: { order: Order }) {
         />
         <ProgressRow
           label={order.status === "CANCELLED" ? "Cancelled" : "Refunded"}
-          at={order.cancelledAt}
+          at={enteredAt(order, order.status) ?? order.cancelledAt}
           state="stopped"
         />
       </ol>

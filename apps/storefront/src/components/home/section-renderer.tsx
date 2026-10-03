@@ -4,8 +4,8 @@ import { BrandStrip, CategoryGrid, ProductCarousel } from "./sections";
 export function SectionRenderer({ sections }: { sections: HomeSection[] }) {
   return (
     <>
-      {sections.map((section, index) => {
-        const key = `${section.type}-${index}`;
+      {sections.map((section) => {
+        const key = section.id;
         switch (section.type) {
           case "CATEGORY_GRID":
             return <CategoryGrid key={key} section={section} />;

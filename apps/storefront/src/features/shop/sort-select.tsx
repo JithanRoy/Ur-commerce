@@ -6,6 +6,7 @@ import { LinkPendingIndicator } from "./catalogue-navigation";
 
 const options: { value: ProductSort; label: string }[] = [
   { value: "newest", label: "Newest" },
+  { value: "best-sellers", label: "Best sellers" },
   { value: "price-asc", label: "Price: low to high" },
   { value: "price-desc", label: "Price: high to low" },
   { value: "discount", label: "Biggest discount" },

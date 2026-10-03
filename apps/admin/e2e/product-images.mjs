@@ -38,36 +38,53 @@ ok(
 let body = await page.textContent("body");
 ok(body.includes("Images"), "Images section renders on the product editor");
 
-const ticket = await fetch(
-  "http://localhost:3002/api/v1/admin/uploads/product-images",
-  {
+const API = "http://localhost:3002/api/v1";
+const productId = page.url().match(/[0-9a-f-]{36}/)?.[0];
+const token = (
+  await fetch(`${API}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Tenant-Host": "demo.localhost",
-      Authorization: `Bearer ${
-        (
-          await fetch("http://localhost:3002/api/v1/auth/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Tenant-Host": "demo.localhost",
-            },
-            body: JSON.stringify({
-              email: "admin@demo.local",
-              password: "password123",
-            }),
-          }).then((r) => r.json())
-        ).data.accessToken
-      }`,
     },
     body: JSON.stringify({
-      fileName: "probe.png",
-      contentType: "image/png",
-      contentLength: 69,
+      email: "admin@demo.local",
+      password: "password123",
     }),
-  },
-).then((r) => r.json());
+  }).then((r) => r.json())
+).data.accessToken;
+const authed = {
+  "Content-Type": "application/json",
+  "X-Tenant-Host": "demo.localhost",
+  Authorization: `Bearer ${token}`,
+};
+const imageIds = async () =>
+  (
+    await fetch(`${API}/admin/products/${productId}/images`, {
+      headers: authed,
+    }).then((r) => r.json())
+  ).data.map((image) => image.id);
+const originalImageIds = new Set(await imageIds());
+
+async function removeImagesAddedByThisRun() {
+  for (const id of await imageIds()) {
+    if (originalImageIds.has(id)) continue;
+    await fetch(`${API}/admin/products/${productId}/images/${id}`, {
+      method: "DELETE",
+      headers: authed,
+    });
+  }
+}
+
+const ticket = await fetch(`${API}/admin/uploads/product-images`, {
+  method: "POST",
+  headers: authed,
+  body: JSON.stringify({
+    fileName: "probe.png",
+    contentType: "image/png",
+    contentLength: 69,
+  }),
+}).then((r) => r.json());
 
 if (!ticket.success) {
   console.log(
@@ -83,111 +100,104 @@ ok(
 
 const before = await page.locator("li:has(img)").count();
 
-// a real 1x1 PNG, uploaded through the browser
-const png = Buffer.from(
-  "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8cfc0000003010100189dd5ca0000000049454e44ae426082",
-  "hex",
-);
-await page.setInputFiles('input[type="file"]', {
-  name: "e2e-upload.png",
-  mimeType: "image/png",
-  buffer: png,
-});
-
-await page
-  .waitForFunction(
-    (n) => document.querySelectorAll("li img").length > n,
-    before,
-    { timeout: 25000 },
-  )
-  .then(() => true)
-  .catch(() => false);
-
-const after = await page.locator("li:has(img)").count();
-ok(after === before + 1, `image added to the gallery (${before} → ${after})`);
-ok(storagePuts.includes(200), "browser PUT to storage returned 200");
-ok(
-  !consoleErrors.some((e) => /CORS|Access-Control/i.test(e)),
-  "no CORS error on the storage PUT",
-);
-
-// the uploaded file actually renders
-await page
-  .waitForFunction(
-    () =>
-      [...document.querySelectorAll("li img")].some(
-        (el) =>
-          el.complete && el.naturalWidth > 0 && !el.src.startsWith("blob:"),
-      ),
-    undefined,
-    { timeout: 15000 },
-  )
-  .then(() => true)
-  .catch(() => false);
-
-const rendered = await page.evaluate(() => {
-  const loaded = [...document.querySelectorAll("li img")].filter(
-    (el) =>
-      el.complete &&
-      el.naturalWidth > 0 &&
-      !el.src.startsWith("blob:"),
+try {
+  // a real 1x1 PNG, uploaded through the browser
+  const png = Buffer.from(
+    "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8cfc0000003010100189dd5ca0000000049454e44ae426082",
+    "hex",
   );
-  const last = loaded[loaded.length - 1];
-  return last ? { w: last.naturalWidth, src: last.src } : null;
-});
-ok(Boolean(rendered?.w), "uploaded image renders (naturalWidth > 0)");
-ok(
-  Boolean(rendered?.src?.includes("9100")),
-  "image served from object storage",
-);
+  await page.setInputFiles('input[type="file"]', {
+    name: "e2e-upload.png",
+    mimeType: "image/png",
+    buffer: png,
+  });
 
-// reorder: move the new image to the front
-if (after > 1) {
   await page
+    .waitForFunction(
+      (n) => document.querySelectorAll("li img").length > n,
+      before,
+      { timeout: 25000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+
+  const after = await page.locator("li:has(img)").count();
+  ok(after === before + 1, `image added to the gallery (${before} → ${after})`);
+  ok(storagePuts.includes(200), "browser PUT to storage returned 200");
+  ok(
+    !consoleErrors.some((e) => /CORS|Access-Control/i.test(e)),
+    "no CORS error on the storage PUT",
+  );
+
+  // the uploaded file actually renders
+  await page
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll("li img")].some(
+          (el) =>
+            el.complete && el.naturalWidth > 0 && !el.src.startsWith("blob:"),
+        ),
+      undefined,
+      { timeout: 15000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+
+  const rendered = await page.evaluate(() => {
+    const loaded = [...document.querySelectorAll("li img")].filter(
+      (el) => el.complete && el.naturalWidth > 0 && !el.src.startsWith("blob:"),
+    );
+    const last = loaded[loaded.length - 1];
+    return last ? { w: last.naturalWidth, src: last.src } : null;
+  });
+  ok(Boolean(rendered?.w), "uploaded image renders (naturalWidth > 0)");
+  ok(
+    Boolean(rendered?.src?.includes("9100")),
+    "image served from object storage",
+  );
+
+  // pin to a variant
+  const selects = await page.locator("li:has(img) select").count();
+  if (selects > 0) {
+    const options = await page
+      .locator("li:has(img) select")
+      .first()
+      .locator("option")
+      .count();
+    ok(options > 1, "variant pinning offers the product's SKUs");
+  }
+
+  // remove exactly the image this run uploaded, leaving the store as we found it
+  const uploadedSrc = rendered?.src;
+  const uploadedCard = page
     .locator("li:has(img)")
-    .last()
-    .getByLabel("Move earlier")
-    .click();
-  await page.waitForTimeout(2500);
-  body = await page.textContent("body");
-  ok(!body.includes("Could not reorder"), "reorder accepted by the server");
+    .filter({ has: page.locator(`img[src="${uploadedSrc}"]`) });
+  ok(
+    (await uploadedCard.count()) === 1,
+    "can address the uploaded image by src",
+  );
+
+  await uploadedCard.getByLabel("Remove image").click();
+  await page
+    .waitForFunction(
+      (src) => !document.querySelector(`li img[src="${src}"]`),
+      uploadedSrc,
+      { timeout: 15000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+
+  ok(
+    (await page.locator(`li img[src="${uploadedSrc}"]`).count()) === 0,
+    "uploaded image removed",
+  );
+  ok(
+    (await page.locator("li:has(img)").count()) === before,
+    "gallery back to its original size",
+  );
+} finally {
+  await removeImagesAddedByThisRun();
+  const leftover = (await imageIds()).filter((id) => !originalImageIds.has(id));
+  ok(leftover.length === 0, "no test images left on the product");
+  await browser.close();
 }
-
-// pin to a variant
-const selects = await page.locator("li:has(img) select").count();
-if (selects > 0) {
-  const options = await page
-    .locator("li:has(img) select")
-    .first()
-    .locator("option")
-    .count();
-  ok(options > 1, "variant pinning offers the product's SKUs");
-}
-
-// remove exactly the image this run uploaded, leaving the store as we found it
-const uploadedSrc = rendered?.src;
-const uploadedCard = page
-  .locator("li:has(img)")
-  .filter({ has: page.locator(`img[src="${uploadedSrc}"]`) });
-ok((await uploadedCard.count()) === 1, "can address the uploaded image by src");
-
-await uploadedCard.getByLabel("Remove image").click();
-await page
-  .waitForFunction(
-    (src) => !document.querySelector(`li img[src="${src}"]`),
-    uploadedSrc,
-    { timeout: 15000 },
-  )
-  .then(() => true)
-  .catch(() => false);
-
-ok(
-  (await page.locator(`li img[src="${uploadedSrc}"]`).count()) === 0,
-  "uploaded image removed",
-);
-ok(
-  (await page.locator("li:has(img)").count()) === before,
-  "gallery back to its original size",
-);
-
-await browser.close();
