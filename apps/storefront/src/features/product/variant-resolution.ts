@@ -9,7 +9,10 @@ export function optionNamesInOrder(product: ProductDetail): string[] {
   const positionByName = new Map<string, number>();
   for (const variant of product.variants) {
     for (const link of variant.optionValues) {
-      positionByName.set(link.optionValue.option.name, link.optionValue.option.position);
+      positionByName.set(
+        link.optionValue.option.name,
+        link.optionValue.option.position,
+      );
     }
   }
   return product.options
@@ -17,6 +20,15 @@ export function optionNamesInOrder(product: ProductDetail): string[] {
     .sort(
       (a, b) => (positionByName.get(a) ?? 0) - (positionByName.get(b) ?? 0),
     );
+}
+
+export function variantLabel(variant: ProductDetailVariant): string {
+  return [...variant.optionValues]
+    .sort(
+      (a, b) => a.optionValue.option.position - b.optionValue.option.position,
+    )
+    .map((link) => link.optionValue.value)
+    .join(" / ");
 }
 
 function valuesOf(variant: ProductDetailVariant): Selection {

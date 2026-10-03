@@ -1,17 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppRouter } from "@/lib/navigation";
-import { Check, ShoppingBag, Zap } from "lucide-react";
-import { formatBDT, formatPriceRange } from "@urcommerce/api-client";
+import { Check, ShoppingCart, Zap } from "lucide-react";
+import { formatBDT } from "@urcommerce/api-client";
 import type {
-  Paisa,
   ProductCard as ProductCardData,
+  ProductCardVariantPreview,
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
 import { useCartMutations } from "@/api/cart";
+import { usePrefetchProductDetail } from "@/api/products";
+import type { QuickAddMode } from "@/features/product/quick-add-dialog";
 import {
   LazySignInDialog,
   preloadSignInDialog,
@@ -24,13 +27,21 @@ const LOW_STOCK_THRESHOLD = 5;
 const PRODUCT_CARD_IMAGE_SIZES =
   "(min-width: 1280px) 320px, (min-width: 640px) 33vw, 50vw";
 
-function highestCompareAtPrice(product: ProductCardData): Paisa | null {
-  return product.variants.reduce<Paisa | null>((highest, variant) => {
-    if (variant.compareAtPrice === null) return highest;
-    return highest === null || variant.compareAtPrice > highest
-      ? variant.compareAtPrice
-      : highest;
-  }, null);
+const loadQuickAddDialog = () => import("@/features/product/quick-add-dialog");
+
+const QuickAddDialog = dynamic(
+  () => loadQuickAddDialog().then((module) => module.QuickAddDialog),
+  { ssr: false },
+);
+
+function cheapestVariant(
+  variants: ProductCardVariantPreview[],
+): ProductCardVariantPreview | null {
+  return variants.reduce<ProductCardVariantPreview | null>(
+    (cheapest, variant) =>
+      cheapest === null || variant.price < cheapest.price ? variant : cheapest,
+    null,
+  );
 }
 
 export function ProductCard({ product }: { product: ProductCardData }) {
@@ -40,6 +51,8 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const [justAdded, setJustAdded] = useState(false);
   const [imageBroken, setImageBroken] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [quickAdd, setQuickAdd] = useState<QuickAddMode | null>(null);
+  const prefetchDetail = usePrefetchProductDetail();
 
   const inStock = product.variants.filter((variant) => variant.stock > 0);
   const isSoldOut = product.totalStock === 0 || inStock.length === 0;
@@ -47,28 +60,40 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const needsChoice = !isSoldOut && directVariant === null;
 
   const image = product.images[0];
-  const compareAtPrice = highestCompareAtPrice(product);
-  const hasDiscount = product.maxDiscountPct > 0 && compareAtPrice !== null;
+  const priced =
+    directVariant ??
+    cheapestVariant(inStock) ??
+    cheapestVariant(product.variants);
+  const price = priced?.price ?? product.minPrice;
+  const compareAtPrice =
+    priced?.compareAtPrice != null && priced.compareAtPrice > price
+      ? priced.compareAtPrice
+      : null;
+  const hasDiscount = product.maxDiscountPct > 0;
   const isLowStock = !isSoldOut && product.totalStock <= LOW_STOCK_THRESHOLD;
   const productHref = `/product/${product.slug}`;
 
-  const priceLabel = directVariant
-    ? formatBDT(directVariant.price)
-    : formatPriceRange(product.minPrice, product.maxPrice);
+  const warmQuickAdd = () => {
+    if (!needsChoice) return;
+    void loadQuickAddDialog();
+    prefetchDetail(product.slug);
+  };
+
+  const flashAdded = () => {
+    setJustAdded(true);
+    window.setTimeout(() => setJustAdded(false), 2000);
+  };
 
   const onAddToBag = () => {
     if (needsChoice) {
-      router.push(productHref);
+      setQuickAdd("add");
       return;
     }
     if (!directVariant) return;
     addItem.mutate(
       { variantId: directVariant.id, quantity: 1 },
       {
-        onSuccess: () => {
-          setJustAdded(true);
-          window.setTimeout(() => setJustAdded(false), 2000);
-        },
+        onSuccess: flashAdded,
       },
     );
   };
@@ -85,7 +110,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       return;
     }
     if (needsChoice) {
-      router.push(productHref);
+      setQuickAdd("buy");
       return;
     }
     if (!directVariant) return;
@@ -93,6 +118,15 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       { variantId: directVariant.id, quantity: 1 },
       { onSuccess: () => router.push("/checkout") },
     );
+  };
+
+  const onQuickAdded = () => {
+    if (quickAdd === "buy") {
+      setQuickAdd(null);
+      router.push("/checkout");
+      return;
+    }
+    flashAdded();
   };
 
   return (
@@ -151,9 +185,9 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-1">
             <span className="text-base font-semibold tracking-tight">
-              {priceLabel}
+              {formatBDT(price)}
             </span>
-            {hasDiscount && compareAtPrice !== null ? (
+            {compareAtPrice !== null ? (
               <span className="text-xs text-muted-foreground line-through">
                 {formatBDT(compareAtPrice)}
               </span>
@@ -188,15 +222,15 @@ export function ProductCard({ product }: { product: ProductCardData }) {
                 size="md"
                 shape="rounded"
                 onClick={onAddToBag}
-                loading={addItem.isPending}
+                onPointerEnter={warmQuickAdd}
+                onFocus={warmQuickAdd}
+                aria-haspopup={needsChoice ? "dialog" : undefined}
+                loading={addItem.isPending && quickAdd === null}
                 leading={
                   justAdded ? (
                     <Check aria-hidden />
                   ) : (
-                    <ShoppingBag
-                      aria-hidden
-                      className={cn(needsChoice && "@max-[9rem]:hidden")}
-                    />
+                    <ShoppingCart aria-hidden />
                   )
                 }
                 className={cn(
@@ -207,11 +241,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
                 )}
               >
                 <span className="truncate">
-                  {justAdded
-                    ? "Added"
-                    : needsChoice
-                      ? "Choose options"
-                      : "Add to bag"}
+                  {justAdded ? "Added" : "Add to cart"}
                 </span>
               </Button>
 
@@ -219,8 +249,15 @@ export function ProductCard({ product }: { product: ProductCardData }) {
                 size="md"
                 shape="rounded"
                 onClick={onBuyNow}
-                onPointerEnter={warmSignIn}
-                onFocus={warmSignIn}
+                onPointerEnter={() => {
+                  warmSignIn();
+                  warmQuickAdd();
+                }}
+                onFocus={() => {
+                  warmSignIn();
+                  warmQuickAdd();
+                }}
+                aria-haspopup={needsChoice && session ? "dialog" : undefined}
                 disabled={addItem.isPending}
                 leading={<Zap aria-hidden />}
                 className="w-full min-w-0 shrink gap-1.5 px-2 hover:bg-primary hover:shadow-md hover:shadow-primary/20 @[18.5rem]:w-auto @[18.5rem]:flex-1"
@@ -231,12 +268,22 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           </div>
         )}
 
-        {addItem.isError ? (
+        {addItem.isError && quickAdd === null ? (
           <p role="alert" className="text-center text-xs text-destructive">
             Could not add that. Please try again.
           </p>
         ) : null}
       </div>
+
+      {quickAdd ? (
+        <QuickAddDialog
+          slug={product.slug}
+          productName={product.name}
+          mode={quickAdd}
+          onClose={() => setQuickAdd(null)}
+          onAdded={onQuickAdded}
+        />
+      ) : null}
 
       <LazySignInDialog
         open={signInOpen}
@@ -248,6 +295,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               { variantId: directVariant.id, quantity: 1 },
               { onSuccess: () => router.push("/checkout") },
             );
+            return;
+          }
+          if (needsChoice) {
+            setQuickAdd("buy");
             return;
           }
           router.push(productHref);

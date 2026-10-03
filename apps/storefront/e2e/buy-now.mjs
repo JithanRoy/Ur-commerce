@@ -5,6 +5,16 @@ const browser = await chromium.launch();
 const ok = (c, n) => console.log(c ? `✓ ${n}` : `✗ ${n}`);
 
 // ---------- guest ----------
+async function addFromCard(page, button) {
+  await button.click();
+  const dialog = page.getByRole("dialog");
+  if (await dialog.waitFor({ timeout: 3000 }).then(() => true).catch(() => false)) {
+    await dialog.getByRole("button", { name: "Add to cart" }).click();
+    await dialog.getByText("Added to your cart").waitFor({ timeout: 12000 });
+    await page.keyboard.press("Escape");
+  }
+}
+
 const guest = await browser.newContext();
 const g = await guest.newPage();
 await g.goto(B + "/", { waitUntil: "load" });
@@ -16,8 +26,8 @@ ok((await cards.count()) >= 3, `cards render (${await cards.count()})`);
 ok((await g.getByRole("button", { name: "Buy now" }).count()) >= 3,
    "every card offers Buy now");
 const homeLabels = await g.locator("section button").allTextContents();
-ok(homeLabels.some((t) => /Choose options/.test(t)),
-   "multi-variant cards show Choose options");
+ok(homeLabels.some((t) => /Add to cart/.test(t)),
+   "cards show Add to cart");
 
 // guest Buy now → dialog, NOT a redirect
 await g.getByRole("button", { name: "Buy now" }).first().click();
@@ -38,17 +48,17 @@ await g.waitForTimeout(500);
 ok(!(await g.getByRole("dialog").isVisible().catch(() => false)),
    "Escape closes the dialog");
 
-// guest CAN still add to bag without signing in
-const addBtn = g.getByRole("button", { name: "Add to bag" }).first();
+// guest CAN still add to cart without signing in
+const addBtn = g.getByRole("button", { name: "Add to cart" }).first();
 if ((await addBtn.count()) > 0) {
-  await addBtn.click();
+  await addFromCard(g, addBtn);
   await g.waitForFunction(
     () => document.querySelector('a[href="/cart"] span')?.textContent === "1",
     undefined, { timeout: 12000 },
   ).then(() => true).catch(() => false);
   const badge = await g.evaluate(() =>
     document.querySelector('a[href="/cart"] span')?.textContent ?? null);
-  ok(badge === "1", `guest can add to bag without signing in (badge ${badge})`);
+  ok(badge === "1", `guest can add to cart without signing in (badge ${badge})`);
 }
 await guest.close();
 
@@ -64,16 +74,13 @@ await p.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 15000 });
 await p.goto(B + "/shop", { waitUntil: "load" });
 await p.waitForTimeout(3000);
 
-// a single-variant card (it offers Add to bag) — its Buy now goes straight
-// to checkout; multi-variant Buy now routes to the detail page by design
-const directCard = p
-  .getByRole("button", { name: "Add to bag" })
-  .first()
-  .locator("xpath=ancestor::div[contains(@class,'group')][1]");
-await directCard.getByRole("button", { name: "Buy now" }).click();
-await p.waitForTimeout(1200);
-ok(!(await p.getByRole("dialog").isVisible().catch(() => false)),
-   "signed-in Buy now shows NO dialog");
+await p.getByRole("button", { name: "Buy now" }).first().click();
+const optionsDialog = p.getByRole("dialog");
+if (await optionsDialog.waitFor({ timeout: 3000 }).then(() => true).catch(() => false)) {
+  ok((await optionsDialog.getByRole("button", { name: "Sign in" }).count()) === 0,
+     "signed-in Buy now shows no sign-in prompt");
+  await optionsDialog.getByRole("button", { name: "Buy now" }).click();
+}
 await p.waitForURL(/\/checkout/, { timeout: 15000 }).catch(() => {});
 ok(new URL(p.url()).pathname === "/checkout",
    `signed-in Buy now reaches checkout (${new URL(p.url()).pathname})`);

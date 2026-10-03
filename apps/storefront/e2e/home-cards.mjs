@@ -30,6 +30,7 @@ const cards = await page.evaluate(() => {
       imgH: ir ? Math.round(ir.height) : 0,
       btnBottom: br ? Math.round(br.bottom) : 0,
       btnLabel: btn?.textContent?.trim() ?? "",
+      text: el.textContent ?? "",
     };
   });
 });
@@ -50,11 +51,11 @@ const bottoms = new Set(cards.map((c) => c.btnBottom));
 ok(bottoms.size === rows.size,
    `buttons align per grid row (${rows.size} rows, ${bottoms.size} baselines)`);
 
-ok(cards.every((c) => /Add to bag|Choose options|Out of stock/.test(c.btnLabel)),
+ok(cards.every((c) => /Add to cart|Out of stock/.test(c.btnLabel)),
    "every card has a clear call to action");
 
-const multiVariant = cards.filter((c) => c.btnLabel === "Choose options").length;
-ok(multiVariant > 0, "multi-variant products route to the detail page");
+ok(cards.every((c) => !/৳[\d,.]+\s*[–-]\s*৳/.test(c.text)),
+   "cards show a single lowest price, never a range");
 
 const body = await page.textContent("body");
 ok(!/\b0\s*(★|stars?)\b/i.test(body), "no stale 0-star ratings rendered");

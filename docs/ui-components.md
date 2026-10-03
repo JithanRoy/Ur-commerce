@@ -89,7 +89,7 @@ import { Input, Checkbox } from "@/components/ui/input";
 |---|---|
 | `Input` | `size`, `invalid`, `leading` / `trailing` slots, `onClear` (with `clearLabel`), password reveal (turn off with `revealable={false}`) |
 | `Textarea` | `size`, `invalid`, `autoResize` |
-| `Select` | `size`, `options`, `placeholder`, `leading`; still accepts child `<option>`s |
+| `Select` | `size`, `options`, `placeholder`, `leading`; still accepts child `<option>`s. Opt in to a search box with `searchable` (plus `searchPlaceholder`, `noResultsText`) |
 | `Checkbox` / `Radio` | `label`, `description` |
 | `Field` | `label`, `hint`, `error`, `required` (shows an asterisk), `optional`, `hideLabel`, `action` (a slot beside the label, for example "Forgot password?") |
 | `TextField` etc. | `Field` and its control in one; `fieldClassName` styles the wrapper |
@@ -100,6 +100,14 @@ import { Input, Checkbox } from "@/components/ui/input";
 - **`className` always styles the control itself.** When a wrapper renders
   (any `Select`, or an `Input` with slots, clear or password),
   put margin, width and layout classes on `containerClassName`.
+- **`searchable` is opt-in.** Without it, `Select` is the native element.
+  With it, the same `onChange(event)` contract still fires (a hidden native
+  `<select>` carries the value, so `name` and form submission keep working),
+  but only `options` are rendered, not child `<option>`s. Search matches
+  `option.keywords` when given, otherwise a string `label`. Set
+  `alwaysShown` on an option that must survive filtering, such as
+  "Create new…". Use it for long or growing lists (categories, brands, SKUs),
+  not for three fixed statuses.
 - React 19 passes `ref` as an ordinary prop, so `{...register("x")}` from
   react-hook-form works on any of these controls.
 - The only native controls left are the hidden `type="file"` inputs inside the

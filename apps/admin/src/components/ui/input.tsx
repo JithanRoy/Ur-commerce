@@ -2,6 +2,7 @@ import * as React from "react";
 import { ChevronDown, Eye, EyeOff, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFieldControl } from "./field-context";
+import { SearchableSelect } from "./searchable-select";
 
 export type ControlSize = "sm" | "md" | "lg";
 
@@ -152,12 +153,7 @@ export function Input({
   }
   if (showClear) {
     trailingItems.push(
-      <SlotButton
-        key="clear"
-        label={clearLabel}
-        size={size}
-        onClick={onClear}
-      >
+      <SlotButton key="clear" label={clearLabel} size={size} onClick={onClear}>
         <X aria-hidden />
       </SlotButton>,
     );
@@ -208,9 +204,7 @@ export function Input({
   return (
     <div className={cn("relative", containerClassName)}>
       {leading ? (
-        <LeadingAdornment size={size}>
-          {leading}
-        </LeadingAdornment>
+        <LeadingAdornment size={size}>{leading}</LeadingAdornment>
       ) : null}
       {input}
       {trailingItems.length > 0 ? (
@@ -269,6 +263,8 @@ export type SelectOption = {
   value: string;
   label: React.ReactNode;
   disabled?: boolean;
+  keywords?: string;
+  alwaysShown?: boolean;
 };
 
 export type SelectProps = Omit<React.ComponentProps<"select">, "size"> &
@@ -276,6 +272,9 @@ export type SelectProps = Omit<React.ComponentProps<"select">, "size"> &
     options?: SelectOption[];
     placeholder?: string;
     leading?: React.ReactNode;
+    searchable?: boolean;
+    searchPlaceholder?: string;
+    noResultsText?: string;
   };
 
 export function Select({
@@ -285,6 +284,9 @@ export function Select({
   options,
   placeholder,
   leading,
+  searchable,
+  searchPlaceholder,
+  noResultsText,
   className,
   children,
   id,
@@ -302,26 +304,53 @@ export function Select({
     "aria-invalid": ariaInvalid,
     "aria-describedby": ariaDescribedBy,
   });
+  const controlClassName = cn(
+    controlClass,
+    boxSize[size],
+    "cursor-pointer appearance-none",
+    leading ? leadingPad[size] : "",
+    trailingPad[size][0],
+    className,
+  );
+
+  if (searchable) {
+    return (
+      <SearchableSelect
+        {...control}
+        name={props.name}
+        value={props.value === undefined ? undefined : String(props.value)}
+        defaultValue={
+          props.defaultValue === undefined
+            ? undefined
+            : String(props.defaultValue)
+        }
+        options={options ?? []}
+        placeholder={placeholder}
+        searchPlaceholder={searchPlaceholder}
+        noResultsText={noResultsText}
+        onChange={props.onChange}
+        aria-label={props["aria-label"]}
+        triggerClassName={controlClassName}
+        containerClassName={containerClassName}
+        leadingAdornment={
+          leading ? (
+            <LeadingAdornment size={size}>{leading}</LeadingAdornment>
+          ) : null
+        }
+      />
+    );
+  }
 
   return (
     <div className={cn("relative", containerClassName)}>
       {leading ? (
-        <LeadingAdornment size={size}>
-          {leading}
-        </LeadingAdornment>
+        <LeadingAdornment size={size}>{leading}</LeadingAdornment>
       ) : null}
       <select
         {...props}
         {...control}
         data-slot="select"
-        className={cn(
-          controlClass,
-          boxSize[size],
-          "cursor-pointer appearance-none",
-          leading ? leadingPad[size] : "",
-          trailingPad[size][0],
-          className,
-        )}
+        className={controlClassName}
       >
         {placeholder !== undefined ? (
           <option value="">{placeholder}</option>

@@ -70,6 +70,8 @@ export function AddVariantForm({ product, onAdd, isPending }: Props) {
       {options.map((option) => (
         <CompactField key={option.id} id={`add-${option.id}`} label={option.name}>
           <Select
+            searchable
+            searchPlaceholder={`Search ${option.name.toLowerCase()}…`}
             value={values[option.name] ?? ""}
             onChange={(event) =>
               setValues((current) => ({

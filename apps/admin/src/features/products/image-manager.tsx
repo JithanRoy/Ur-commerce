@@ -434,6 +434,8 @@ export function ImageManager({
                   className="space-y-1"
                 >
                   <Select
+                    searchable
+                    searchPlaceholder="Search SKU…"
                     value={image.variantId ?? ""}
                     disabled={busy}
                     onChange={(event) =>

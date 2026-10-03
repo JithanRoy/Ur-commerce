@@ -14,6 +14,16 @@ const badge = (page) =>
     };
   });
 
+async function addFromCard(page, button) {
+  await button.click();
+  const dialog = page.getByRole("dialog");
+  if (await dialog.waitFor({ timeout: 3000 }).then(() => true).catch(() => false)) {
+    await dialog.getByRole("button", { name: "Add to cart" }).click();
+    await dialog.getByText("Added to your cart").waitFor({ timeout: 12000 });
+    await page.keyboard.press("Escape");
+  }
+}
+
 const page = await (await browser.newContext()).newPage();
 await page.goto(B + "/", { waitUntil: "load" });
 await page.waitForTimeout(3000);
@@ -22,10 +32,9 @@ const empty = await badge(page);
 ok(empty.text === null, `no badge on an empty cart (got ${empty.text})`);
 ok(/empty/i.test(empty.label ?? ""), `empty state announced (${empty.label})`);
 
-// add from a single-variant card on the home page
-const addBtn = page.getByRole("button", { name: "Add to bag" }).first();
-ok((await addBtn.count()) > 0, "home card offers Add to bag");
-await addBtn.click();
+const addBtn = page.getByRole("button", { name: "Add to cart" }).first();
+ok((await addBtn.count()) > 0, "home card offers Add to cart");
+await addFromCard(page, addBtn);
 
 await page
   .waitForFunction(
@@ -41,7 +50,7 @@ ok(afterOne.text === "1", `badge shows 1 after adding (got ${afterOne.text})`);
 ok(/1 item$/i.test(afterOne.label ?? ""), `singular reads correctly (${afterOne.label})`);
 
 // add the same product again — badge must increment, not stay at 1
-await page.getByRole("button", { name: /Add to bag|Added to bag/ }).first().click();
+await addFromCard(page, page.getByRole("button", { name: /Add to cart|Added/ }).first());
 await page
   .waitForFunction(
     () => document.querySelector('a[href="/cart"] span')?.textContent === "2",

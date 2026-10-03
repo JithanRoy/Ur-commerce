@@ -16,20 +16,27 @@ import { Input, Select } from "@/components/ui/input";
 import { Button, IconButton } from "@/components/ui/button";
 import { slugify } from "./variant-matrix";
 
-type CategoryOption = { id: string; label: string };
+type CategoryOption = { id: string; label: string; keywords?: string };
 
 const CREATE_NEW = "__create__";
 
 function flattenCategories(
   nodes: AdminCategoryNode[],
-  depth = 0,
+  ancestors: string[] = [],
 ): CategoryOption[] {
   return [...nodes]
     .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name))
-    .flatMap((node) => [
-      { id: node.id, label: `${"— ".repeat(depth)}${node.name}` },
-      ...flattenCategories(node.children ?? [], depth + 1),
-    ]);
+    .flatMap((node) => {
+      const path = [...ancestors, node.name];
+      return [
+        {
+          id: node.id,
+          label: `${"— ".repeat(ancestors.length)}${node.name}`,
+          keywords: path.join(" "),
+        },
+        ...flattenCategories(node.children ?? [], path),
+      ];
+    });
 }
 
 export function useTaxonomy() {
@@ -136,6 +143,9 @@ function TaxonomyPicker<T extends TaxonomyRow>({
         </div>
       ) : (
         <Select
+          searchable
+          searchPlaceholder={`Search ${label.toLowerCase()}…`}
+          noResultsText={`No ${label.toLowerCase()} matches — use “Create new” below`}
           value={value}
           disabled={disabled}
           onChange={(event) => {
@@ -150,10 +160,12 @@ function TaxonomyPicker<T extends TaxonomyRow>({
             ...options.map((option) => ({
               value: option.id,
               label: option.label,
+              keywords: option.keywords,
             })),
             {
               value: CREATE_NEW,
               label: `＋ Create new ${label.toLowerCase()}…`,
+              alwaysShown: true,
             },
           ]}
         />
