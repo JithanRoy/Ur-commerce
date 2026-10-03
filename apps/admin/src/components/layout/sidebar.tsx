@@ -11,6 +11,7 @@ import {
   Store,
   Palette,
   GalleryHorizontal,
+  LayoutList,
 } from "lucide-react";
 import { useAuth } from "@/stores/auth";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ const productModule = {
 const manage: NavItem[] = [
   { label: "Branding", to: "/branding", icon: Palette },
   { label: "Homepage hero", to: "/hero", icon: GalleryHorizontal },
+  { label: "Homepage sections", to: "/sections", icon: LayoutList },
   { label: "Team", to: "/team", icon: Users },
 ];
 

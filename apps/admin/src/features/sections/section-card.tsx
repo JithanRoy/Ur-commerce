@@ -24,11 +24,21 @@ function savedMessage(
   section: AdminSection,
   { input }: UpdateSectionVariables,
 ): string {
-  if (input.isActive === true) return `“${section.title}” is back on your homepage.`;
-  if (input.isActive === false) return `“${section.title}” is hidden from your homepage.`;
+  if (input.isActive === true)
+    return `“${section.title}” is back on your homepage.`;
+  if (input.isActive === false)
+    return `“${section.title}” is hidden from your homepage.`;
   if (input.title !== undefined) return `Renamed to “${section.title}”.`;
-  if (input.source) return `“${section.title}” now shows ${SOURCE_LABELS[input.source].toLowerCase()}.`;
+  if (input.source)
+    return `“${section.title}” now shows ${SOURCE_LABELS[input.source].toLowerCase()}.`;
   return `“${section.title}” now shows up to ${section.itemLimit} items.`;
+}
+
+function displayedSection(
+  section: AdminSection,
+  pending: UpdateSectionVariables["input"] | undefined,
+): AdminSection {
+  return pending ? { ...section, ...pending } : section;
 }
 
 function TitleField({
@@ -128,22 +138,29 @@ export function SectionCard({
   onMove: (from: number, to: number) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [unsaved, setUnsaved] = useState<UpdateSectionVariables["input"]>();
   const update = useUpdateSection({ success: savedMessage });
   const remove = useRemoveSection({
     success: `“${section.title}” removed from your homepage.`,
     onSettled: () => setConfirming(false),
   });
+  const shown = displayedSection(section, unsaved);
   const details = KIND_DETAILS[section.kind];
   const position = index + 1;
-  const save = (input: UpdateSectionVariables["input"]) =>
-    update.mutate({ sectionId: section.id, input });
+  const save = (input: UpdateSectionVariables["input"]) => {
+    setUnsaved((current) => ({ ...current, ...input }));
+    update.mutate(
+      { sectionId: section.id, input },
+      { onSettled: () => setUnsaved(undefined) },
+    );
+  };
 
   return (
     <li
       aria-label={`Section ${position} of ${total}: ${section.title}`}
       className={cn(
         "flex flex-col gap-4 rounded-xl border bg-card p-4 transition-colors",
-        !section.isActive && "border-dashed bg-muted/30",
+        !shown.isActive && "border-dashed bg-muted/30",
       )}
     >
       <div className="flex flex-wrap items-center gap-3">
@@ -157,10 +174,10 @@ export function SectionCard({
           <p className="truncate text-sm font-medium">{section.title}</p>
           <p className="text-xs text-muted-foreground">
             {details.label}
-            {section.source ? ` · ${SOURCE_LABELS[section.source]}` : null}
+            {shown.source ? ` · ${SOURCE_LABELS[shown.source]}` : null}
           </p>
         </div>
-        {!section.isActive ? (
+        {!shown.isActive ? (
           <span className="rounded-full bg-amber-500/12 px-2 py-0.5 text-xs font-medium text-amber-700">
             Hidden
           </span>
@@ -206,18 +223,20 @@ export function SectionCard({
         <SelectField
           id={`section-limit-${section.id}`}
           label="How many"
-          options={itemLimitOptions(section.itemLimit, details.itemNoun)}
-          value={String(section.itemLimit)}
+          options={itemLimitOptions(shown.itemLimit, details.itemNoun)}
+          value={String(shown.itemLimit)}
           disabled={update.isPending}
           onChange={(event) => save({ itemLimit: Number(event.target.value) })}
         />
-        {section.source ? (
+        {shown.source ? (
           <SelectField
             id={`section-source-${section.id}`}
             label="Which products"
-            hint={section.source === "BEST_SELLERS" ? BEST_SELLERS_HINT : undefined}
+            hint={
+              shown.source === "BEST_SELLERS" ? BEST_SELLERS_HINT : undefined
+            }
             options={SOURCE_OPTIONS}
-            value={section.source}
+            value={shown.source}
             disabled={update.isPending}
             onChange={(event) => {
               const source = event.target.value;
@@ -232,7 +251,7 @@ export function SectionCard({
         id={`section-active-${section.id}`}
         label="Show on homepage"
         description="Hidden sections keep their settings, ready to switch back on."
-        checked={section.isActive}
+        checked={shown.isActive}
         disabled={update.isPending}
         onChange={(event) => save({ isActive: event.target.checked })}
       />

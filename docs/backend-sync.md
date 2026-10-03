@@ -4,7 +4,7 @@ The backend lives in a separate repo and is changed by its own sessions. This
 file records which backend commit the frontend has been built against, so
 new backend work is never missed.
 
-Last synced backend commit: `b66bcb0`
+Last synced backend commit: `bda44db`
 
 ## How a sync works
 
@@ -31,3 +31,4 @@ every Claude session in this repo.
 |---|---|---|
 | 2026-09-30 | `d374993` | Hero carousel: storefront carousel and admin manager |
 | 2026-10-03 | `b66bcb0` | Production tenant headers (`X-Tenant-Host` + `X-Internal-Key`) from the storefront server; customer order `timeline`; verified CORS `maxAge`, upload `Cache-Control` and safe hero links. Homepage sections (uncommitted backend work) not yet built. |
+| 2026-10-03 | `bda44db` | Homepage sections: admin manager (`/sections`, owner-only: add, rename, resize, source, hide, reorder, remove), storefront keys sections on `id`, `best-sellers` sort on the shop page (`soldCount` now increments at checkout). E2E `apps/admin/e2e/homepage-sections.mjs`. |

@@ -50,15 +50,16 @@ export const SOURCE_TITLES: Record<SectionSource, string> = {
   BEST_SELLERS: "Popular",
   DISCOUNT: "Hot Deals",
   PRICE_ASC: "Budget Picks",
-  PRICE_DESC: "Premium Picks",
+  PRICE_DESC: "Premium",
 };
 
 export const BEST_SELLERS_HINT =
   "Ranked by units sold. On a new store most products have no sales yet, so the order settles as orders come in.";
 
-export const SOURCE_OPTIONS: SelectOption[] = SECTION_SOURCES.map(
-  (source) => ({ value: source, label: SOURCE_LABELS[source] }),
-);
+export const SOURCE_OPTIONS: SelectOption[] = SECTION_SOURCES.map((source) => ({
+  value: source,
+  label: SOURCE_LABELS[source],
+}));
 
 const ITEM_LIMIT_PRESETS = [4, 6, 8, 10, 12, 16, 20, 24];
 

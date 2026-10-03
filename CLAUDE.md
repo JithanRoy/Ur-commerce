@@ -83,7 +83,6 @@ See `docs/frontend/08-backend-gaps.md`.
 - Online payment — COD only; build the payment step as a data-driven radio
   group so a gateway is configuration later
 - Customer-facing order cancellation, coupons/promo codes
-- "Best sellers" sort — `soldCount` is never recomputed, order is arbitrary
 - Size/colour facets — `/products/facets` returns categories and brands only
 - Platform console — zero endpoints exist
 
@@ -114,8 +113,8 @@ allowedHeaders: ["Content-Type", "Authorization", "X-Cart-Session", "X-Tenant-Ho
 | OpenAPI JSON | `http://localhost:3002/api/docs-json` |
 | Dev store | `demo.localhost` — send as `X-Tenant-Host` in development |
 
-The seeded `demo` store currently returns `sections: []` from `GET /home`. The
-empty-array case is the default path, not an afterthought. Render sections by
+Homepage sections are merchant-managed (admin `/sections`). `sections` can
+still be `[]` for a new store; that case is a real path, not an afterthought. Render sections by
 `type` in array order and ignore unknown types — never index by position.
 
 Verify against a live response, not against the docs or a schema:

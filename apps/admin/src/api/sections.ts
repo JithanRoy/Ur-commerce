@@ -100,11 +100,7 @@ export function useRemoveSection(
 }
 
 export function useReorderSections(
-  options: ApiMutationOverrides<
-    AdminSection[],
-    string[],
-    ReorderSnapshot
-  > = {},
+  options: ApiMutationOverrides<AdminSection[], string[], ReorderSnapshot> = {},
 ) {
   const queryClient = useQueryClient();
   const isLastReorderInFlight = () =>
@@ -137,7 +133,9 @@ export function useReorderSections(
         queryClient.setQueryData(queryKeys.sections.list(), snapshot.previous);
       }
       if (isLastReorderInFlight()) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.sections.all });
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.sections.all,
+        });
       }
     },
   });
