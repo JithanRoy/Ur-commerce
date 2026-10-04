@@ -61,14 +61,24 @@ try {
 
   await dialog.getByRole("button", { name: "Add to cart" }).click();
   await dialog.getByText("Added to your cart").waitFor({ timeout: 15000 });
+  const panel = await dialog.boundingBox();
+  const buttonsInside = await Promise.all(
+    [dialog.getByRole("link", { name: "View cart" }), dialog.getByRole("button", { name: "Keep shopping" })].map(
+      async (button) => {
+        const box = await button.boundingBox();
+        return box.x >= panel.x && box.x + box.width <= panel.x + panel.width + 0.5;
+      },
+    ),
+  );
+  ok(buttonsInside.every(Boolean), "confirmation buttons stay inside the dialog");
   await page
     .waitForFunction(
-      (n) => document.querySelector('a[href="/cart"] span')?.textContent === String(n),
+      (n) => document.querySelector("[data-cart-count]")?.textContent === String(n),
       quantity,
       { timeout: 12000 },
     )
     .catch(() => {});
-  const badge = await page.evaluate(() => document.querySelector('a[href="/cart"] span')?.textContent ?? null);
+  const badge = await page.evaluate(() => document.querySelector("[data-cart-count]")?.textContent ?? null);
   ok(badge === String(quantity), `cart badge shows ${quantity} (got ${badge})`);
 
   await page.keyboard.press("Escape");

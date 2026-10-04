@@ -58,7 +58,7 @@ export function SiteHeader({
           </Suspense>
         </div>
 
-        <div className="ml-auto flex items-center gap-1 lg:ml-2">
+        <div className="ml-auto flex items-center gap-1.5 lg:ml-2">
           <IconButton
             label={searchOpen ? "Close search" : "Search"}
             aria-expanded={searchOpen}

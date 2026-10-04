@@ -6,8 +6,8 @@ const ok = (c, n) => console.log(c ? `✓ ${n}` : `✗ ${n}`);
 
 const badge = (page) =>
   page.evaluate(() => {
-    const link = document.querySelector('a[href="/cart"]');
-    const span = link?.querySelector("span");
+    const link = document.querySelector("[data-cart-trigger]");
+    const span = link?.querySelector("[data-cart-count]");
     return {
       label: link?.getAttribute("aria-label") ?? null,
       text: span?.textContent?.trim() ?? null,
@@ -38,7 +38,7 @@ await addFromCard(page, addBtn);
 
 await page
   .waitForFunction(
-    () => document.querySelector('a[href="/cart"] span')?.textContent === "1",
+    () => document.querySelector("[data-cart-count]")?.textContent === "1",
     undefined,
     { timeout: 12000 },
   )
@@ -53,7 +53,7 @@ ok(/1 item$/i.test(afterOne.label ?? ""), `singular reads correctly (${afterOne.
 await addFromCard(page, page.getByRole("button", { name: /Add to cart|Added/ }).first());
 await page
   .waitForFunction(
-    () => document.querySelector('a[href="/cart"] span')?.textContent === "2",
+    () => document.querySelector("[data-cart-count]")?.textContent === "2",
     undefined,
     { timeout: 12000 },
   )
@@ -77,7 +77,7 @@ if ((await removeBtn.count()) > 0) {
   await removeBtn.click();
   await page
     .waitForFunction(
-      () => !document.querySelector('a[href="/cart"] span'),
+      () => !document.querySelector("[data-cart-count]"),
       undefined,
       { timeout: 12000 },
     )

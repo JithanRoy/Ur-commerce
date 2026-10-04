@@ -180,7 +180,7 @@ function AddedConfirmation({ onClose }: { onClose: () => void }) {
         <Check className="size-6" aria-hidden />
       </span>
       <p className="font-medium">Added to your cart</p>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="grid gap-2 sm:grid-cols-2">
         <Button asChild shape="rounded" fullWidth>
           <Link href="/cart">View cart</Link>
         </Button>

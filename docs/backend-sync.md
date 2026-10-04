@@ -4,7 +4,7 @@ The backend lives in a separate repo and is changed by its own sessions. This
 file records which backend commit the frontend has been built against, so
 new backend work is never missed.
 
-Last synced backend commit: `a5414b6`
+Last synced backend commit: `820d1ba`
 
 ## How a sync works
 
@@ -33,3 +33,4 @@ every Claude session in this repo.
 | 2026-10-03 | `b66bcb0` | Production tenant headers (`X-Tenant-Host` + `X-Internal-Key`) from the storefront server; customer order `timeline`; verified CORS `maxAge`, upload `Cache-Control` and safe hero links. Homepage sections (uncommitted backend work) not yet built. |
 | 2026-10-03 | `bda44db` | Homepage sections: admin manager (`/sections`, owner-only: add, rename, resize, source, hide, reorder, remove), storefront keys sections on `id`, `best-sellers` sort on the shop page (`soldCount` now increments at checkout). E2E `apps/admin/e2e/homepage-sections.mjs`. |
 | 2026-10-03 | `a5414b6` | Customer profile and two-step verification (TOTP) in both apps: sign-in code step (authenticator or recovery code), `/account` pages (details with completion, change password, set up / turn off two-step, recovery codes), owner reminder banner in admin. API client: `rejectsCredentials` so a wrong password or code no longer signs the user out. Google sign-in has a table only — nothing to build. E2E `apps/*/e2e/account-security.mjs`. |
+| 2026-10-04 | `820d1ba` | Editor config only (SonarLint in `.vscode/settings.json`) — no frontend work. |

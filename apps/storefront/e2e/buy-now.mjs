@@ -53,11 +53,11 @@ const addBtn = g.getByRole("button", { name: "Add to cart" }).first();
 if ((await addBtn.count()) > 0) {
   await addFromCard(g, addBtn);
   await g.waitForFunction(
-    () => document.querySelector('a[href="/cart"] span')?.textContent === "1",
+    () => document.querySelector("[data-cart-count]")?.textContent === "1",
     undefined, { timeout: 12000 },
   ).then(() => true).catch(() => false);
   const badge = await g.evaluate(() =>
-    document.querySelector('a[href="/cart"] span')?.textContent ?? null);
+    document.querySelector("[data-cart-count]")?.textContent ?? null);
   ok(badge === "1", `guest can add to cart without signing in (badge ${badge})`);
 }
 await guest.close();

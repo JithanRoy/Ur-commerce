@@ -22,6 +22,7 @@ function useRefetchCartForNewSession() {
   const queryClient = useQueryClient();
   return async () => {
     clearCartSession();
+    queryClient.removeQueries({ queryKey: queryKeys.profile.all });
     await queryClient.invalidateQueries({ queryKey: queryKeys.cart.all });
   };
 }
