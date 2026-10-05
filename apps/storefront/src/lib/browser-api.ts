@@ -6,6 +6,7 @@ import {
   createCartApi,
   createCheckoutApi,
   createProfileApi,
+  createReviewsApi,
   createStorefrontApi,
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
@@ -30,3 +31,4 @@ export const checkoutApi = createCheckoutApi(client);
 export const authApi = createAuthApi(client);
 export const shopApi = createStorefrontApi(client);
 export const profileApi = createProfileApi(client);
+export const reviewsApi = createReviewsApi(client);

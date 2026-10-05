@@ -28,6 +28,8 @@ import {
 import { VariantPicker } from "./variant-picker";
 import { ProductGallery } from "./product-gallery";
 import { ProductTabs } from "./product-tabs";
+import { ProductReviews } from "@/features/reviews/product-reviews";
+import { RatingLine } from "@/features/reviews/rating-line";
 import {
   findVariant,
   imagesForVariant,
@@ -212,6 +214,12 @@ export function ProductDetailClient({
           <h1 className="mt-2 text-balance font-display text-3xl font-semibold leading-tight sm:text-4xl">
             {product.name}
           </h1>
+
+          <RatingLine
+            productSlug={product.slug}
+            average={product.avgRating}
+            count={product.ratingCount}
+          />
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {showsDiscount && compareAt !== null ? (
@@ -462,6 +470,8 @@ export function ProductDetailClient({
       </div>
 
       <ProductTabs product={product} />
+
+      <ProductReviews productId={product.id} productSlug={product.slug} />
 
       <div
         className={cn(

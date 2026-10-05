@@ -4,12 +4,22 @@ import type {
   QueryKey,
   UseQueryOptions,
 } from "@tanstack/react-query";
-import type { OrderStatus, ProductStatus } from "@urcommerce/api-client";
+import type {
+  OrderStatus,
+  ProductStatus,
+  ReviewStatus,
+} from "@urcommerce/api-client";
 
 export type ProductListParams = {
   page: number;
   search: string;
   status: ProductStatus | "";
+};
+
+export type ReviewListParams = {
+  page: number;
+  status: ReviewStatus | "";
+  rating: number | null;
 };
 
 export type OrderListParams = {
@@ -28,6 +38,7 @@ const settingsRoot = ["admin", "settings"] as const;
 const heroRoot = ["admin", "hero"] as const;
 const sectionsRoot = ["admin", "sections"] as const;
 const profileRoot = ["profile"] as const;
+const reviewsRoot = ["admin", "reviews"] as const;
 
 export const queryKeys = {
   auth: {
@@ -79,6 +90,10 @@ export const queryKeys = {
   sections: {
     all: sectionsRoot,
     list: () => sectionsRoot,
+  },
+  reviews: {
+    all: reviewsRoot,
+    list: (params: ReviewListParams) => [...reviewsRoot, params] as const,
   },
   profile: {
     all: profileRoot,

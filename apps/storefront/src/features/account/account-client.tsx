@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Package } from "lucide-react";
+import { MapPin, Package, Star } from "lucide-react";
 import { useProfile } from "@/api/profile";
 import { useSignOut } from "@/api/auth";
 import { ListSkeleton } from "@/components/ui/page-skeletons";
@@ -14,6 +14,7 @@ import { TwoFactorSettings } from "./settings/two-factor-settings";
 const shortcuts = [
   { href: "/account/orders", label: "Your orders", icon: Package },
   { href: "/account/addresses", label: "Your addresses", icon: MapPin },
+  { href: "/account/reviews", label: "Your reviews", icon: Star },
 ];
 
 export function AccountClient() {

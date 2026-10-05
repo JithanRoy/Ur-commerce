@@ -9,6 +9,7 @@ import {
   MapPin,
   Package,
   ShieldOff,
+  Star,
   User,
   UserRound,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const links = [
   { href: "/account", label: "Your account", icon: UserRound },
   { href: "/account/orders", label: "Your orders", icon: Package },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
+  { href: "/account/reviews", label: "Your reviews", icon: Star },
 ];
 
 function initials(name: string): string {

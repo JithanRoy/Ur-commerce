@@ -33,6 +33,17 @@ export {
   createProfileApi,
 } from "./profile";
 export type * from "./profile";
+export {
+  REVIEW_BODY_MAX_LENGTH,
+  REVIEW_MAX_RATING,
+  REVIEW_MIN_RATING,
+  REVIEW_SORTS,
+  REVIEW_STATUSES,
+  REVIEW_TITLE_MAX_LENGTH,
+  createReviewsApi,
+  roundedRating,
+} from "./reviews";
+export type * from "./reviews";
 export { createAdminApi } from "./admin/endpoints";
 export type { AdminApi, AdminProductQuery } from "./admin/endpoints";
 export type * from "./admin/types";

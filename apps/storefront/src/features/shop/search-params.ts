@@ -3,6 +3,7 @@ import type { ProductQuery, ProductSort } from "@urcommerce/api-client";
 const SORTS: ProductSort[] = [
   "newest",
   "best-sellers",
+  "top-rated",
   "price-asc",
   "price-desc",
   "discount",

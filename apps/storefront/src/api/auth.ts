@@ -23,6 +23,7 @@ function useRefetchCartForNewSession() {
   return async () => {
     clearCartSession();
     queryClient.removeQueries({ queryKey: queryKeys.profile.all });
+    queryClient.removeQueries({ queryKey: queryKeys.reviews.all });
     await queryClient.invalidateQueries({ queryKey: queryKeys.cart.all });
   };
 }

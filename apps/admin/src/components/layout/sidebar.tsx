@@ -12,6 +12,7 @@ import {
   Palette,
   GalleryHorizontal,
   LayoutList,
+  MessageSquareText,
 } from "lucide-react";
 import { useAuth } from "@/stores/auth";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,10 @@ function preloadOnIntent(path: string) {
 
 type NavItem = { label: string; to: string; icon: typeof Package };
 
-const sell: NavItem[] = [{ label: "Orders", to: "/orders", icon: Receipt }];
+const sell: NavItem[] = [
+  { label: "Orders", to: "/orders", icon: Receipt },
+  { label: "Reviews", to: "/reviews", icon: MessageSquareText },
+];
 
 const productModule = {
   label: "Products",

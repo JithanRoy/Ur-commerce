@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAppRouter } from "@/lib/navigation";
 import { Check, ShoppingCart, Zap } from "lucide-react";
-import { formatBDT } from "@urcommerce/api-client";
+import { formatBDT, roundedRating } from "@urcommerce/api-client";
 import type {
   ProductCard as ProductCardData,
   ProductCardVariantPreview,
@@ -21,6 +21,7 @@ import {
   useIdleSignInWarmup,
 } from "@/features/auth/lazy-sign-in-dialog";
 import { Button } from "@/components/ui/button";
+import { Stars } from "@/components/ui/stars";
 import { cn } from "@/lib/utils";
 
 const LOW_STOCK_THRESHOLD = 5;
@@ -182,6 +183,17 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           <h3 className="line-clamp-2 text-sm font-medium leading-snug transition-colors group-hover:text-primary">
             {product.name}
           </h3>
+
+          {product.ratingCount > 0 ? (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Stars value={product.avgRating} size="xs" decorative />
+              <span className="sr-only">
+                Rated {roundedRating(product.avgRating)} out of 5 from
+              </span>
+              <span className="tabular-nums">({product.ratingCount})</span>
+              <span className="sr-only">reviews</span>
+            </p>
+          ) : null}
 
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-1">
             <span className="text-base font-semibold tracking-tight">

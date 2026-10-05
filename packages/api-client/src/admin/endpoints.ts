@@ -12,6 +12,11 @@ import type {
   CreateSectionInput,
   UpdateSectionInput,
 } from "../sections";
+import type {
+  AdminReview,
+  AdminReviewQuery,
+  ModerationDecision,
+} from "../reviews";
 import type { Paginated } from "../types";
 import type {
   AdminBrand,
@@ -125,6 +130,12 @@ export function createAdminApi(client: ApiClient) {
         client.put<AdminHeroSlide[]>("/admin/hero/slides/order", { slideIds }),
       updateSettings: (input: UpdateHeroSettingsInput) =>
         client.patch<HeroSettings>("/admin/hero/settings", input),
+    },
+    reviews: {
+      list: (query: AdminReviewQuery = {}) =>
+        client.get<Paginated<AdminReview>>("/admin/reviews", { query }),
+      moderate: (id: string, status: ModerationDecision) =>
+        client.patch<AdminReview>(`/admin/reviews/${id}/status`, { status }),
     },
     sections: {
       list: () => client.get<AdminSection[]>("/admin/sections"),

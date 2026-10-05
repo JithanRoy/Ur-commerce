@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
 import { useOrder } from "@/api/orders";
+import { useAwaitingReviews } from "@/api/reviews";
 import { OrderStatusBadge, formatOrderDate } from "./order-status";
 import { OrderProgress } from "./order-progress";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,9 @@ import { CartSkeleton } from "@/components/ui/page-skeletons";
 
 export function OrderDetailClient({ orderId }: { orderId: string }) {
   const { data: order, isPending, error } = useOrder(orderId);
+  const { data: awaiting } = useAwaitingReviews(order?.status === "DELIVERED");
+  const slugAwaitingReview = (productId: string | null) =>
+    awaiting?.find((product) => product.id === productId)?.slug ?? null;
 
   if (isPending) {
     return <CartSkeleton label="Loading your order" />;
@@ -73,6 +77,15 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
                       {formatBDT(item.unitPrice, order.currency)} ×{" "}
                       {item.quantity}
                     </p>
+                    {slugAwaitingReview(item.productId) ? (
+                      <Link
+                        href={`/product/${slugAwaitingReview(item.productId)}#write-review`}
+                        className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                      >
+                        <Star className="size-3.5" aria-hidden />
+                        Rate this item
+                      </Link>
+                    ) : null}
                   </div>
                   <p className="shrink-0 font-medium tabular-nums">
                     {formatBDT(item.lineTotal, order.currency)}

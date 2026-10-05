@@ -3,6 +3,7 @@ import type {
   QueryKey,
   UseQueryOptions,
 } from "@tanstack/react-query";
+import type { ProductReviewQuery } from "@urcommerce/api-client";
 
 const cartRoot = ["cart"] as const;
 const ordersRoot = ["orders"] as const;
@@ -10,6 +11,7 @@ const addressesRoot = ["addresses"] as const;
 const checkoutRoot = ["checkout"] as const;
 const productsRoot = ["products"] as const;
 const profileRoot = ["profile"] as const;
+const reviewsRoot = ["reviews"] as const;
 
 export const queryKeys = {
   cart: {
@@ -24,6 +26,16 @@ export const queryKeys = {
   addresses: {
     all: addressesRoot,
     list: () => addressesRoot,
+  },
+  reviews: {
+    all: reviewsRoot,
+    forProduct: (slug: string, query: ProductReviewQuery) =>
+      [...reviewsRoot, "product", slug, query] as const,
+    productAll: (slug: string) => [...reviewsRoot, "product", slug] as const,
+    eligibility: (productId: string) =>
+      [...reviewsRoot, "eligibility", productId] as const,
+    awaiting: () => [...reviewsRoot, "awaiting"] as const,
+    mine: (page: number) => [...reviewsRoot, "mine", page] as const,
   },
   profile: {
     all: profileRoot,

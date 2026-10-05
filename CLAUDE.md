@@ -78,8 +78,6 @@ No backend exists for them. Do not mock them, do not stub screens for them.
 See `docs/frontend/08-backend-gaps.md`.
 
 - Admin dashboard, customer management, settings/branding, image upload
-- Reviews and star ratings — `avgRating` is never recomputed; suppress ratings
-  entirely rather than render a stale 0
 - Online payment — COD only; build the payment step as a data-driven radio
   group so a gateway is configuration later
 - Customer-facing order cancellation, coupons/promo codes
