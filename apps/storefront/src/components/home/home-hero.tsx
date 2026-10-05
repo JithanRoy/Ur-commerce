@@ -6,10 +6,12 @@ export function HomeHero({
   hero,
   storeName,
   tagline,
+  brandsEnabled = true,
 }: {
   hero: Hero | null;
   storeName: string;
   tagline?: string | null;
+  brandsEnabled?: boolean;
 }) {
   if (hero?.style === "OFF") return null;
 
@@ -18,6 +20,7 @@ export function HomeHero({
       content={hero?.static ?? null}
       storeName={storeName}
       tagline={tagline}
+      brandsEnabled={brandsEnabled}
     />
   );
   if (hero?.style !== "CAROUSEL" || !hero.slides.length) return fallback;

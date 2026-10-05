@@ -207,6 +207,7 @@ export type StoreSettings = {
   locale: string;
   supportEmail: string | null;
   supportPhone: string | null;
+  brandsEnabled: boolean;
   theme: {
     primaryColor: string;
     accentColor: string;
@@ -226,4 +227,5 @@ export type UpdateStoreSettingsInput = {
   accentColor?: string;
   supportEmail?: string | null;
   supportPhone?: string | null;
+  brandsEnabled?: boolean;
 };

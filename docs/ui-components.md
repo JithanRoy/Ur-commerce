@@ -113,6 +113,23 @@ import { Input, Checkbox } from "@/components/ui/input";
 - The only native controls left are the hidden `type="file"` inputs inside the
   uploaders and the colour swatch picker.
 
+## Dialog (storefront)
+
+`components/ui/dialog.tsx` is the one modal shell: portal to `body`, backdrop,
+Escape and backdrop click to close, scroll lock, focus moved in and restored
+on close, and a close button. Bottom sheet on phones, centred from `sm`.
+
+```tsx
+<Dialog onClose={close} labelledBy="my-title" className="max-w-lg">
+  <h2 id="my-title">…</h2>
+</Dialog>
+```
+
+Pass `label` instead of `labelledBy` when there is no visible heading yet.
+Used by quick-add and the review dialog. Keep the dialog mounted in a stable
+spot in the tree; rendering it inside a branch that flips when its own save
+refetches data remounts it and loses its state.
+
 ## Image upload (admin)
 
 - `ImageField`: one image, such as a brand logo, category banner or store

@@ -1,4 +1,5 @@
 import type { Paisa } from "../money";
+import type { ReviewStatus } from "../reviews";
 
 export type CartLineOption = {
   name: string;
@@ -120,7 +121,19 @@ export type OrderItem = {
   lineTotal: Paisa;
   productId: string | null;
   variantId: string | null;
+  review?: OrderLineReview;
 };
+
+export type OrderLineReview =
+  | { state: "NOT_DELIVERED" }
+  | { state: "UNAVAILABLE" }
+  | { state: "AVAILABLE" }
+  | {
+      state: "REVIEWED";
+      reviewId: string;
+      rating: number;
+      status: ReviewStatus;
+    };
 
 export type OrderTimelineEntry = {
   status: OrderStatus;
@@ -148,5 +161,6 @@ export type Order = {
   timeline: OrderTimelineEntry[];
   cancelReason: string | null;
   items: OrderItem[];
+  reviewableCount?: number;
   shippingAddress: ShippingAddressSnapshot;
 };

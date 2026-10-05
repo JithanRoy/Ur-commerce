@@ -3,14 +3,13 @@ import { EmptyStorefront } from "@/components/home/empty-storefront";
 import { StorefrontUnavailable } from "@/components/home/storefront-unavailable";
 import { SectionRenderer } from "@/components/home/section-renderer";
 import { api } from "@/lib/api";
-import { loadStoreTheme } from "@/lib/load-store";
+import { brandsEnabledFor, loadStoreTheme } from "@/lib/load-store";
 import type { HomeResponse } from "@urcommerce/api-client";
 
 export const revalidate = 60;
 
 type HomeState =
-  | { status: "loaded"; home: HomeResponse }
-  | { status: "unavailable" };
+  { status: "loaded"; home: HomeResponse } | { status: "unavailable" };
 
 async function loadHome(): Promise<HomeState> {
   try {
@@ -22,7 +21,10 @@ async function loadHome(): Promise<HomeState> {
 }
 
 export default async function HomePage() {
-  const [state, { theme }] = await Promise.all([loadHome(), loadStoreTheme()]);
+  const [state, { store, theme }] = await Promise.all([
+    loadHome(),
+    loadStoreTheme(),
+  ]);
 
   return (
     <main>
@@ -30,6 +32,7 @@ export default async function HomePage() {
         hero={state.status === "loaded" ? state.home.hero : null}
         storeName={theme.name}
         tagline={theme.tagline}
+        brandsEnabled={brandsEnabledFor(store)}
       />
       {state.status === "unavailable" ? (
         <StorefrontUnavailable />

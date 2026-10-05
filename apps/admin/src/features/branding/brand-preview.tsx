@@ -40,12 +40,14 @@ export function BrandPreview({
   logoUrl,
   primaryColor,
   accentColor,
+  brandsEnabled = true,
 }: {
   storeName: string;
   tagline: string;
   logoUrl: string;
   primaryColor: string;
   accentColor: string;
+  brandsEnabled?: boolean;
 }) {
   const onPrimary = readableTextOn(primaryColor);
   const accentWash = tint(accentColor, 0.86);
@@ -72,7 +74,7 @@ export function BrandPreview({
           )}
           <span className="ml-auto flex gap-3 text-[0.7rem] text-neutral-400">
             <span>Shop</span>
-            <span>Brands</span>
+            {brandsEnabled ? <span>Brands</span> : null}
           </span>
         </div>
 

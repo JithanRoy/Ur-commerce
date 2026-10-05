@@ -21,6 +21,14 @@ const columns = [
   },
 ];
 
+function visibleColumns(store: StoreProfile | null | undefined) {
+  if (store?.brandsEnabled !== false) return columns;
+  return columns.map((column) => ({
+    ...column,
+    links: column.links.filter((link) => link.href !== "/brand"),
+  }));
+}
+
 export function SiteFooter({
   storeName,
   store,
@@ -41,7 +49,7 @@ export function SiteFooter({
           </p>
         </div>
 
-        {columns.map((column) => (
+        {visibleColumns(store).map((column) => (
           <div key={column.heading}>
             <h2 className="text-sm font-medium">{column.heading}</h2>
             <ul className="mt-3 space-y-2">

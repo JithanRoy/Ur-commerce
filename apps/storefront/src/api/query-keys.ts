@@ -36,6 +36,8 @@ export const queryKeys = {
       [...reviewsRoot, "eligibility", productId] as const,
     awaiting: () => [...reviewsRoot, "awaiting"] as const,
     mine: (page: number) => [...reviewsRoot, "mine", page] as const,
+    summary: () => [...reviewsRoot, "summary"] as const,
+    prompt: () => [...reviewsRoot, "prompt"] as const,
   },
   profile: {
     all: profileRoot,
@@ -45,6 +47,8 @@ export const queryKeys = {
   products: {
     all: productsRoot,
     detail: (slug: string) => [...productsRoot, slug] as const,
+    slugForId: (productId: string) =>
+      [...productsRoot, "slug-for-id", productId] as const,
   },
   checkout: {
     all: checkoutRoot,

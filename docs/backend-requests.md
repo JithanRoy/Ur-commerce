@@ -80,6 +80,80 @@ admin login will get a "Forgot password?" screen.
 
 ---
 
+## 5. 🟠 Customers cannot attach photos to a review
+
+Business request (2026-10-05): a customer reviewing a delivered product should
+be able to add photos. Nothing on the backend supports it yet:
+
+- `Review` has no images relation; `POST /reviews` and `PATCH /reviews/:id`
+  accept only `productId`, `rating`, `title`, `body`.
+- Every upload route is under `/admin/uploads/*`, so a customer token cannot
+  get an upload ticket.
+
+```bash
+curl -s localhost:3002/api/docs-json | jq -r '.paths|keys[]' | grep -i upload
+# /api/v1/admin/uploads/images
+# /api/v1/admin/uploads/product-images
+```
+
+### Request
+
+Reuse the existing ticket → PUT → attach flow with a customer-facing scope:
+
+1. `POST /reviews/uploads` (customer, delivered buyer of the product only):
+   `{ productId, contentType, size }` → `{ uploadUrl, objectKey, headers }`,
+   same limits as product images (JPEG/PNG/WebP, size cap).
+2. `POST /reviews` and `PATCH /reviews/:id` accept `imageObjectKeys: string[]`
+   (max ~4; `PATCH` replaces the set, `[]` clears it). Reject keys not issued
+   to this user.
+3. `PublicReview`, `OwnReview` and `AdminReview` carry
+   `images: [{ id, url, position }]`, ordered by `position`.
+4. Hiding a review (`REJECTED`) hides its photos from the public list; admin
+   moderation still shows them.
+
+The storefront form, gallery on each review and admin moderation thumbnails
+are ready to build as soon as this lands.
+
+---
+
+## 6. 🟠 Posted reviews must be final — the API still allows edit and delete
+
+Business rule (2026-10-05): once a customer posts a review they cannot change
+it. The storefront no longer offers Edit or Delete, but the API still accepts
+both, so the rule is only cosmetic until the backend enforces it:
+
+```bash
+# with a customer token for a review they wrote
+curl -s -X PATCH localhost:3002/api/v1/reviews/<id> -H "Authorization: Bearer $T" \
+  -H 'X-Tenant-Host: demo.localhost' -H 'Content-Type: application/json' -d '{"rating":1}'
+# → 200, rating changed
+```
+
+### Request
+
+Remove (or 403) customer `PATCH /reviews/:id` and `DELETE /reviews/:id`.
+Staff moderation (`PATCH /admin/reviews/:id/status`) stays. If support needs
+to remove a review, that belongs on the admin side.
+
+---
+
+## 7. 🟡 Order lines have no product slug — no link back to the product
+
+`OrderItem` carries `productId` but not `slug`, and the storefront's product
+route is `/product/:slug`. `GET /products/:id` returns 404, so there is no
+direct way to link an ordered item to its page. The storefront currently
+resolves it by searching `/products?search=<name>` and matching the id on
+click — it works for live products but is a workaround.
+
+### Request
+
+Add `productSlug: string | null` to each order line on `GET /orders` and
+`GET /orders/:id` (null when the product was deleted or is no longer
+active), and ideally `productImage: { url, alt } | null` for a thumbnail.
+Order lines stay snapshots; these two are links, not prices.
+
+---
+
 ## Delivered since the last version of this doc — thank you
 
 Verified 2026-10-03 against backend `b66bcb0`:

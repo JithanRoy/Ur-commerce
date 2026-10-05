@@ -30,3 +30,33 @@ export function usePrefetchProductDetail() {
   return (slug: string) =>
     void queryClient.prefetchQuery(productDetailQuery(slug));
 }
+
+const ORDERED_PRODUCT_SEARCH_LIMIT = 24;
+
+function orderedProductSlugQuery(productId: string, productName: string) {
+  return queryOptions({
+    queryKey: queryKeys.products.slugForId(productId),
+    queryFn: async () => {
+      const results = await shopApi.products({
+        search: productName,
+        limit: ORDERED_PRODUCT_SEARCH_LIMIT,
+      });
+      return (
+        results.items.find((product) => product.id === productId)?.slug ?? null
+      );
+    },
+    staleTime: Infinity,
+  });
+}
+
+export function useResolveOrderedProduct() {
+  const queryClient = useQueryClient();
+  return {
+    prefetch: (productId: string, productName: string) =>
+      void queryClient.prefetchQuery(
+        orderedProductSlugQuery(productId, productName),
+      ),
+    resolve: (productId: string, productName: string) =>
+      queryClient.fetchQuery(orderedProductSlugQuery(productId, productName)),
+  };
+}

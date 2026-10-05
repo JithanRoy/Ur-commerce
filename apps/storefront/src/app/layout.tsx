@@ -3,10 +3,11 @@ import { Fraunces, Outfit } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { themeStyle } from "@/lib/theme";
-import { loadStoreTheme } from "@/lib/load-store";
+import { brandsEnabledFor, loadStoreTheme } from "@/lib/load-store";
 import { Suspense } from "react";
 import { NavigationProgress } from "@/components/layout/navigation-progress";
 import { NetworkStatus } from "@/components/ui/network-status";
+import { ReviewPrompt } from "@/features/reviews/review-prompt";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -49,9 +50,14 @@ export default async function RootLayout({
             <NavigationProgress />
           </Suspense>
           <NetworkStatus />
-          <SiteHeader storeName={theme.name} logoUrl={store?.logoUrl ?? null} />
+          <SiteHeader
+            storeName={theme.name}
+            logoUrl={store?.logoUrl ?? null}
+            brandsEnabled={brandsEnabledFor(store)}
+          />
           <div className="flex-1">{children}</div>
           <SiteFooter storeName={theme.name} store={store} />
+          <ReviewPrompt />
         </Providers>
       </body>
     </html>

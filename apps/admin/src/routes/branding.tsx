@@ -8,6 +8,7 @@ import { useStoreSettings, useUpdateStoreSettings } from "@/api/settings";
 import { TextField } from "@/components/ui/field";
 import { ImageField } from "@/components/ui/image-field";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { ColourField } from "@/features/branding/colour-field";
@@ -29,6 +30,7 @@ type Draft = {
   accentColor: string;
   supportEmail: string;
   supportPhone: string;
+  brandsEnabled: boolean;
 };
 
 function toDraft(settings: StoreSettings): Draft {
@@ -41,6 +43,7 @@ function toDraft(settings: StoreSettings): Draft {
     accentColor: settings.theme.accentColor,
     supportEmail: settings.supportEmail ?? "",
     supportPhone: settings.supportPhone ?? "",
+    brandsEnabled: settings.brandsEnabled,
   };
 }
 
@@ -75,6 +78,9 @@ function buildPatch(
     accentColor: draft.accentColor.toUpperCase(),
     supportEmail: optional(draft.supportEmail),
     supportPhone: optional(draft.supportPhone),
+    ...(draft.brandsEnabled === saved.brandsEnabled
+      ? {}
+      : { brandsEnabled: draft.brandsEnabled }),
   };
 }
 
@@ -223,6 +229,17 @@ export function BrandingRoute() {
             />
           </section>
 
+          <section className="space-y-3">
+            <h2 className="text-sm font-medium">Storefront</h2>
+            <Checkbox
+              id="brandsEnabled"
+              checked={draft.brandsEnabled}
+              onChange={(event) => set("brandsEnabled", event.target.checked)}
+              label="Show brands on the storefront"
+              description="Turn off if you sell a single brand. Shoppers then see no brand pages, brand filter, brand strip or brand names. Your brands are kept, and switching back restores everything."
+            />
+          </section>
+
           {problem ? (
             <p role="alert" className="text-sm text-destructive">
               {problem}
@@ -267,6 +284,7 @@ export function BrandingRoute() {
           accentColor={
             HEX.test(draft.accentColor) ? draft.accentColor : "#EEEEEE"
           }
+          brandsEnabled={draft.brandsEnabled}
         />
       </div>
     </div>

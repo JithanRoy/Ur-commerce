@@ -9,14 +9,11 @@ import type {
   OwnReview,
   ReviewProductImage,
 } from "@urcommerce/api-client";
-import {
-  useAwaitingReviews,
-  useDeleteReview,
-  useMyReviews,
-} from "@/api/reviews";
+import { useAwaitingReviews, useMyReviews } from "@/api/reviews";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/ui/page-skeletons";
 import { Stars } from "@/components/ui/stars";
+import { cn } from "@/lib/utils";
 import { ReviewForm } from "./review-form";
 import { formatReviewDate } from "./review-item";
 
@@ -85,10 +82,6 @@ function AwaitingRow({ product }: { product: AwaitingReviewProduct }) {
 }
 
 function MyReviewRow({ review }: { review: OwnReview }) {
-  const [editing, setEditing] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const remove = useDeleteReview();
-
   return (
     <li className="py-4">
       <div className="flex gap-3">
@@ -105,86 +98,75 @@ function MyReviewRow({ review }: { review: OwnReview }) {
               {formatReviewDate(review.createdAt)}
             </span>
           </div>
-          {editing ? null : (
-            <>
-              <Stars value={review.rating} size="xs" className="mt-1" />
-              {review.title ? (
-                <p className="mt-1.5 text-sm font-semibold">{review.title}</p>
-              ) : null}
-              {review.body ? (
-                <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm text-muted-foreground">
-                  {review.body}
-                </p>
-              ) : null}
-              {review.status === "REJECTED" ? (
-                <p className="mt-2 inline-block rounded-md bg-muted px-2.5 py-1 text-xs text-muted-foreground">
-                  This review isn&apos;t shown on the store.
-                </p>
-              ) : null}
-              {confirming ? (
-                <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2.5">
-                  <p className="mr-auto text-sm">Delete this review?</p>
-                  <Button
-                    size="sm"
-                    shape="rounded"
-                    variant="destructive"
-                    loading={remove.isPending}
-                    loadingText="Deleting…"
-                    onClick={() => remove.mutate(review.id)}
-                  >
-                    Delete
-                  </Button>
-                  <Button
-                    size="sm"
-                    shape="rounded"
-                    variant="ghost"
-                    onClick={() => setConfirming(false)}
-                  >
-                    Keep
-                  </Button>
-                </div>
-              ) : (
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    size="xs"
-                    shape="rounded"
-                    variant="outline"
-                    onClick={() => setEditing(true)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="xs"
-                    shape="rounded"
-                    variant="destructive-ghost"
-                    onClick={() => setConfirming(true)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
+          <Stars value={review.rating} size="xs" className="mt-1" />
+          {review.title ? (
+            <p className="mt-1.5 text-sm font-semibold">{review.title}</p>
+          ) : null}
+          {review.body ? (
+            <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm text-muted-foreground">
+              {review.body}
+            </p>
+          ) : null}
+          {review.status === "REJECTED" ? (
+            <p className="mt-2 inline-block rounded-md bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+              This review isn&apos;t shown on the store.
+            </p>
+          ) : null}
         </div>
       </div>
-      {editing ? (
-        <div className="mt-4 rounded-xl border bg-muted/20 p-4">
-          <ReviewForm
-            productId={review.productId}
-            existing={review}
-            idPrefix={`edit-${review.id}`}
-            onSaved={() => setEditing(false)}
-            onCancel={() => setEditing(false)}
-          />
-        </div>
-      ) : null}
     </li>
+  );
+}
+
+type Tab = "to-review" | "reviewed";
+
+function TabButton({
+  id,
+  active,
+  count,
+  label,
+  onSelect,
+}: {
+  id: Tab;
+  active: boolean;
+  count: number;
+  label: string;
+  onSelect: (tab: Tab) => void;
+}) {
+  return (
+    <Button
+      role="tab"
+      id={`tab-${id}`}
+      aria-selected={active}
+      aria-controls={`panel-${id}`}
+      variant="ghost"
+      size="md"
+      shape="square"
+      onClick={() => onSelect(id)}
+      className={cn(
+        "-mb-px h-11 gap-2 border-b-2 px-1 hover:bg-transparent",
+        active
+          ? "border-primary text-foreground"
+          : "border-transparent text-muted-foreground",
+      )}
+    >
+      {label}
+      <span
+        className={cn(
+          "rounded-full px-2 py-0.5 text-xs tabular-nums",
+          active ? "bg-primary/10 text-primary" : "bg-muted",
+        )}
+      >
+        {count}
+      </span>
+    </Button>
   );
 }
 
 export function AccountReviews() {
   const awaiting = useAwaitingReviews();
   const mine = useMyReviews();
+  const [chosen, setChosen] = useState<Tab | null>(null);
 
   if (awaiting.isPending || mine.isPending) {
     return <ListSkeleton rows={3} label="Loading your reviews" />;
@@ -192,52 +174,70 @@ export function AccountReviews() {
 
   const toRate = awaiting.data ?? [];
   const written = mine.data?.items ?? [];
+  const writtenTotal = mine.data?.total ?? written.length;
+  const tab: Tab = chosen ?? (toRate.length > 0 ? "to-review" : "reviewed");
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
-      <section
-        aria-labelledby="awaiting-heading"
-        className="rounded-xl border bg-card p-5"
-      >
-        <h2 id="awaiting-heading" className="font-medium">
-          Rate your purchases
-        </h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Delivered items you haven&apos;t reviewed yet.
-        </p>
-        {toRate.length === 0 ? (
-          <p className="mt-6 rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-            You&apos;re all caught up.
-          </p>
-        ) : (
-          <ul className="mt-2 divide-y">
-            {toRate.map((product) => (
-              <AwaitingRow key={product.id} product={product} />
-            ))}
-          </ul>
-        )}
-      </section>
+    <div className="max-w-3xl">
+      <div role="tablist" aria-label="Reviews" className="flex gap-6 border-b">
+        <TabButton
+          id="to-review"
+          label="To review"
+          count={toRate.length}
+          active={tab === "to-review"}
+          onSelect={setChosen}
+        />
+        <TabButton
+          id="reviewed"
+          label="Reviewed"
+          count={writtenTotal}
+          active={tab === "reviewed"}
+          onSelect={setChosen}
+        />
+      </div>
 
-      <section
-        aria-labelledby="mine-heading"
-        className="rounded-xl border bg-card p-5"
-      >
-        <h2 id="mine-heading" className="font-medium">
-          Your reviews
-        </h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {written.length === 0
-            ? "Reviews you write appear here."
-            : `${mine.data?.total ?? written.length} review${(mine.data?.total ?? 0) === 1 ? "" : "s"}`}
-        </p>
-        {written.length === 0 ? null : (
-          <ul className="mt-2 divide-y">
-            {written.map((review) => (
-              <MyReviewRow key={review.id} review={review} />
-            ))}
-          </ul>
-        )}
-      </section>
+      {tab === "to-review" ? (
+        <section
+          id="panel-to-review"
+          role="tabpanel"
+          aria-labelledby="tab-to-review"
+          className="pt-2"
+        >
+          <h2 className="sr-only">Rate your purchases</h2>
+          {toRate.length === 0 ? (
+            <p className="mt-6 rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+              You&apos;re all caught up. Delivered items you haven&apos;t
+              reviewed show up here.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {toRate.map((product) => (
+                <AwaitingRow key={product.id} product={product} />
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : (
+        <section
+          id="panel-reviewed"
+          role="tabpanel"
+          aria-labelledby="tab-reviewed"
+          className="pt-2"
+        >
+          <h2 className="sr-only">Your reviews</h2>
+          {written.length === 0 ? (
+            <p className="mt-6 rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+              Reviews you write appear here.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {written.map((review) => (
+                <MyReviewRow key={review.id} review={review} />
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   );
 }

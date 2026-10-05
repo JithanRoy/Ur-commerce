@@ -5,8 +5,8 @@ import {
   REVIEW_BODY_MAX_LENGTH,
   REVIEW_TITLE_MAX_LENGTH,
 } from "@urcommerce/api-client";
-import type { OwnReview, UpdateReviewInput } from "@urcommerce/api-client";
-import { useCreateReview, useUpdateReview } from "@/api/reviews";
+import type { OwnReview } from "@urcommerce/api-client";
+import { useCreateReview } from "@/api/reviews";
 import { apiErrorMessage } from "@/api/use-api-mutation";
 import { Button } from "@/components/ui/button";
 import { TextField, TextareaField } from "@/components/ui/field";
@@ -14,46 +14,29 @@ import { StarInput } from "@/components/ui/star-input";
 
 type Draft = { rating: number; title: string; body: string };
 
-function draftOf(review: OwnReview | null): Draft {
-  return {
-    rating: review?.rating ?? 0,
-    title: review?.title ?? "",
-    body: review?.body ?? "",
-  };
-}
+const emptyDraft: Draft = { rating: 0, title: "", body: "" };
 
 function orNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed === "" ? null : trimmed;
 }
 
-function changesFrom(review: OwnReview, draft: Draft): UpdateReviewInput {
-  const changes: UpdateReviewInput = {};
-  if (draft.rating !== review.rating) changes.rating = draft.rating;
-  if (orNull(draft.title) !== review.title) changes.title = orNull(draft.title);
-  if (orNull(draft.body) !== review.body) changes.body = orNull(draft.body);
-  return changes;
-}
-
 export function ReviewForm({
   productId,
-  existing = null,
   onSaved,
   onCancel,
   idPrefix = "review",
 }: {
   productId: string;
-  existing?: OwnReview | null;
   onSaved: (review: OwnReview) => void;
   onCancel?: () => void;
   idPrefix?: string;
 }) {
-  const [draft, setDraft] = useState<Draft>(() => draftOf(existing));
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [ratingError, setRatingError] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const create = useCreateReview();
-  const update = useUpdateReview();
-  const pending = create.isPending || update.isPending;
+  const pending = create.isPending;
 
   const set = <K extends keyof Draft>(field: K, value: Draft[K]) => {
     setFailure(null);
@@ -68,15 +51,6 @@ export function ReviewForm({
     }
     setRatingError(null);
     try {
-      if (existing) {
-        const changes = changesFrom(existing, draft);
-        if (Object.keys(changes).length === 0) {
-          onCancel?.();
-          return;
-        }
-        onSaved(await update.mutateAsync({ id: existing.id, input: changes }));
-        return;
-      }
       onSaved(
         await create.mutateAsync({
           productId,
@@ -123,6 +97,9 @@ export function ReviewForm({
         onChange={(event) => set("body", event.target.value)}
         disabled={pending}
       />
+      <p className="text-xs text-muted-foreground">
+        Once posted, your review can&apos;t be edited or deleted.
+      </p>
       {failure ? (
         <p role="alert" className="text-sm text-destructive">
           {failure}
@@ -134,9 +111,9 @@ export function ReviewForm({
           size="md"
           shape="rounded"
           loading={pending}
-          loadingText={existing ? "Saving…" : "Posting…"}
+          loadingText="Posting…"
         >
-          {existing ? "Save changes" : "Post review"}
+          Post review
         </Button>
         {onCancel ? (
           <Button

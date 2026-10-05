@@ -17,11 +17,14 @@ import type { Profile } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
 import { useSignOut } from "@/api/auth";
 import { useProfile } from "@/api/profile";
+import { useReviewSummary } from "@/api/reviews";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppRouter } from "@/lib/navigation";
 import { useDismissable } from "@/lib/use-dismissable";
 import { cn } from "@/lib/utils";
+import { CountBadge } from "./account-nav";
 
 const links = [
   { href: "/account", label: "Your account", icon: UserRound },
@@ -30,37 +33,8 @@ const links = [
   { href: "/account/reviews", label: "Your reviews", icon: Star },
 ];
 
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-}
-
 function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
-}
-
-function Avatar({
-  profile,
-  size = "sm",
-}: {
-  profile: Profile | undefined;
-  size?: "sm" | "lg";
-}) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full bg-primary/12 font-semibold text-primary",
-        size === "sm" ? "size-7 text-[11px]" : "size-10 text-sm",
-      )}
-    >
-      {profile ? initials(profile.name) : <User className="size-3.5" />}
-    </span>
-  );
 }
 
 function SignedOutNotice({ message }: { message: string }) {
@@ -96,7 +70,7 @@ function SignInLink() {
 function MenuHeader({ profile }: { profile: Profile | undefined }) {
   return (
     <div className="flex items-center gap-3 border-b px-4 py-3.5">
-      <Avatar profile={profile} size="lg" />
+      <Avatar name={profile?.name} size="lg" />
       {profile ? (
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{profile.name}</p>
@@ -145,6 +119,8 @@ export function AccountMenu() {
   const router = useAppRouter();
   const session = useAuth((state) => state.session);
   const { data: profile } = useProfile({ enabled: Boolean(session) });
+  const { data: reviewSummary } = useReviewSummary(Boolean(session));
+  const toReview = reviewSummary?.awaiting ?? 0;
   const { revokeThisDevice, revokeAllDevices, endLocalSession } = useSignOut();
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
@@ -209,7 +185,12 @@ export function AccountMenu() {
         variant="ghost"
         size="md"
         shape="pill"
-        aria-label={profile ? `Your account, ${profile.name}` : "Your account"}
+        aria-label={[
+          profile ? `Your account, ${profile.name}` : "Your account",
+          toReview > 0 ? `${toReview} to review` : null,
+        ]
+          .filter(Boolean)
+          .join(", ")}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
@@ -218,7 +199,15 @@ export function AccountMenu() {
           open && "bg-muted",
         )}
       >
-        <Avatar profile={profile} />
+        <span className="relative">
+          <Avatar name={profile?.name} />
+          {toReview > 0 ? (
+            <span
+              aria-hidden
+              className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-background bg-primary"
+            />
+          ) : null}
+        </span>
         <span className="hidden max-w-28 truncate text-sm font-medium sm:inline">
           {profile ? `Hi, ${firstName(profile.name)}` : "Account"}
         </span>
@@ -253,7 +242,10 @@ export function AccountMenu() {
                   className="size-4 text-muted-foreground"
                   aria-hidden
                 />
-                {link.label}
+                <span className="flex-1">{link.label}</span>
+                {link.href === "/account/reviews" && toReview > 0 ? (
+                  <CountBadge count={toReview} />
+                ) : null}
               </Link>
             ))}
           </div>

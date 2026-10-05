@@ -9,17 +9,11 @@ import type {
   CreateReviewInput,
   OwnReview,
   ProductReviewQuery,
-  UpdateReviewInput,
 } from "@urcommerce/api-client";
 import { reviewsApi } from "@/lib/browser-api";
 import { useAuth } from "@/stores/auth";
 import { queryKeys } from "./query-keys";
-import {
-  useApiMutation,
-  type ApiMutationOverrides,
-} from "./use-api-mutation";
-
-type UpdateReviewVariables = { id: string; input: UpdateReviewInput };
+import { useApiMutation, type ApiMutationOverrides } from "./use-api-mutation";
 
 export function productReviewsQuery(slug: string, query: ProductReviewQuery) {
   return queryOptions({
@@ -61,7 +55,39 @@ export function useMyReviews(page = 1) {
   });
 }
 
-const everyReviewQuery = [queryKeys.reviews.all];
+export function useReviewSummary(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.reviews.summary(),
+    queryFn: () => reviewsApi.summary(),
+    enabled,
+    retry: false,
+  });
+}
+
+export function useReviewPrompt(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.reviews.prompt(),
+    queryFn: () => reviewsApi.prompt(),
+    enabled,
+    retry: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useMarkPromptShown() {
+  return useApiMutation({
+    mutationFn: (productId: string) => reviewsApi.promptShown(productId),
+  });
+}
+
+export function useDismissPrompt() {
+  return useApiMutation({
+    mutationFn: (productId: string) => reviewsApi.dismissPrompt(productId),
+  });
+}
+
+const everyReviewQuery = [queryKeys.reviews.all, queryKeys.orders.all];
 
 export function useCreateReview(
   options: ApiMutationOverrides<OwnReview, CreateReviewInput> = {},
@@ -71,28 +97,5 @@ export function useCreateReview(
     awaitInvalidate: true,
     ...options,
     mutationFn: (input: CreateReviewInput) => reviewsApi.create(input),
-  });
-}
-
-export function useUpdateReview(
-  options: ApiMutationOverrides<OwnReview, UpdateReviewVariables> = {},
-) {
-  return useApiMutation({
-    invalidate: everyReviewQuery,
-    awaitInvalidate: true,
-    ...options,
-    mutationFn: ({ id, input }: UpdateReviewVariables) =>
-      reviewsApi.update(id, input),
-  });
-}
-
-export function useDeleteReview(
-  options: ApiMutationOverrides<{ deleted: true }, string> = {},
-) {
-  return useApiMutation({
-    invalidate: everyReviewQuery,
-    awaitInvalidate: true,
-    ...options,
-    mutationFn: (id: string) => reviewsApi.remove(id),
   });
 }

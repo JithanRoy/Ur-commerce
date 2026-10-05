@@ -51,9 +51,7 @@ export type OwnReview = PublicReview & {
 };
 
 export type ReviewIneligibility =
-  | "NOT_PURCHASED"
-  | "ALREADY_REVIEWED"
-  | "STAFF_ACCOUNT";
+  "NOT_PURCHASED" | "ALREADY_REVIEWED" | "STAFF_ACCOUNT";
 
 export type ReviewEligibility = {
   canReview: boolean;
@@ -66,6 +64,21 @@ export type AwaitingReviewProduct = {
   name: string;
   slug: string;
   images: ReviewProductImage[];
+};
+
+export type ReviewSummary = {
+  awaiting: number;
+  written: number;
+};
+
+export type ReviewPrompt = {
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    images: ReviewProductImage[];
+  };
+  order: { id: string; orderNumber: string; deliveredAt: string | null };
 };
 
 export type CreateReviewInput = {
@@ -110,6 +123,15 @@ export function createReviewsApi(client: ApiClient) {
     eligibility: (productId: string) =>
       client.get<ReviewEligibility>(`/reviews/eligibility/${productId}`),
     awaiting: () => client.get<AwaitingReviewProduct[]>("/reviews/awaiting"),
+    summary: () => client.get<ReviewSummary>("/reviews/summary"),
+    prompt: () =>
+      client
+        .get<{ prompt: ReviewPrompt | null }>("/reviews/prompt")
+        .then((result) => result.prompt),
+    promptShown: (productId: string) =>
+      client.post<unknown>(`/reviews/prompt/${productId}/shown`),
+    dismissPrompt: (productId: string) =>
+      client.post<unknown>(`/reviews/prompt/${productId}/dismiss`),
     mine: (query: { page?: number; limit?: number } = {}) =>
       client.get<Paginated<OwnReview>>("/reviews/mine", { query }),
     create: (input: CreateReviewInput) =>

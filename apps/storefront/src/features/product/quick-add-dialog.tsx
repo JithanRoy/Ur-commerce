@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ShoppingCart, X, Zap } from "lucide-react";
+import { Check, ShoppingCart, Zap } from "lucide-react";
 import { formatBDT, isApiError } from "@urcommerce/api-client";
 import type {
   ProductDetail,
@@ -13,6 +12,7 @@ import type {
 import { useCartMutations } from "@/api/cart";
 import { useProductDetail } from "@/api/products";
 import { Button, IconButton } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Radio } from "@/components/ui/input";
 import { LoadingRegion, Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -43,28 +43,6 @@ function stockNote(variant: ProductDetailVariant): string | null {
   if (variant.stock <= 0) return "Out of stock";
   if (variant.stock <= LOW_STOCK_THRESHOLD) return `Only ${variant.stock} left`;
   return null;
-}
-
-function useDialogBehaviour(onClose: () => void) {
-  const panel = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    panel.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
-    };
-  }, [onClose]);
-
-  return panel;
 }
 
 function VariantOptions({
@@ -343,7 +321,6 @@ export function QuickAddDialog({
   onClose: () => void;
   onAdded: () => void;
 }) {
-  const panel = useDialogBehaviour(onClose);
   const { data: product, isPending, isError } = useProductDetail(slug);
   const [added, setAdded] = useState(false);
 
@@ -352,52 +329,28 @@ export function QuickAddDialog({
     if (mode === "add") setAdded(true);
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto sm:items-center sm:p-4">
-      <button
-        type="button"
-        aria-label="Close"
-        tabIndex={-1}
-        onClick={onClose}
-        className="fixed inset-0 animate-fade-in bg-foreground/40 backdrop-blur-[2px]"
-      />
-
-      <div
-        ref={panel}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={product ? "quick-add-title" : undefined}
-        aria-label={product ? undefined : productName}
-        tabIndex={-1}
-        className="relative w-full max-w-md animate-fade-in rounded-t-2xl border bg-background p-5 shadow-xl outline-none sm:my-auto sm:rounded-2xl sm:p-6"
-      >
-        <IconButton
-          label="Close"
-          size="icon-sm"
-          onClick={onClose}
-          className="absolute right-3 top-3 text-muted-foreground"
-        >
-          <X aria-hidden />
-        </IconButton>
-
-        {added ? (
-          <AddedConfirmation onClose={onClose} />
-        ) : isPending ? (
-          <QuickAddSkeleton />
-        ) : isError || !product ? (
-          <div className="space-y-3 py-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              We could not load the options for {productName}.
-            </p>
-            <Button asChild variant="outline" shape="rounded">
-              <Link href={`/product/${slug}`}>Open the product page</Link>
-            </Button>
-          </div>
-        ) : (
-          <VariantChooser product={product} mode={mode} onAdded={handleAdded} />
-        )}
-      </div>
-    </div>,
-    document.body,
+  return (
+    <Dialog
+      onClose={onClose}
+      labelledBy={product ? "quick-add-title" : undefined}
+      label={productName}
+    >
+      {added ? (
+        <AddedConfirmation onClose={onClose} />
+      ) : isPending ? (
+        <QuickAddSkeleton />
+      ) : isError || !product ? (
+        <div className="space-y-3 py-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            We could not load the options for {productName}.
+          </p>
+          <Button asChild variant="outline" shape="rounded">
+            <Link href={`/product/${slug}`}>Open the product page</Link>
+          </Button>
+        </div>
+      ) : (
+        <VariantChooser product={product} mode={mode} onAdded={handleAdded} />
+      )}
+    </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { brandsEnabledFor, loadStoreTheme } from "@/lib/load-store";
 import type { StorefrontBrand } from "@urcommerce/api-client";
 import { storefront } from "@/lib/api";
 import { loadCatalogue } from "@/features/shop/load-catalogue";
@@ -34,8 +35,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function BrandPage({ params, searchParams }: Params) {
   const { slug } = await params;
-  const brand = await findBrand(slug);
-  if (!brand) notFound();
+  const [brand, { store }] = await Promise.all([
+    findBrand(slug),
+    loadStoreTheme(),
+  ]);
+  if (!brand || !brandsEnabledFor(store)) notFound();
 
   const query = { ...parseShopQuery(await searchParams), brands: [slug] };
   const data = await loadCatalogue(query);

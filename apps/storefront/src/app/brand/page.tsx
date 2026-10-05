@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { storefront } from "@/lib/api";
+import { brandsEnabledFor, loadStoreTheme } from "@/lib/load-store";
 
 export const metadata: Metadata = { title: "Brands" };
 
 export const revalidate = 60;
 
 export default async function BrandsPage() {
-  const brands = await storefront.brands().catch(() => null);
+  const [brands, { store }] = await Promise.all([
+    storefront.brands().catch(() => null),
+    loadStoreTheme(),
+  ]);
+  if (!brandsEnabledFor(store)) notFound();
 
   if (!brands) {
     return (

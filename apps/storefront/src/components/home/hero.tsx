@@ -49,10 +49,12 @@ export function StaticHero({
   content,
   storeName,
   tagline,
+  brandsEnabled = true,
 }: {
   content: StaticHeroContent | null;
   storeName: string;
   tagline?: string | null;
+  brandsEnabled?: boolean;
 }) {
   const [lead, accent] = splitHeadline(content?.headline ?? DEFAULT_HEADLINE);
   const primary = {
@@ -64,7 +66,9 @@ export function StaticHero({
     ? content.secondaryLabel && secondaryHref
       ? { label: content.secondaryLabel, href: secondaryHref }
       : null
-    : { label: "Browse brands", href: "/brand" };
+    : brandsEnabled
+      ? { label: "Browse brands", href: "/brand" }
+      : null;
   const badges = content?.badges ?? [];
   const imageUrl = content?.imageUrl ?? null;
 

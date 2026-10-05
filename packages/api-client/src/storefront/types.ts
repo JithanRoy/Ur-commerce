@@ -204,5 +204,6 @@ export type StoreProfile = {
   locale: string;
   supportEmail: string | null;
   supportPhone: string | null;
+  brandsEnabled: boolean;
   theme: StoreThemeColours;
 };

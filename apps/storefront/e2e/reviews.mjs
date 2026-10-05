@@ -123,13 +123,10 @@ try {
   ok(await page.getByRole("link", { name: /Rated .* out of 5 from \d+ review/ }).isVisible(), "rating line by the title updates");
   await shot("review-posted");
 
-  await panel.getByRole("button", { name: "Edit" }).click();
-  await panel.getByLabel(/^5 stars/).check({ force: true });
-  await panel.getByRole("button", { name: "Save changes" }).click();
-  await panel.getByRole("button", { name: "Edit" }).waitFor();
+  ok((await panel.getByRole("button", { name: /Edit|Delete/ }).count()) === 0, "posted review offers no edit or delete");
   const mine = await api("/reviews/mine", { token: shopperToken });
   const saved = mine.data.items.find((review) => review.productId === product.id);
-  ok(saved?.rating === 5 && saved.title === `Good fit ${RUN}`, "edit sends only the change and keeps the rest");
+  ok(saved?.rating === 4 && saved.title === `Good fit ${RUN}`, "review saved as posted");
 
   await api(`/admin/reviews/${saved.id}/status`, { method: "PATCH", token: ownerToken, body: { status: "REJECTED" } });
   await page.goto(`${B}/account/reviews`, { waitUntil: "networkidle" });
@@ -140,14 +137,14 @@ try {
   await api(`/admin/reviews/${saved.id}/status`, { method: "PATCH", token: ownerToken, body: { status: "APPROVED" } });
 
   await page.reload({ waitUntil: "networkidle" });
-  const row = page.locator("li").filter({ hasText: product.name }).filter({ has: page.getByRole("button", { name: "Delete" }) });
-  await row.getByRole("button", { name: "Delete" }).click();
-  await row.getByRole("button", { name: "Delete" }).last().click();
-  await page.getByRole("button", { name: "Rate it" }).first().waitFor();
-  ok(true, "deleting returns the product to “Rate your purchases”");
+  const row = page.locator("li").filter({ hasText: product.name }).first();
+  await row.waitFor();
+  ok((await row.getByRole("button", { name: /Edit|Delete/ }).count()) === 0, "account review list is read-only");
 
+  await api(`/reviews/${saved.id}`, { method: "DELETE", token: shopperToken });
+  await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Rate it" }).first().click();
-  ok(await page.getByRole("radiogroup").count() >= 0 && await page.getByText("Tap to rate").first().isVisible(), "inline review form opens from the account page");
+  ok(await page.getByText("Tap to rate").first().isVisible() && await page.getByText(/can't be edited or deleted/).first().isVisible(), "inline form opens and warns reviews are final");
 
   await page.goto(`${B}/shop?sort=top-rated`, { waitUntil: "networkidle" });
   ok(await page.getByRole("link", { name: "Top rated" }).isVisible(), "Top rated sort is offered");

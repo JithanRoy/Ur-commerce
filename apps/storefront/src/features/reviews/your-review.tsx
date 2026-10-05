@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { PenLine } from "lucide-react";
 import type { OwnReview } from "@urcommerce/api-client";
-import { useDeleteReview, useReviewEligibility } from "@/api/reviews";
+import { useReviewEligibility } from "@/api/reviews";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Stars } from "@/components/ui/stars";
@@ -22,16 +22,7 @@ function Panel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function OwnReviewSummary({
-  review,
-  onEdit,
-}: {
-  review: OwnReview;
-  onEdit: () => void;
-}) {
-  const remove = useDeleteReview();
-  const [confirming, setConfirming] = useState(false);
-
+function OwnReviewSummary({ review }: { review: OwnReview }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
@@ -51,43 +42,6 @@ function OwnReviewSummary({
           This review isn&apos;t shown on the store.
         </p>
       ) : null}
-      {confirming ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2.5">
-          <p className="mr-auto text-sm">Delete your review?</p>
-          <Button
-            size="sm"
-            shape="rounded"
-            variant="destructive"
-            loading={remove.isPending}
-            loadingText="Deleting…"
-            onClick={() => remove.mutate(review.id)}
-          >
-            Delete
-          </Button>
-          <Button
-            size="sm"
-            shape="rounded"
-            variant="ghost"
-            onClick={() => setConfirming(false)}
-          >
-            Keep
-          </Button>
-        </div>
-      ) : (
-        <div className="flex gap-2">
-          <Button size="sm" shape="rounded" variant="outline" onClick={onEdit}>
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            shape="rounded"
-            variant="destructive-ghost"
-            onClick={() => setConfirming(true)}
-          >
-            Delete
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
@@ -105,7 +59,6 @@ export function YourReview({
     isPending,
     isError,
   } = useReviewEligibility(productId);
-  const [editing, setEditing] = useState(false);
   const [justPosted, setJustPosted] = useState(false);
 
   if (!signedIn) {
@@ -144,7 +97,7 @@ export function YourReview({
   if (isError || !eligibility || eligibility.reason === "STAFF_ACCOUNT")
     return null;
 
-  if (eligibility.review && !editing) {
+  if (eligibility.review) {
     return (
       <Panel>
         {justPosted ? (
@@ -152,10 +105,7 @@ export function YourReview({
             Thanks — your review is live.
           </p>
         ) : null}
-        <OwnReviewSummary
-          review={eligibility.review}
-          onEdit={() => setEditing(true)}
-        />
+        <OwnReviewSummary review={eligibility.review} />
       </Panel>
     );
   }
@@ -175,17 +125,9 @@ export function YourReview({
     <Panel>
       <p className="mb-4 flex items-center gap-2 text-sm font-medium">
         <PenLine className="size-4 text-primary" aria-hidden />
-        {eligibility.review ? "Edit your review" : "Write a review"}
+        Write a review
       </p>
-      <ReviewForm
-        productId={productId}
-        existing={eligibility.review}
-        onSaved={() => {
-          setJustPosted(!eligibility.review);
-          setEditing(false);
-        }}
-        onCancel={eligibility.review ? () => setEditing(false) : undefined}
-      />
+      <ReviewForm productId={productId} onSaved={() => setJustPosted(true)} />
     </Panel>
   );
 }

@@ -16,10 +16,15 @@ const navigation = [
 export function SiteHeader({
   storeName,
   logoUrl,
+  brandsEnabled = true,
 }: {
   storeName: string;
   logoUrl?: string | null;
+  brandsEnabled?: boolean;
 }) {
+  const links = brandsEnabled
+    ? navigation
+    : navigation.filter((item) => item.href !== "/brand");
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
@@ -41,7 +46,7 @@ export function SiteHeader({
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
-          {navigation.map((item) => (
+          {links.map((item) => (
             <Link
               key={item.label}
               href={item.href}
