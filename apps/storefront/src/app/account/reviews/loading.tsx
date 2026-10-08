@@ -1,5 +1,5 @@
 import { ListSkeleton } from "@/components/ui/page-skeletons";
 
 export default function Loading() {
-  return <ListSkeleton label="Loading your orders" />;
+  return <ListSkeleton rows={3} label="Loading your reviews" />;
 }

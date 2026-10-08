@@ -119,7 +119,9 @@ export function ReviewPrompt() {
   const dismiss = useDismissPrompt();
   const [state, setState] = useState<"card" | "writing" | "closed">("card");
   const recorded = useRef<string | null>(null);
-  const quiet = isQuietPath(pathname);
+  const quiet =
+    isQuietPath(pathname) ||
+    (prompt ? pathname === `/product/${prompt.product.slug}` : false);
   const productId = prompt?.product.id ?? null;
   const visible = Boolean(prompt) && !quiet && state === "card";
 

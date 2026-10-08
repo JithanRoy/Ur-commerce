@@ -8,13 +8,14 @@ import { queryKeys, type QueryOverrides } from "./query-keys";
 
 const ORDER_PAGE_SIZE = 20;
 const ORDER_POLL_MS = 30_000;
+const ORDER_LIST_STALE_MS = 15_000;
 
 export function orderListQuery() {
   return queryOptions({
     queryKey: queryKeys.orders.list(),
     queryFn: () => checkoutApi.orders({ limit: ORDER_PAGE_SIZE }),
     retry: false,
-    staleTime: 0,
+    staleTime: ORDER_LIST_STALE_MS,
   });
 }
 
@@ -40,10 +41,7 @@ export function useOrders(
 
 export function useOrder(
   orderId: string,
-  options?: QueryOverrides<
-    Order,
-    ReturnType<typeof queryKeys.orders.detail>
-  >,
+  options?: QueryOverrides<Order, ReturnType<typeof queryKeys.orders.detail>>,
 ) {
   return useQuery({ ...orderDetailQuery(orderId), ...options });
 }

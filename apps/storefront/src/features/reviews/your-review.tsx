@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Stars } from "@/components/ui/stars";
 import { useAuth } from "@/stores/auth";
 import { ReviewForm } from "./review-form";
+import { ReviewPhotos } from "./review-photos";
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
@@ -37,6 +38,7 @@ function OwnReviewSummary({ review }: { review: OwnReview }) {
           {review.body}
         </p>
       ) : null}
+      <ReviewPhotos images={review.images ?? []} size="sm" />
       {review.status === "REJECTED" ? (
         <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
           This review isn&apos;t shown on the store.

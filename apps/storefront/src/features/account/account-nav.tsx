@@ -52,6 +52,7 @@ export function AccountNav() {
             <li key={section.href}>
               <Link
                 href={section.href}
+                prefetch
                 aria-current={current ? "page" : undefined}
                 className={cn(
                   "flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors",

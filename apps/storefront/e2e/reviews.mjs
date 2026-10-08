@@ -106,7 +106,11 @@ try {
   await panel.getByRole("button", { name: "Post review" }).click();
   ok(await panel.getByText("Choose from 1 to 5 stars.").isVisible(), "stars are required");
 
-  await panel.getByLabel(/^4 stars/).check({ force: true });
+  await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label")?.startsWith("1 star"));
+  ok(true, "a missing rating moves focus to the stars");
+  await page.keyboard.press("Space");
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("ArrowRight");
+  ok(await panel.getByLabel(/^4 stars/).isChecked(), "stars can be chosen with the keyboard");
   ok(await panel.getByText("Very good").isVisible(), "star choice is described in words");
   await panel.getByLabel("Headline").fill(`Good fit ${RUN}`);
   await panel.getByLabel("Your review").fill("Soft fabric.\nOrdered my usual size.");

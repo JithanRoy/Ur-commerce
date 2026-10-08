@@ -2,6 +2,7 @@ import { BadgeCheck } from "lucide-react";
 import type { PublicReview } from "@urcommerce/api-client";
 import { Avatar } from "@/components/ui/avatar";
 import { Stars } from "@/components/ui/stars";
+import { ReviewPhotos } from "./review-photos";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -48,6 +49,11 @@ export function ReviewItem({ review }: { review: PublicReview }) {
             {review.body}
           </p>
         ) : null}
+        <ReviewPhotos
+          images={review.images ?? []}
+          authorName={review.authorName}
+          className="mt-3"
+        />
         <p className="mt-2 text-xs text-muted-foreground">
           <time dateTime={review.createdAt}>
             {formatReviewDate(review.createdAt)}

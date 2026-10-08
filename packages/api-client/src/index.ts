@@ -35,6 +35,8 @@ export {
 export type * from "./profile";
 export {
   REVIEW_BODY_MAX_LENGTH,
+  REVIEW_IMAGE_MAX_BYTES,
+  REVIEW_MAX_IMAGES,
   REVIEW_MAX_RATING,
   REVIEW_MIN_RATING,
   REVIEW_SORTS,

@@ -1,10 +1,13 @@
 import type { ApiClient } from "./client";
+import type { UploadTicket } from "./admin/types";
 import type { Paginated } from "./types";
 
 export const REVIEW_MIN_RATING = 1;
 export const REVIEW_MAX_RATING = 5;
 export const REVIEW_TITLE_MAX_LENGTH = 120;
 export const REVIEW_BODY_MAX_LENGTH = 2000;
+export const REVIEW_MAX_IMAGES = 5;
+export const REVIEW_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const REVIEW_SORTS = ["newest", "highest", "lowest"] as const;
 export const REVIEW_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 
@@ -20,6 +23,15 @@ export type RatingSummary = {
   distribution: RatingDistribution;
 };
 
+export type ReviewImage = { url: string; position: number };
+
+export type OwnReviewImage = ReviewImage & { objectKey: string };
+
+export type ReviewImageUploadInput = {
+  contentType: string;
+  contentLength: number;
+};
+
 export type PublicReview = {
   id: string;
   authorName: string;
@@ -29,6 +41,7 @@ export type PublicReview = {
   isVerifiedPurchase: boolean;
   createdAt: string;
   updatedAt: string;
+  images: ReviewImage[];
 };
 
 export type ProductReviews = Paginated<PublicReview> & {
@@ -44,7 +57,8 @@ export type ProductReviewQuery = {
 
 export type ReviewProductImage = { url: string; alt: string | null };
 
-export type OwnReview = PublicReview & {
+export type OwnReview = Omit<PublicReview, "images"> & {
+  images: OwnReviewImage[];
   status: ReviewStatus;
   productId: string;
   product: { name: string; slug: string; images: ReviewProductImage[] };
@@ -86,6 +100,7 @@ export type CreateReviewInput = {
   rating: number;
   title?: string | null;
   body?: string | null;
+  imageObjectKeys?: string[];
 };
 
 export type UpdateReviewInput = {
@@ -94,7 +109,8 @@ export type UpdateReviewInput = {
   body?: string | null;
 };
 
-export type AdminReview = PublicReview & {
+export type AdminReview = Omit<PublicReview, "images"> & {
+  images: OwnReviewImage[];
   status: ReviewStatus;
   orderId: string;
   userId: string;
@@ -134,6 +150,8 @@ export function createReviewsApi(client: ApiClient) {
       client.post<unknown>(`/reviews/prompt/${productId}/dismiss`),
     mine: (query: { page?: number; limit?: number } = {}) =>
       client.get<Paginated<OwnReview>>("/reviews/mine", { query }),
+    imageUpload: (input: ReviewImageUploadInput) =>
+      client.post<UploadTicket>("/reviews/uploads", input),
     create: (input: CreateReviewInput) =>
       client.post<OwnReview>("/reviews", input),
     update: (id: string, input: UpdateReviewInput) =>

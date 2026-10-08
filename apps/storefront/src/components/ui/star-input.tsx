@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,12 +28,23 @@ export function StarInput({
   disabled?: boolean;
 }) {
   const name = useId();
+  const group = useRef<HTMLFieldSetElement>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const shown = hovered ?? value;
   const caption = STAR_LABELS[shown as keyof typeof STAR_LABELS];
 
+  useEffect(() => {
+    if (!error || !group.current) return;
+    group.current.scrollIntoView({ block: "center", behavior: "smooth" });
+    group.current.querySelector("input")?.focus({ preventScroll: true });
+  }, [error]);
+
   return (
-    <fieldset disabled={disabled} aria-invalid={error ? true : undefined}>
+    <fieldset
+      ref={group}
+      disabled={disabled}
+      aria-invalid={error ? true : undefined}
+    >
       <legend className="mb-1.5 text-sm font-medium">{label}</legend>
       <div
         className="flex items-center gap-3"

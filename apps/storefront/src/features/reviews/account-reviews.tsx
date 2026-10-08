@@ -15,6 +15,7 @@ import { ListSkeleton } from "@/components/ui/page-skeletons";
 import { Stars } from "@/components/ui/stars";
 import { cn } from "@/lib/utils";
 import { ReviewForm } from "./review-form";
+import { ReviewPhotos } from "./review-photos";
 import { formatReviewDate } from "./review-item";
 
 function Thumb({
@@ -107,6 +108,12 @@ function MyReviewRow({ review }: { review: OwnReview }) {
               {review.body}
             </p>
           ) : null}
+          <ReviewPhotos
+            images={review.images ?? []}
+
+            size="sm"
+            className="mt-2"
+          />
           {review.status === "REJECTED" ? (
             <p className="mt-2 inline-block rounded-md bg-muted px-2.5 py-1 text-xs text-muted-foreground">
               This review isn&apos;t shown on the store.

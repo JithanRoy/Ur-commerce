@@ -4,7 +4,7 @@ The backend lives in a separate repo and is changed by its own sessions. This
 file records which backend commit the frontend has been built against, so
 new backend work is never missed.
 
-Last synced backend commit: `a1ab047`
+Last synced backend commit: `e5dfdd2`
 
 ## How a sync works
 
@@ -38,3 +38,4 @@ every Claude session in this repo.
 | 2026-10-05 | `a1ab047` | Brands switch committed; matches what was built against it — no further work. Uncommitted backend work noted, not built: review prompts (`GET /reviews/prompt`, `POST /reviews/prompt/:productId/shown` and `/dismiss`, `GET /reviews/summary`). Review photos requested — no backend support yet (`Review` has no images; uploads are admin-only). |
 | 2026-10-05 | `a1ab047` + uncommitted | Reviews from orders and profile, built against **uncommitted** backend work (user asked) — recheck once committed: per-line `items[].review` state and `reviewableCount` on `/orders` → "Write a review" / "You rated ★ · Edit review" on the orders list and order detail, opening a review dialog in place; `GET /reviews/summary` → count badges on the account nav, navbar avatar and account menu, plus a "waiting for your review" nudge; `/account/reviews` now "To review / Reviewed" tabs; `/reviews/prompt` (+ `shown`, `dismiss`) → a non-blocking post-delivery card (not a redirect), quiet on cart/checkout/auth. E2E `storefront/e2e/order-reviews.mjs`. |
 | 2026-10-05 | `a1ab047` + uncommitted | Reviews are final once posted: storefront removed Edit/Delete everywhere (product page, account reviews, orders, dialog); form warns before posting. API still allows customer PATCH/DELETE — requested in `backend-requests.md` #6. Order lines now link to the product (resolved via search by name + id match until `productSlug` lands — request #7). |
+| 2026-10-08 | `e5dfdd2` | Review state on order lines, `reviewableCount`, `/reviews/summary` and `/reviews/prompt` now committed — matches what was built; `order-reviews.mjs` passes against it. **Review photos** built: picker in the review form (up to 5, previews, retry/remove, client-side shrink to ≤1600px JPEG over 1 MB, server errors shown verbatim), thumbnails + viewer on the product page, account reviews and your-review panel, thumbnails on admin moderation. Photos are set only when posting (reviews are final in the UI). Uncommitted backend work noted, not built: default homepage sections trigger + RLS on `StorefrontSection` (no frontend change needed). E2E `storefront/e2e/review-photos.mjs`. |

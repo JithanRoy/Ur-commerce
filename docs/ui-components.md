@@ -130,6 +130,18 @@ Used by quick-add and the review dialog. Keep the dialog mounted in a stable
 spot in the tree; rendering it inside a branch that flips when its own save
 refetches data remounts it and loses its state.
 
+## Avatar and FileTrigger (storefront)
+
+`components/ui/avatar.tsx` — initials in a tinted circle; `name` (null shows
+a person icon) and `size` `sm` · `md` · `lg`. Used by the account menu and
+each review.
+
+`components/ui/file-trigger.tsx` — a label that opens the file picker, with
+the real `<input type="file">` visually hidden but focusable. Props: `accept`,
+`multiple`, `disabled`, `label` (the input's accessible name), `onFiles`.
+Style it through `className`; the input value is reset after each pick so the
+same file can be chosen again.
+
 ## Image upload (admin)
 
 - `ImageField`: one image, such as a brand logo, category banner or store

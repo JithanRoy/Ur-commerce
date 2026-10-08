@@ -87,7 +87,29 @@ export function ReviewModerationCard({ review }: { review: AdminReview }) {
           {review.body}
         </p>
       ) : null}
-      {!review.title && !review.body ? (
+      {review.images.length > 0 ? (
+        <ul aria-label="Customer photos" className="mt-3 flex flex-wrap gap-2">
+          {review.images.map((image, index) => (
+            <li key={image.objectKey}>
+              <a
+                href={image.url}
+                target="_blank"
+                rel="noreferrer"
+                title={`Open photo ${index + 1} full size`}
+                className="block size-16 overflow-hidden rounded-md border bg-muted transition-opacity hover:opacity-85"
+              >
+                <img
+                  src={image.url}
+                  alt={`Customer photo ${index + 1}`}
+                  loading="lazy"
+                  className="size-full object-cover"
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {!review.title && !review.body && review.images.length === 0 ? (
         <p className="mt-3 text-sm italic text-muted-foreground">
           Stars only, no written review.
         </p>

@@ -11,6 +11,7 @@ import { apiErrorMessage } from "@/api/use-api-mutation";
 import { Button } from "@/components/ui/button";
 import { TextField, TextareaField } from "@/components/ui/field";
 import { StarInput } from "@/components/ui/star-input";
+import { PhotoPicker, useReviewPhotos } from "./photo-picker";
 
 type Draft = { rating: number; title: string; body: string };
 
@@ -36,6 +37,7 @@ export function ReviewForm({
   const [ratingError, setRatingError] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const create = useCreateReview();
+  const photos = useReviewPhotos();
   const pending = create.isPending;
 
   const set = <K extends keyof Draft>(field: K, value: Draft[K]) => {
@@ -50,6 +52,14 @@ export function ReviewForm({
       return;
     }
     setRatingError(null);
+    if (photos.uploading) {
+      setFailure("Wait for your photos to finish uploading.");
+      return;
+    }
+    if (photos.failed) {
+      setFailure("Retry or remove the photos that didn't upload.");
+      return;
+    }
     try {
       onSaved(
         await create.mutateAsync({
@@ -57,6 +67,9 @@ export function ReviewForm({
           rating: draft.rating,
           title: orNull(draft.title),
           body: orNull(draft.body),
+          ...(photos.objectKeys.length > 0
+            ? { imageObjectKeys: photos.objectKeys }
+            : {}),
         }),
       );
     } catch (cause) {
@@ -97,6 +110,7 @@ export function ReviewForm({
         onChange={(event) => set("body", event.target.value)}
         disabled={pending}
       />
+      <PhotoPicker photos={photos} disabled={pending} />
       <p className="text-xs text-muted-foreground">
         Once posted, your review can&apos;t be edited or deleted.
       </p>
@@ -110,8 +124,8 @@ export function ReviewForm({
           type="submit"
           size="md"
           shape="rounded"
-          loading={pending}
-          loadingText="Posting…"
+          loading={pending || photos.uploading}
+          loadingText={photos.uploading ? "Uploading photos…" : "Posting…"}
         >
           Post review
         </Button>
