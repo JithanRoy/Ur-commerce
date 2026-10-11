@@ -8,6 +8,7 @@ import {
   createProfileApi,
   createReviewsApi,
   createStorefrontApi,
+  localStoreHost,
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
 import { cartSessionToken } from "@/stores/cart-session";
@@ -19,7 +20,9 @@ const client = createApiClient({
   getCartSession: () => cartSessionToken(),
   devTenantHost:
     process.env.NODE_ENV !== "production"
-      ? process.env.NEXT_PUBLIC_DEV_TENANT_HOST
+      ? (localStoreHost(
+          typeof window === "undefined" ? null : window.location.host,
+        ) ?? process.env.NEXT_PUBLIC_DEV_TENANT_HOST)
       : undefined,
   onRefreshed: (accessToken, refreshToken) =>
     useAuth.getState().setTokens(accessToken, refreshToken),

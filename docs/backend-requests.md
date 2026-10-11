@@ -120,6 +120,30 @@ Order lines stay snapshots; these two are links, not prices.
 
 ---
 
+## 8. 🟡 Platform console sessions cannot be refreshed
+
+`POST /auth/refresh` looks the refresh token up by tenant, and platform
+owners have `tenantId = null`, so their refresh token from
+`POST /platform/auth/login` can never be used. The console therefore signs the
+operator out when the 15-minute access token expires, mid-task.
+
+### Request
+
+`POST /platform/auth/refresh` (and `/platform/auth/logout`) that accept
+platform-owner refresh tokens only, mirroring the tenant endpoints.
+
+---
+
+## 9. 🟡 Unknown hosts fall back to the demo store in development
+
+`GET /store` with `X-Tenant-Host: no-such-shop.localhost` returns the demo
+store's data. With the console creating real stores at
+`<subdomain>.localhost`, a typo or a cancelled store silently shows someone
+else's shop. A 404 ("store not found") for unknown hosts, even in
+development, would make that visible.
+
+---
+
 ## Delivered since the last version of this doc — thank you
 
 - **Review photos** — `POST /reviews/uploads` + `imageObjectKeys` (verified

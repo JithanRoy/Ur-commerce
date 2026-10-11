@@ -3,6 +3,7 @@ import {
   createApiClient,
   createAuthApi,
   createProfileApi,
+  localStoreHost,
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
 
@@ -11,7 +12,8 @@ const client = createApiClient({
   getAccessToken: () => useAuth.getState().session?.accessToken,
   getRefreshToken: () => useAuth.getState().session?.refreshToken,
   devTenantHost: import.meta.env.DEV
-    ? import.meta.env.VITE_DEV_TENANT_HOST
+    ? (localStoreHost(window.location.host) ??
+      import.meta.env.VITE_DEV_TENANT_HOST)
     : undefined,
   onRefreshed: (accessToken, refreshToken) =>
     useAuth.getState().setTokens(accessToken, refreshToken),

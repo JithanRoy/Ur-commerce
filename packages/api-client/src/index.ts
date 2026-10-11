@@ -93,3 +93,16 @@ export {
   sectionNeedsSource,
 } from "./sections";
 export type * from "./sections";
+export {
+  RESERVED_SUBDOMAINS,
+  STORE_OWNER_PASSWORD_MIN_LENGTH,
+  STORE_STATUSES,
+  STORE_STATUS_LABELS,
+  STORE_STATUS_TRANSITIONS,
+  SUBDOMAIN_MAX_LENGTH,
+  SUBDOMAIN_MIN_LENGTH,
+  SUBDOMAIN_PATTERN,
+  createPlatformApi,
+} from "./platform";
+export type * from "./platform";
+export { localStoreHost } from "./dev-host";

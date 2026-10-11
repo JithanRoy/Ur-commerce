@@ -1,0 +1,129 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  --console-hue: 235;
+
+  --background: oklch(0.985 0.003 var(--console-hue));
+  --foreground: oklch(0.21 0.02 var(--console-hue));
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.44 0.17 var(--console-hue));
+  --primary-foreground: oklch(0.99 0.005 var(--console-hue));
+
+  --secondary: oklch(0.96 0.012 var(--console-hue));
+  --secondary-foreground: oklch(0.33 0.09 var(--console-hue));
+
+  --muted: oklch(0.965 0.008 var(--console-hue));
+  --muted-foreground: oklch(0.52 0.025 var(--console-hue));
+
+  --accent: oklch(0.95 0.025 var(--console-hue));
+  --accent-foreground: oklch(0.36 0.12 var(--console-hue));
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.56 0.13 155);
+  --warning: oklch(0.72 0.15 75);
+
+  --sidebar: oklch(0.29 0.075 var(--console-hue));
+  --sidebar-foreground: oklch(0.97 0.01 var(--console-hue));
+  --sidebar-muted: oklch(0.72 0.04 var(--console-hue));
+  --sidebar-active: oklch(0.99 0.008 var(--console-hue));
+  --sidebar-active-foreground: oklch(0.32 0.13 var(--console-hue));
+
+  --border: oklch(0.905 0.008 var(--console-hue));
+  --input: oklch(0.9 0.01 var(--console-hue));
+  --ring: oklch(0.55 0.13 var(--console-hue));
+}
+
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@theme {
+  --animate-shimmer: shimmer 1.8s ease-in-out infinite;
+  --animate-fade-in: fade-in 240ms ease-out both;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

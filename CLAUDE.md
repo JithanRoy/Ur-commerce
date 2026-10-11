@@ -82,7 +82,6 @@ See `docs/frontend/08-backend-gaps.md`.
   group so a gateway is configuration later
 - Customer-facing order cancellation, coupons/promo codes
 - Size/colour facets — `/products/facets` returns categories and brands only
-- Platform console — zero endpoints exist
 
 **Verify against `http://localhost:3002/api/docs-json` before trusting this
 list** — the backend moves independently and several entries above have since
@@ -110,6 +109,22 @@ allowedHeaders: ["Content-Type", "Authorization", "X-Cart-Session", "X-Tenant-Ho
 | Swagger | `http://localhost:3002/api/docs` |
 | OpenAPI JSON | `http://localhost:3002/api/docs-json` |
 | Dev store | `demo.localhost` — send as `X-Tenant-Host` in development |
+
+## Platform console (`apps/platform`, port 5373)
+
+The SaaS operator's console: sign in as `PLATFORM_OWNER`
+(`POST /platform/auth/login`, no tenant header), list every store, create a
+store with its owner, change a store's status. It spans tenants, so it is its
+own app — never fold it into the store admin, whose session is bound to one
+store. Its session lives in `sessionStorage` only and cannot be refreshed
+(the refresh endpoint is tenant-bound), so it ends after the 15-minute access
+token. There is no public sign-up; owners are seeded with
+`npm run db:seed-platform` in the backend.
+
+In development both shop apps take the store from a `*.localhost` address
+(`rangdhonu.localhost:3100` / `:5273`), falling back to `demo.localhost`.
+The backend falls back to the demo store for unknown hosts in development,
+so an unknown subdomain silently shows the demo shop.
 
 Homepage sections are merchant-managed (admin `/sections`). `sections` can
 still be `[]` for a new store; that case is a real path, not an afterthought. Render sections by
