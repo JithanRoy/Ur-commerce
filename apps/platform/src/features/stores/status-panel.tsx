@@ -8,6 +8,8 @@ import type { PlatformStore, StoreStatus } from "@urcommerce/api-client";
 import { useChangeStoreStatus } from "@/api/stores";
 import { Button, type ButtonVariant } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
+import { StateMap } from "./state-map";
+import { StatusBadge } from "./status-badge";
 
 const effects: Record<StoreStatus, string> = {
   TRIAL: "Full access to the shop and the admin panel.",
@@ -127,15 +129,21 @@ export function StatusPanel({ store }: { store: PlatformStore }) {
       aria-labelledby="status-title"
       className="rounded-xl border bg-card p-6"
     >
-      <h2 id="status-title" className="font-semibold">
-        Status
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="status-title" className="font-semibold">
+          Status
+        </h2>
+        <StatusBadge status={store.status} />
+      </div>
+      <p className="mt-2 text-sm text-muted-foreground">
         {effects[store.status]}
       </p>
+      <div className="mt-5">
+        <StateMap current={store.status} />
+      </div>
 
       {transitions.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-5 text-sm text-muted-foreground">
           A cancelled store can't change status.
         </p>
       ) : pending ? (
@@ -145,7 +153,7 @@ export function StatusPanel({ store }: { store: PlatformStore }) {
           onCancel={() => setPending(null)}
         />
       ) : (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
           {transitions.map((next) => (
             <Button
               key={next}

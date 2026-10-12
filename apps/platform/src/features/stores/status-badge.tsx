@@ -1,23 +1,27 @@
 import { STORE_STATUS_LABELS } from "@urcommerce/api-client";
 import type { StoreStatus } from "@urcommerce/api-client";
 import { cn } from "@/lib/utils";
+import { statusDot } from "./status-style";
 
-const tone: Record<StoreStatus, string> = {
-  TRIAL: "bg-accent text-accent-foreground",
-  ACTIVE: "bg-success/12 text-success",
-  PAST_DUE: "bg-warning/15 text-foreground",
-  SUSPENDED: "bg-destructive/10 text-destructive",
-  CANCELLED: "bg-muted text-muted-foreground line-through",
-};
-
-export function StatusBadge({ status }: { status: StoreStatus }) {
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: StoreStatus;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        tone[status],
+        "inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-0.5 text-xs font-medium",
+        status === "CANCELLED" && "text-muted-foreground",
+        className,
       )}
     >
+      <span
+        aria-hidden
+        className={cn("size-1.5 rounded-full", statusDot[status])}
+      />
       {STORE_STATUS_LABELS[status]}
     </span>
   );

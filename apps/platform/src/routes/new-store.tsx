@@ -22,8 +22,8 @@ import {
   StoreHandover,
   type OwnerCredentials,
 } from "@/features/stores/store-handover";
+import { StorePreview } from "@/features/stores/store-preview";
 import { generatePassword } from "@/lib/passwords";
-import { displayHost, storefrontUrl } from "@/lib/store-urls";
 import { suggestSubdomain } from "@/lib/subdomain";
 
 const reserved: readonly string[] = RESERVED_SUBDOMAINS;
@@ -101,6 +101,8 @@ function NewStoreForm({
   const { errors, isSubmitting } = form.formState;
   const subdomain = useWatch({ control: form.control, name: "subdomain" });
   const status = useWatch({ control: form.control, name: "status" });
+  const name = useWatch({ control: form.control, name: "name" });
+  const ownerEmail = useWatch({ control: form.control, name: "ownerEmail" });
 
   const nameField = form.register("name", {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,117 +135,120 @@ function NewStoreForm({
     }
   }
 
-  const preview = subdomain
-    ? displayHost(storefrontUrl(subdomain.trim().toLowerCase()))
-    : null;
-
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      noValidate
-      className="max-w-2xl space-y-6"
-    >
-      <Section title="Store" description="The shop's name and its web address.">
-        <TextField
-          label="Store name"
-          placeholder="Rangdhonu Fashion"
-          error={errors.name?.message}
-          {...nameField}
-        />
-        <TextField
-          label="Subdomain"
-          placeholder="rangdhonu"
-          autoCapitalize="none"
-          spellCheck={false}
-          error={errors.subdomain?.message}
-          hint={
-            preview
-              ? `The shop will live at ${preview}`
-              : "Lowercase letters, numbers and hyphens."
-          }
-          {...form.register("subdomain", {
-            onChange: () => setSubdomainTouched(true),
-          })}
-        />
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium">Start as</legend>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Radio
-              value="TRIAL"
-              checked={status === "TRIAL"}
-              onChange={() => form.setValue("status", "TRIAL")}
-              label="Trial"
-              description="Full access while they try it out."
-              containerClassName="rounded-lg border p-3"
-            />
-            <Radio
-              value="ACTIVE"
-              checked={status === "ACTIVE"}
-              onChange={() => form.setValue("status", "ACTIVE")}
-              label="Active"
-              description="For a store that has already paid."
-              containerClassName="rounded-lg border p-3"
-            />
-          </div>
-        </fieldset>
-      </Section>
-
-      <Section
-        title="Owner"
-        description="The first person who can sign in to this store's admin. They can add staff later."
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        noValidate
+        className="space-y-6"
       >
-        <TextField
-          label="Owner name"
-          placeholder="Rafiqul Islam"
-          autoComplete="off"
-          error={errors.ownerName?.message}
-          {...form.register("ownerName")}
-        />
-        <TextField
-          label="Owner email"
-          type="email"
-          autoComplete="off"
-          placeholder="owner@example.com"
-          error={errors.ownerEmail?.message}
-          {...form.register("ownerEmail")}
-        />
-        <TextField
-          label="Temporary password"
-          type="password"
-          autoComplete="new-password"
-          error={errors.ownerPassword?.message}
-          hint="You'll see it once more after the store is created, to send to the owner."
-          action={
-            <Button
-              variant="link"
-              size="xs"
-              leading={<KeyRound aria-hidden />}
-              onClick={() =>
-                form.setValue("ownerPassword", generatePassword(), {
-                  shouldValidate: form.formState.isSubmitted,
-                })
-              }
-            >
-              Generate
-            </Button>
-          }
-          {...form.register("ownerPassword")}
-        />
-      </Section>
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="submit"
-          loading={isSubmitting}
-          loadingText="Creating store…"
+        <Section
+          title="Store"
+          description="The shop's name and its web address."
         >
-          Create store
-        </Button>
-        <Button asChild variant="ghost">
-          <Link to="/">Cancel</Link>
-        </Button>
-      </div>
-    </form>
+          <TextField
+            label="Store name"
+            placeholder="Rangdhonu Fashion"
+            error={errors.name?.message}
+            {...nameField}
+          />
+          <TextField
+            label="Subdomain"
+            placeholder="rangdhonu"
+            autoCapitalize="none"
+            spellCheck={false}
+            error={errors.subdomain?.message}
+            hint="Lowercase letters, numbers and hyphens. Suggested from the name."
+            {...form.register("subdomain", {
+              onChange: () => setSubdomainTouched(true),
+            })}
+          />
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium">Start as</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Radio
+                value="TRIAL"
+                checked={status === "TRIAL"}
+                onChange={() => form.setValue("status", "TRIAL")}
+                label="Trial"
+                description="Full access while they try it out."
+                containerClassName="rounded-lg border p-3"
+              />
+              <Radio
+                value="ACTIVE"
+                checked={status === "ACTIVE"}
+                onChange={() => form.setValue("status", "ACTIVE")}
+                label="Active"
+                description="For a store that has already paid."
+                containerClassName="rounded-lg border p-3"
+              />
+            </div>
+          </fieldset>
+        </Section>
+
+        <Section
+          title="Owner"
+          description="The first person who can sign in to this store's admin. They can add staff later."
+        >
+          <TextField
+            label="Owner name"
+            placeholder="Rafiqul Islam"
+            autoComplete="off"
+            error={errors.ownerName?.message}
+            {...form.register("ownerName")}
+          />
+          <TextField
+            label="Owner email"
+            type="email"
+            autoComplete="off"
+            placeholder="owner@example.com"
+            error={errors.ownerEmail?.message}
+            {...form.register("ownerEmail")}
+          />
+          <TextField
+            label="Temporary password"
+            type="password"
+            autoComplete="new-password"
+            error={errors.ownerPassword?.message}
+            hint="You'll see it once more after the store is created, to send to the owner."
+            action={
+              <Button
+                variant="link"
+                size="xs"
+                leading={<KeyRound aria-hidden />}
+                onClick={() =>
+                  form.setValue("ownerPassword", generatePassword(), {
+                    shouldValidate: form.formState.isSubmitted,
+                  })
+                }
+              >
+                Generate
+              </Button>
+            }
+            {...form.register("ownerPassword")}
+          />
+        </Section>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="submit"
+            loading={isSubmitting}
+            loadingText="Creating store…"
+          >
+            Create store
+          </Button>
+          <Button asChild variant="ghost">
+            <Link to="/">Cancel</Link>
+          </Button>
+        </div>
+      </form>
+      <StorePreview
+        name={name}
+        subdomain={subdomain}
+        status={status}
+        ownerEmail={ownerEmail}
+      />
+    </div>
   );
 }
 

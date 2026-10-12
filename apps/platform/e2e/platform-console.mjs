@@ -124,11 +124,13 @@ try {
   await shot("stores");
 
   if (!LIVE) {
-    await page.getByLabel("Filter by status").selectOption("SUSPENDED");
+    const strip = page.getByRole("region", { name: "Stores by status" });
+    await strip.getByRole("button", { name: /Suspended/ }).click();
     await page.waitForURL(/status=SUSPENDED/);
     await page.waitForFunction(() => document.querySelectorAll("tbody tr").length === 1, null, { timeout: 5000 }).catch(() => {});
     ok((await page.locator("tbody tr").count()) === 1 && (await page.locator("tbody tr").filter({ hasText: "Nokshi House" }).count()) === 1, "status filter narrows the list");
-    await page.getByLabel("Filter by status").selectOption("");
+    await strip.getByRole("button", { name: /Suspended/ }).click();
+    await page.waitForURL((url) => !url.search.includes("status="));
     await page.getByLabel("Search stores").fill("zzz-nothing");
     await page.getByText("No stores match").waitFor();
     ok(true, "search with no match says so");

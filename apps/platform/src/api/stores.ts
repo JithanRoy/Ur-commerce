@@ -1,5 +1,5 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { STORE_STATUS_LABELS } from "@urcommerce/api-client";
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
+import { STORE_STATUSES, STORE_STATUS_LABELS } from "@urcommerce/api-client";
 import type {
   CreateStoreInput,
   PlatformStore,
@@ -16,6 +16,29 @@ export function useStores(query: PlatformStoreQuery) {
     queryKey: queryKeys.stores.list(query),
     queryFn: () => platformApi.stores.list(query),
     placeholderData: keepPreviousData,
+  });
+}
+
+export type StoreCounts = Record<StoreStatus, number>;
+
+export function useStoreCounts(): StoreCounts | null {
+  return useQueries({
+    queries: STORE_STATUSES.map((status) => {
+      const query = { status, limit: 1 };
+      return {
+        queryKey: queryKeys.stores.list(query),
+        queryFn: () => platformApi.stores.list(query),
+      };
+    }),
+    combine: (results) => {
+      if (results.some((result) => !result.data)) return null;
+      return Object.fromEntries(
+        STORE_STATUSES.map((status, index) => [
+          status,
+          results[index]?.data?.total ?? 0,
+        ]),
+      ) as StoreCounts;
+    },
   });
 }
 

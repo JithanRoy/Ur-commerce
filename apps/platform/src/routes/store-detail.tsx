@@ -7,19 +7,35 @@ import { Button } from "@/components/ui/button";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { StatusBadge } from "@/features/stores/status-badge";
 import { StatusPanel } from "@/features/stores/status-panel";
+import { StoreMark } from "@/features/stores/store-mark";
 import { StoreDetailsCard } from "@/features/stores/store-details-card";
 import { StorePeople } from "@/features/stores/store-people";
-import { adminUrl, storefrontUrl } from "@/lib/store-urls";
+import { adminUrl, displayHost, storefrontUrl } from "@/lib/store-urls";
 
 function StoreDetail({ store }: { store: PlatformStore }) {
   const open = store.status !== "CANCELLED";
   return (
     <>
-      <header className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold tracking-tight">{store.name}</h1>
-        <StatusBadge status={store.status} />
+      <header className="mb-8 flex flex-wrap items-center gap-4">
+        <StoreMark
+          name={store.name}
+          subdomain={store.subdomain}
+          size="lg"
+          muted={!open}
+        />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {store.name}
+            </h1>
+            <StatusBadge status={store.status} />
+          </div>
+          <p className="mt-1 font-mono text-sm text-muted-foreground">
+            {displayHost(storefrontUrl(store.subdomain))}
+          </p>
+        </div>
         {open ? (
-          <div className="ml-auto flex gap-2">
+          <div className="flex gap-2 sm:ml-auto">
             <Button
               asChild
               variant="outline"

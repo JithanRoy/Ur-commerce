@@ -126,7 +126,7 @@ function ExternalAnchor({ href }: { href: string }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+      className="inline-flex items-center gap-1 font-mono text-primary hover:underline"
     >
       {displayHost(href)}
       <ExternalLink className="size-3.5" aria-hidden />
@@ -142,7 +142,9 @@ function DetailsView({ store }: { store: PlatformStore }) {
   return (
     <dl className="divide-y">
       <Detail label="Name">{store.name}</Detail>
-      <Detail label="Subdomain">{store.subdomain}</Detail>
+      <Detail label="Subdomain">
+        <span className="font-mono">{store.subdomain}</span>
+      </Detail>
       <Detail label="Storefront">
         <ExternalAnchor href={storefrontUrl(store.subdomain)} />
       </Detail>
@@ -156,7 +158,9 @@ function DetailsView({ store }: { store: PlatformStore }) {
       <Detail label="Created">{formatDateTime(store.createdAt)}</Detail>
       <Detail label="Last changed">{formatDateTime(store.updatedAt)}</Detail>
       <Detail label="Store ID">
-        <code className="text-xs">{store.id}</code>
+        <code className="font-mono text-xs text-muted-foreground">
+          {store.id}
+        </code>
       </Detail>
     </dl>
   );
