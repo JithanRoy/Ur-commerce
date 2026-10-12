@@ -7,11 +7,3 @@ export const statusDot: Record<StoreStatus, string> = {
   SUSPENDED: "bg-status-suspended",
   CANCELLED: "bg-status-cancelled",
 };
-
-export const statusText: Record<StoreStatus, string> = {
-  TRIAL: "text-status-trial",
-  ACTIVE: "text-status-active",
-  PAST_DUE: "text-status-past-due",
-  SUSPENDED: "text-status-suspended",
-  CANCELLED: "text-status-cancelled",
-};

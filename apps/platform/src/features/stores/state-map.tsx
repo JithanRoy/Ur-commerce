@@ -42,10 +42,8 @@ export function StateMap({ current }: { current: StoreStatus }) {
                 aria-hidden
                 className={cn(
                   "flex h-2 w-full rounded-full",
-                  reach === "current" && statusDot[status],
-                  reach === "next" &&
-                    cn("border-2 border-dashed", statusRing[status]),
-                  reach === "unreachable" && "bg-muted",
+                  reach === "unreachable" ? "bg-muted" : statusDot[status],
+                  reach === "next" && "opacity-35",
                 )}
               />
               <span

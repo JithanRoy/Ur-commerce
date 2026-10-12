@@ -43,7 +43,6 @@ export function ConsoleShell() {
           <nav aria-label="Console" className="flex items-center gap-1">
             <NavLink
               to="/"
-              end
               className={({ isActive }) =>
                 cn(
                   "flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors",

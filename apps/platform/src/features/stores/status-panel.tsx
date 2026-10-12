@@ -9,7 +9,6 @@ import { useChangeStoreStatus } from "@/api/stores";
 import { Button, type ButtonVariant } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
 import { StateMap } from "./state-map";
-import { StatusBadge } from "./status-badge";
 
 const effects: Record<StoreStatus, string> = {
   TRIAL: "Full access to the shop and the admin panel.",
@@ -133,7 +132,6 @@ export function StatusPanel({ store }: { store: PlatformStore }) {
         <h2 id="status-title" className="font-semibold">
           Status
         </h2>
-        <StatusBadge status={store.status} />
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
         {effects[store.status]}
