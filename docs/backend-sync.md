@@ -4,7 +4,7 @@ The backend lives in a separate repo and is changed by its own sessions. This
 file records which backend commit the frontend has been built against, so
 new backend work is never missed.
 
-Last synced backend commit: `4291b86`
+Last synced backend commit: `927c2a3`
 
 ## How a sync works
 
@@ -42,3 +42,4 @@ every Claude session in this repo.
 | 2026-10-10 | `3fabe52` | Setup docs, RLS on `StorefrontSection` and default homepage sections for new stores (migration applied; schema up to date) — no frontend work. Uncommitted backend work noted: Docker setup and a separate presign endpoint for object storage (browser-reachable upload URLs) — no frontend change expected; re-run `review-photos.mjs` once committed. |
 | 2026-10-11 | `4291b86` | `89bfe0b` Docker + separate presign endpoint: re-ran `review-photos.mjs` — storefront uploads still work. `4291b86` docs only: platform console API exists (`/platform/auth/login`, `/platform/tenants` list/create/get/status), UI missing — candidate frontend work. |
 | 2026-10-11 | `4291b86` | **Platform console built** (`apps/platform`, :5373): platform-owner sign-in, store list (search, status filter, pages, open storefront/admin), create store + owner with a one-time handover card, store detail, guarded status changes (cancel requires typing the subdomain). API client `createPlatformApi`. Dev shops now resolve from `*.localhost` in storefront and admin. Requests #8 (platform refresh) and #9 (unknown-host fallback) logged. E2E `apps/platform/e2e/platform-console.mjs` (live with `PLATFORM_OWNER_PASSWORD`, otherwise against a simulated backend). |
+| 2026-10-12 | `927c2a3` + uncommitted | `927c2a3` is README only. Built against **uncommitted** platform work (user asked) — recheck once committed, and restart the API (the running one did not serve the new routes yet): `PATCH /platform/tenants/:id` → "Edit details" on the store page (name, subdomain with an address-change warning, own domain, language `en`/`bn`, time zone; only changed fields sent); `GET /platform/tenants/:id/staff` → "Owners and staff" list (role, deactivated, two-step, password age); `POST …/staff/:userId/reset-password` → reset with a generated password shown once, devices signed out, 2FA reminder. `platform-console.mjs` extended (simulated backend). |

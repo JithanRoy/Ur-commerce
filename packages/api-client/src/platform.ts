@@ -78,6 +78,48 @@ export type CreateStoreInput = {
   status?: Extract<StoreStatus, "TRIAL" | "ACTIVE">;
 };
 
+export const STORE_LOCALES = ["en", "bn"] as const;
+
+export type StoreLocale = (typeof STORE_LOCALES)[number];
+
+export const STORE_LOCALE_LABELS: Record<StoreLocale, string> = {
+  en: "English",
+  bn: "বাংলা (Bangla)",
+};
+
+export type UpdateStoreInput = Partial<{
+  name: string;
+  subdomain: string;
+  customDomain: string | null;
+  locale: StoreLocale;
+  timezone: string;
+}>;
+
+export type StoreUserRole = "TENANT_OWNER" | "TENANT_STAFF";
+
+export const STORE_USER_ROLE_LABELS: Record<StoreUserRole, string> = {
+  TENANT_OWNER: "Owner",
+  TENANT_STAFF: "Staff",
+};
+
+export type StoreUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: StoreUserRole;
+  isActive: boolean;
+  twoFactorEnabled: boolean;
+  passwordChangedAt: string | null;
+  createdAt: string;
+};
+
+export type StoreUserPasswordReset = {
+  userId: string;
+  email: string;
+  role: StoreUserRole;
+  revokedSessions: number;
+};
+
 export type PlatformSession = {
   accessToken: string;
   refreshToken: string;
@@ -94,6 +136,15 @@ export function createPlatformApi(client: ApiClient) {
       list: (query: PlatformStoreQuery = {}) =>
         client.get<Paginated<PlatformStore>>("/platform/tenants", { query }),
       get: (id: string) => client.get<PlatformStore>(`/platform/tenants/${id}`),
+      update: (id: string, input: UpdateStoreInput) =>
+        client.patch<PlatformStore>(`/platform/tenants/${id}`, input),
+      staff: (id: string) =>
+        client.get<StoreUser[]>(`/platform/tenants/${id}/staff`),
+      resetPassword: (id: string, userId: string, newPassword: string) =>
+        client.post<StoreUserPasswordReset>(
+          `/platform/tenants/${id}/staff/${userId}/reset-password`,
+          { newPassword },
+        ),
       create: (input: CreateStoreInput) =>
         client.post<PlatformStore>("/platform/tenants", input),
       changeStatus: (id: string, status: StoreStatus) =>

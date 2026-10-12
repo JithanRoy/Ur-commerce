@@ -5,39 +5,11 @@ import type { PlatformStore } from "@urcommerce/api-client";
 import { useStore } from "@/api/stores";
 import { Button } from "@/components/ui/button";
 import { ErrorState, LoadingState } from "@/components/ui/states";
-import { formatDateTime } from "@/features/stores/date";
 import { StatusBadge } from "@/features/stores/status-badge";
 import { StatusPanel } from "@/features/stores/status-panel";
-import { adminUrl, displayHost, storefrontUrl } from "@/lib/store-urls";
-
-function Detail({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr] sm:gap-4">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="break-all text-sm">{children}</dd>
-    </div>
-  );
-}
-
-function ExternalAnchor({ href }: { href: string }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-    >
-      {displayHost(href)}
-      <ExternalLink className="size-3.5" aria-hidden />
-    </a>
-  );
-}
+import { StoreDetailsCard } from "@/features/stores/store-details-card";
+import { StorePeople } from "@/features/stores/store-people";
+import { adminUrl, storefrontUrl } from "@/lib/store-urls";
 
 function StoreDetail({ store }: { store: PlatformStore }) {
   const open = store.status !== "CANCELLED";
@@ -81,33 +53,10 @@ function StoreDetail({ store }: { store: PlatformStore }) {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <section
-          aria-label="Store details"
-          className="rounded-xl border bg-card px-6 py-3"
-        >
-          <dl className="divide-y">
-            <Detail label="Subdomain">{store.subdomain}</Detail>
-            <Detail label="Storefront">
-              <ExternalAnchor href={storefrontUrl(store.subdomain)} />
-            </Detail>
-            <Detail label="Admin">
-              <ExternalAnchor href={adminUrl(store.subdomain)} />
-            </Detail>
-            <Detail label="Custom domain">
-              {store.customDomain ?? "None"}
-            </Detail>
-            <Detail label="Currency">{store.currency}</Detail>
-            <Detail label="Locale">{store.locale}</Detail>
-            <Detail label="Time zone">{store.timezone}</Detail>
-            <Detail label="Created">{formatDateTime(store.createdAt)}</Detail>
-            <Detail label="Last changed">
-              {formatDateTime(store.updatedAt)}
-            </Detail>
-            <Detail label="Store ID">
-              <code className="text-xs">{store.id}</code>
-            </Detail>
-          </dl>
-        </section>
+        <div className="flex min-w-0 flex-col gap-6">
+          <StoreDetailsCard store={store} />
+          <StorePeople store={store} />
+        </div>
         <div className="lg:sticky lg:top-20 lg:self-start">
           <StatusPanel store={store} />
         </div>

@@ -29,8 +29,11 @@ const TRANSITIONS = {
 
 function storeRecord(name, subdomain, status = "ACTIVE") {
   const now = new Date().toISOString();
-  return { id: crypto.randomUUID(), name, subdomain, customDomain: null, status, currency: "BDT", locale: "en-BD", timezone: "Asia/Dhaka", createdAt: now, updatedAt: now };
+  return { id: crypto.randomUUID(), name, subdomain, customDomain: null, status, currency: "BDT", locale: "en", timezone: "Asia/Dhaka", createdAt: now, updatedAt: now };
 }
+
+const lastPatch = { body: null };
+const lastReset = { password: null };
 
 async function mockBackend(page) {
   const stores = [storeRecord("Demo Store", "demo"), storeRecord("Nokshi House", "nokshi", "SUSPENDED")];
@@ -57,12 +60,30 @@ async function mockBackend(page) {
     if (path === "/platform/tenants" && request.method() === "POST") {
       if (stores.some((s) => s.subdomain === body.subdomain)) return reply(route, 409, null, `Subdomain "${body.subdomain}" is already taken`);
       const store = storeRecord(body.name, body.subdomain, body.status ?? "TRIAL");
+      store.staff = [{ id: crypto.randomUUID(), name: body.ownerName, email: body.ownerEmail, role: "TENANT_OWNER", isActive: true, twoFactorEnabled: false, passwordChangedAt: null, createdAt: store.createdAt }];
       stores.unshift(store);
       return reply(route, 201, store);
+    }
+    const staffMatch = path.match(/^\/platform\/tenants\/([^/]+)\/staff(?:\/([^/]+)\/reset-password)?$/);
+    if (staffMatch) {
+      const owner = stores.find((s) => s.id === staffMatch[1]);
+      if (!owner) return reply(route, 404, null, "Store not found");
+      if (!staffMatch[2]) return reply(route, 200, owner.staff ?? []);
+      const person = (owner.staff ?? []).find((u) => u.id === staffMatch[2]);
+      if (!person) return reply(route, 404, null, "No owner or staff member with that id in this store");
+      person.passwordChangedAt = new Date().toISOString();
+      lastReset.password = body.newPassword;
+      return reply(route, 200, { userId: person.id, email: person.email, role: person.role, revokedSessions: 2 });
     }
     const match = path.match(/^\/platform\/tenants\/([^/]+)(\/status)?$/);
     const store = match && stores.find((s) => s.id === match[1]);
     if (!store) return reply(route, 404, null, "Store not found");
+    if (!match[2] && request.method() === "PATCH") {
+      if (body.subdomain && stores.some((s) => s.subdomain === body.subdomain && s.id !== store.id)) return reply(route, 409, null, `Subdomain "${body.subdomain}" is already taken`);
+      lastPatch.body = body;
+      Object.assign(store, body, { updatedAt: new Date().toISOString() });
+      return reply(route, 200, store);
+    }
     if (match[2]) {
       if (!TRANSITIONS[store.status].includes(body.status)) return reply(route, 400, null, "Not allowed");
       store.status = body.status;
@@ -146,6 +167,41 @@ try {
   const panel = page.getByRole("region", { name: "Status" });
   const badge = (label) => page.locator("main header").getByText(label, { exact: true });
   ok(await badge("Trial").isVisible(), "new store starts on trial");
+
+  const details = page.getByRole("region", { name: "Details" });
+  await details.getByRole("button", { name: "Edit details" }).click();
+  await details.getByLabel("Store name").fill(`E2E Shop ${RUN} Renamed`);
+  await details.getByLabel("Subdomain").fill(`${subdomain}-x`);
+  ok(await details.getByRole("note").getByText(`${subdomain}-x.localhost:3100`).isVisible(), "changing the subdomain warns that the old address stops working");
+  await details.getByLabel("Own domain").fill("https://bad domain");
+  await details.getByRole("button", { name: "Save details" }).click();
+  ok(await details.getByText(/Enter a domain like/).isVisible(), "a malformed own domain is refused");
+  await details.getByLabel("Own domain").fill("");
+  await details.getByLabel("Subdomain").fill(subdomain);
+  ok((await details.getByRole("note").count()) === 0, "no warning when the subdomain is unchanged");
+  await details.getByRole("button", { name: "Save details" }).click();
+  await page.getByRole("heading", { name: `E2E Shop ${RUN} Renamed`, exact: true }).waitFor();
+  ok(true, "renaming the store saves and updates the page");
+  if (!LIVE) ok(JSON.stringify(lastPatch.body) === JSON.stringify({ name: `E2E Shop ${RUN} Renamed` }), `only the changed field is sent (${JSON.stringify(lastPatch.body)})`);
+  await details.getByRole("button", { name: "Edit details" }).click();
+  await details.getByLabel("Store name").fill(`E2E Shop ${RUN}`);
+  await details.getByRole("button", { name: "Save details" }).click();
+  await page.getByRole("heading", { name: `E2E Shop ${RUN}`, exact: true }).waitFor();
+
+  const people = page.getByRole("region", { name: "Owners and staff" });
+  const ownerRow = people.locator("li").filter({ hasText: `owner-${RUN}@example.com` });
+  await ownerRow.waitFor();
+  ok(await ownerRow.getByText("Owner", { exact: true }).isVisible(), "the store's owner is listed");
+  await ownerRow.getByRole("button", { name: "Reset password" }).click();
+  const newPassword = await ownerRow.getByLabel("New password", { exact: true }).inputValue();
+  ok(newPassword.length >= 12, "a new password is suggested");
+  await ownerRow.getByRole("button", { name: "Reset password" }).click();
+  await ownerRow.getByText(`Password reset for E2E Owner`).waitFor();
+  ok(await ownerRow.getByText(newPassword).isVisible(), "the new password is shown once to send on");
+  if (!LIVE) ok(lastReset.password === newPassword && await ownerRow.getByText("Signed out of 2 devices").isVisible(), "the reset sends that password and reports the devices signed out");
+  await shot("people");
+  await ownerRow.getByRole("button", { name: "Done" }).click();
+  ok(await ownerRow.getByText(/Password changed/).isVisible(), "the list shows the password was just changed");
 
   await panel.getByRole("button", { name: "Suspend", exact: true }).click();
   ok(await panel.getByRole("alertdialog").getByText(/locked out of the admin panel/).isVisible(), "suspending explains what it does");

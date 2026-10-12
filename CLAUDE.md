@@ -114,7 +114,9 @@ allowedHeaders: ["Content-Type", "Authorization", "X-Cart-Session", "X-Tenant-Ho
 
 The SaaS operator's console: sign in as `PLATFORM_OWNER`
 (`POST /platform/auth/login`, no tenant header), list every store, create a
-store with its owner, change a store's status. It spans tenants, so it is its
+store with its owner, edit a store's details (name, subdomain, own domain,
+language, time zone), see its owners and staff and reset their passwords,
+and change a store's status. It spans tenants, so it is its
 own app — never fold it into the store admin, whose session is bound to one
 store. Its session lives in `sessionStorage` only and cannot be refreshed
 (the refresh endpoint is tenant-bound), so it ends after the 15-minute access

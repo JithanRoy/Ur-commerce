@@ -8,5 +8,6 @@ export const queryKeys = {
     list: (query: PlatformStoreQuery) =>
       [...storesRoot, "list", query] as const,
     detail: (id: string) => [...storesRoot, "detail", id] as const,
+    staff: (id: string) => [...storesRoot, "staff", id] as const,
   },
 };
