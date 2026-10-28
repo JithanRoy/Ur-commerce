@@ -6,7 +6,10 @@ import {
   localStoreHost,
 } from "@urcommerce/api-client";
 
-async function shopperTenantHeaders(): Promise<Record<string, string>> {
+export const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002/api/v1";
+
+export async function shopperTenantHeaders(): Promise<Record<string, string>> {
   const host = (await headers()).get("host");
 
   if (process.env.NODE_ENV !== "production") {
@@ -21,7 +24,7 @@ async function shopperTenantHeaders(): Promise<Record<string, string>> {
 }
 
 export const api = createApiClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002/api/v1",
+  baseUrl: apiBaseUrl,
   tenantHeaders: shopperTenantHeaders,
 });
 

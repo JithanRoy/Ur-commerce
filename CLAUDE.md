@@ -110,6 +110,22 @@ allowedHeaders: ["Content-Type", "Authorization", "X-Cart-Session", "X-Tenant-Ho
 | OpenAPI JSON | `http://localhost:3002/api/docs-json` |
 | Dev store | `demo.localhost` — send as `X-Tenant-Host` in development |
 
+## Hosting (Vercel)
+
+One Vercel project per app, Root Directory `apps/<app>`. In production the
+store comes from the address, so neither shop app calls the API from the
+browser: both proxy `/api/v1/*` through their own server, which adds
+`X-Tenant-Host` and `X-Internal-Key`.
+
+| App | Proxy | Environment |
+|---|---|---|
+| storefront | `src/app/api/v1/[...path]/route.ts`, store = the request's own host | `NEXT_PUBLIC_API_URL`, `INTERNAL_API_KEY` |
+| admin | `api/proxy.ts` via `vercel.json`, store = `STORE_HOST` (one store per deployment) | `VITE_API_URL`, `STORE_HOST`, `INTERNAL_API_KEY` |
+| platform | none, no tenant | `VITE_API_URL` |
+
+`INTERNAL_API_KEY` must equal the backend's. A store matches when its own
+domain equals the host, else when its subdomain equals the host's first label.
+
 ## Platform console (`apps/platform`, port 5373)
 
 The SaaS operator's console: sign in as `PLATFORM_OWNER`

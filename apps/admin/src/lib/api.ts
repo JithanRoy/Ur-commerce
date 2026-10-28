@@ -8,7 +8,9 @@ import {
 import { useAuth } from "@/stores/auth";
 
 const client = createApiClient({
-  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:3002/api/v1",
+  baseUrl: import.meta.env.DEV
+    ? (import.meta.env.VITE_API_URL ?? "http://localhost:3002/api/v1")
+    : "/api/v1",
   getAccessToken: () => useAuth.getState().session?.accessToken,
   getRefreshToken: () => useAuth.getState().session?.refreshToken,
   devTenantHost: import.meta.env.DEV

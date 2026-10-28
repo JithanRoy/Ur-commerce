@@ -8,22 +8,15 @@ import {
   createProfileApi,
   createReviewsApi,
   createStorefrontApi,
-  localStoreHost,
 } from "@urcommerce/api-client";
 import { useAuth } from "@/stores/auth";
 import { cartSessionToken } from "@/stores/cart-session";
 
 const client = createApiClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002/api/v1",
+  baseUrl: "/api/v1",
   getAccessToken: () => useAuth.getState().session?.accessToken,
   getRefreshToken: () => useAuth.getState().session?.refreshToken,
   getCartSession: () => cartSessionToken(),
-  devTenantHost:
-    process.env.NODE_ENV !== "production"
-      ? (localStoreHost(
-          typeof window === "undefined" ? null : window.location.host,
-        ) ?? process.env.NEXT_PUBLIC_DEV_TENANT_HOST)
-      : undefined,
   onRefreshed: (accessToken, refreshToken) =>
     useAuth.getState().setTokens(accessToken, refreshToken),
   onUnauthenticated: () => useAuth.getState().signOut(),
