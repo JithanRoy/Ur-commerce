@@ -123,6 +123,8 @@ browser: both proxy `/api/v1/*` through their own server, which adds
 | admin | `api/proxy.ts` via `vercel.json`, store = `STORE_HOST` (one store per deployment) | `VITE_API_URL`, `STORE_HOST`, `INTERNAL_API_KEY` |
 | platform | none, no tenant | `VITE_API_URL` |
 
+The admin's production build calls `/api/v1` on its own origin, which only the
+Vercel rewrite serves, so it cannot be hosted as a plain static site.
 `INTERNAL_API_KEY` must equal the backend's. A store matches when its own
 domain equals the host, else when its subdomain equals the host's first label.
 

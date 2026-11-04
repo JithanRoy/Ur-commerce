@@ -25,11 +25,15 @@ function failure(status: number, message: string): Response {
   return Response.json({ success: false, message }, { status });
 }
 
-function upstreamUrl(request: Request): string {
+function upstreamUrl(request: Request): string | null {
   const url = new URL(request.url);
-  const path = url.searchParams.get("path") ?? "";
+  const segments = (url.searchParams.get("path") ?? "").split("/");
   url.searchParams.delete("path");
-  return `${process.env.VITE_API_URL}/${path}${url.search}`;
+  const base = (process.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+  const target = new URL(
+    `${base}/${segments.map(encodeURIComponent).join("/")}${url.search}`,
+  );
+  return target.href.startsWith(`${base}/`) ? target.href : null;
 }
 
 function upstreamHeaders(request: Request): Headers {
@@ -50,8 +54,11 @@ async function proxy(request: Request): Promise<Response> {
     return failure(500, "The admin is not connected to a store yet.");
   }
 
+  const target = upstreamUrl(request);
+  if (!target) return failure(400, "That address is not part of the API.");
+
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
-  const upstream = await fetch(upstreamUrl(request), {
+  const upstream = await fetch(target, {
     method: request.method,
     headers: upstreamHeaders(request),
     body: hasBody ? await request.arrayBuffer() : undefined,

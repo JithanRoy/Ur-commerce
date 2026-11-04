@@ -19,8 +19,22 @@ export async function shopperTenantHeaders(): Promise<Record<string, string>> {
   }
 
   const internalKey = process.env.INTERNAL_API_KEY;
-  if (!host || !internalKey) return {};
+  if (!internalKey) {
+    reportMissingInternalKey();
+    return {};
+  }
+  if (!host) return {};
   return { "X-Tenant-Host": host, "X-Internal-Key": internalKey };
+}
+
+let missingKeyReported = false;
+
+function reportMissingInternalKey() {
+  if (missingKeyReported) return;
+  missingKeyReported = true;
+  console.error(
+    'INTERNAL_API_KEY is not set, so the API cannot tell which store this is and answers every request with "Store not found for this domain". Set it to the backend\'s value and redeploy.',
+  );
 }
 
 export const api = createApiClient({

@@ -8,6 +8,11 @@ function requireApiUrl() {
       "NEXT_PUBLIC_API_URL is missing or not a URL. It is baked in at build time: set it in your host's build environment (for example Render's Environment tab), not only in .env.local, which is never deployed.",
     );
   }
+  if (process.env.VERCEL && !process.env.INTERNAL_API_KEY) {
+    throw new Error(
+      "INTERNAL_API_KEY must be set in your host's environment and equal the backend's. Without it the API cannot tell which store a request is for.",
+    );
+  }
 }
 
 const nextConfig: NextConfig = {

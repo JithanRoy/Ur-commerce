@@ -109,3 +109,4 @@ export {
 } from "./platform";
 export type * from "./platform";
 export { localStoreHost } from "./dev-host";
+export { apiFailure, apiTargetUrl, forwardToApi } from "./forward";
