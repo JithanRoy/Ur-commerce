@@ -30,11 +30,10 @@ const paymentOptions: [PaymentOption, ...PaymentOption[]] = [
   },
 ];
 
-const SOLD_OUT_DURING_CHECKOUT =
-  "Something in your cart sold out while you were checking out. Your cart has been refreshed — please adjust it and try again.";
-
 function placeOrderErrorMessage(error: unknown): string {
-  if (isApiError(error) && error.isConflict) return SOLD_OUT_DURING_CHECKOUT;
+  if (isApiError(error) && error.isConflict) {
+    return `${error.message.replace(/\.$/, "")}. We've refreshed your cart below.`;
+  }
   return apiErrorMessage(error, "Could not place your order.");
 }
 
@@ -52,7 +51,8 @@ export function CheckoutClient() {
 
   useEffect(() => {
     if (addressId || !addresses?.length) return;
-    const preferred = addresses.find((entry) => entry.isDefault) ?? addresses[0];
+    const preferred =
+      addresses.find((entry) => entry.isDefault) ?? addresses[0];
     if (preferred) setAddressId(preferred.id);
   }, [addresses, addressId]);
 
@@ -144,7 +144,10 @@ export function CheckoutClient() {
               pending={createAddress.isPending}
               showOptionalFields={false}
               onSubmit={(values) =>
-                createAddress.mutate({ ...toCreateInput(values), isDefault: true })
+                createAddress.mutate({
+                  ...toCreateInput(values),
+                  isDefault: true,
+                })
               }
             />
           ) : null}

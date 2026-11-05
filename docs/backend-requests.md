@@ -49,26 +49,6 @@ Please add the response DTOs so the contract is checkable.
 
 ---
 
-## 3. 🟡 Deleted products keep their SKUs reserved forever
-
-`DELETE /admin/products/:id` soft-deletes, and the dead product's SKUs stay
-unique-constrained. Recreating a product after deleting it fails with
-`"SKU already in use: …"` naming SKUs the admin cannot see anywhere in the
-panel. Verified today: create → delete → identical create → 400.
-
-Either exclude soft-deleted rows from the SKU uniqueness check, or suffix
-their SKUs on delete (`FOR-M__deleted_<id>`), whichever fits the model. As it
-stands an admin who deletes a mistyped product cannot make it again with the
-same SKUs and gets no explanation.
-
-Related: the tombstones also come back from `GET /admin/products` as ARCHIVED
-rows with mangled slugs (`form-test-78482__archived_<id>`), polluting the
-product list, and a PATCH against one 400s on its own slug. Deleted products
-should be excluded from admin listings entirely. (The frontend currently
-filters slugs containing `__archived_` as a workaround.)
-
----
-
 ## 4. 🟡 No way back in after a forgotten password
 
 There is no password-reset endpoint, so a store owner who forgets their
@@ -145,6 +125,12 @@ development, would make that visible.
 ---
 
 ## Delivered since the last version of this doc — thank you
+
+- **Archiving frees the slug and SKUs** (#3, backend `3faf523`) — `DELETE`
+  and `PATCH status: ARCHIVED` both add `-archived-<product id>` to the slug
+  and every SKU, so a new product can reuse them. The admin product page
+  explains this, and setting an archived product back to Draft or Active
+  restores its original address and SKUs.
 
 - **Review photos** — `POST /reviews/uploads` + `imageObjectKeys` (verified
   2026-10-08: ticket → PUT from the storefront origin → review shows both

@@ -77,29 +77,15 @@ Pagination is flat: `{ items, page, limit, total, totalPages }`. There is no
 No backend exists for them. Do not mock them, do not stub screens for them.
 See `docs/frontend/08-backend-gaps.md`.
 
-- Admin dashboard, customer management, settings/branding, image upload
+- Admin dashboard (sales stats) and customer management — no endpoints
 - Online payment — COD only; build the payment step as a data-driven radio
   group so a gateway is configuration later
-- Customer-facing order cancellation, coupons/promo codes
+- Customer-facing order cancellation, coupons/promo codes, password reset
 - Size/colour facets — `/products/facets` returns categories and brands only
 
 **Verify against `http://localhost:3002/api/docs-json` before trusting this
-list** — the backend moves independently and several entries above have since
-shipped. Admin orders and the refresh-token flow both exist and are built.
-
-## Known blocker — CORS (unresolved as of 2026-09-11)
-
-The backend's `src/main.ts` sets
-`allowedHeaders: ["Content-Type", "Authorization"]`, omitting
-`X-Cart-Session` and `X-Tenant-Host`. The browser preflight rejects both, so
-guest carts and the dev tenant override fail in a browser while curl works
-fine. Verified still unfixed.
-
-One-line fix, in the backend repo:
-
-```ts
-allowedHeaders: ["Content-Type", "Authorization", "X-Cart-Session", "X-Tenant-Host"],
-```
+list** — the backend moves independently. Checked 2026-11-05: every documented
+path except `GET /health` already has a call in `packages/api-client`.
 
 ## Environment
 

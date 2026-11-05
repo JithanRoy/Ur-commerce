@@ -4,7 +4,7 @@ The backend lives in a separate repo and is changed by its own sessions. This
 file records which backend commit the frontend has been built against, so
 new backend work is never missed.
 
-Last synced backend commit: `554b71b`
+Last synced backend commit: `3faf523`
 
 ## How a sync works
 
@@ -45,3 +45,4 @@ every Claude session in this repo.
 | 2026-10-12 | `927c2a3` + uncommitted | `927c2a3` is README only. Built against **uncommitted** platform work (user asked) — recheck once committed, and restart the API (the running one did not serve the new routes yet): `PATCH /platform/tenants/:id` → "Edit details" on the store page (name, subdomain with an address-change warning, own domain, language `en`/`bn`, time zone; only changed fields sent); `GET /platform/tenants/:id/staff` → "Owners and staff" list (role, deactivated, two-step, password age); `POST …/staff/:userId/reset-password` → reset with a generated password shown once, devices signed out, 2FA reminder. `platform-console.mjs` extended (simulated backend). |
 | 2026-10-13 | `9d7c80d` | Store editing and staff password reset committed — matches what was built against it on 2026-10-12; the API now serves `PATCH /platform/tenants/:id` and `/platform/tenants/:tenantId/staff[...]`. No further frontend work. |
 | 2026-10-27 | `554b71b` | Six deployment commits (R2 region, env-file loading, production env template, production Docker image) — no API change, no frontend work. Note for hosting: the backend now requires `CORS_ALLOWED_ORIGINS` in production, listing the storefront, admin and console origins. Uncommitted backend work (health endpoints) noted. Frontend: production builds now fail when `VITE_API_URL` / `NEXT_PUBLIC_API_URL` is missing instead of silently falling back to localhost. |
+| 2026-11-05 | `3faf523` | `cfb88f9` adds `/health` (not used by the frontend). `3faf523` is a correctness sweep. Request #3 delivered: `PATCH status: ARCHIVED` now archives like `DELETE`, adding `-archived-<id>` to the slug and SKUs. Admin product page: status hint explains this, the variant table reloads the archived SKUs (saving the old ones would have reserved them again), and setting an archived product back to Draft/Active restores the original slug and SKUs. Removed the dead `__archived_` list filters (the backend never used that marker); the collection picker now hides ARCHIVED products by status. Checkout shows the server's 409 message (sold out, or cart changed by a second checkout) instead of always "sold out". Admin order status: a 409 (changed by someone else) reloads the order. Not verified in the browser: the demo admin password is still unknown. |

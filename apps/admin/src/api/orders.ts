@@ -11,6 +11,7 @@ import type {
   OrderCounts,
   Paginated,
 } from "@urcommerce/api-client";
+import { isApiError } from "@urcommerce/api-client";
 import { adminApi } from "@/lib/api";
 import { OrderDetailRoute } from "@/routes/lazy";
 import {
@@ -132,6 +133,14 @@ export function useUpdateOrderStatus(
     onSuccess: (updated, ...rest) => {
       queryClient.setQueryData(orderDetailQuery(orderId).queryKey, updated);
       return options.onSuccess?.(updated, ...rest);
+    },
+    onSettled: (data, cause, ...rest) => {
+      if (isApiError(cause) && cause.isConflict) {
+        void queryClient.invalidateQueries({
+          queryKey: orderDetailQuery(orderId).queryKey,
+        });
+      }
+      return options.onSettled?.(data, cause, ...rest);
     },
   });
 }

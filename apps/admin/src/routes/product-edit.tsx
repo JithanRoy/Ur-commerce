@@ -25,6 +25,11 @@ import {
 } from "@/features/products/edit-variant-table";
 import { AddVariantForm } from "@/features/products/add-variant-form";
 import { ImageManager } from "@/features/products/image-manager";
+import {
+  isArchivedIdentifier,
+  statusHint,
+  withoutArchivedEnding,
+} from "@/features/products/archive";
 import { TaxonomyFields } from "@/features/products/taxonomy-fields";
 
 function toVariantRow(variant: AdminVariant): VariantEdit {
@@ -53,6 +58,21 @@ function toPaisa(value: string): number | undefined {
   if (trimmed === "") return undefined;
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) ? Math.round(parsed * 100) : undefined;
+}
+
+function toVariantUpdates(rows: VariantEdit[]) {
+  return rows.map((row) => ({
+    id: row.id,
+    sku: row.sku.trim(),
+    price: toPaisa(row.price) ?? 0,
+    compareAtPrice: toPaisa(row.compareAtPrice),
+    costPrice: toPaisa(row.costPrice),
+    stock: Number(row.stock) || 0,
+  }));
+}
+
+function withRestoredSkus(rows: VariantEdit[]): VariantEdit[] {
+  return rows.map((row) => ({ ...row, sku: withoutArchivedEnding(row.sku) }));
 }
 
 export function ProductEditRoute() {
@@ -105,6 +125,7 @@ export function ProductEditRoute() {
     onSuccess: (updated) => {
       setError(null);
       seedDetails(updated);
+      if (updated.status === "ARCHIVED") setRows(toRow(updated));
     },
     onError: failed("Could not save the product."),
   });
@@ -137,27 +158,32 @@ export function ProductEditRoute() {
     onSettled: () => setRemovingId(null),
   });
 
-  const submitDetails = () =>
-    saveDetails.mutate({
-      name: name.trim(),
-      slug: slug.trim(),
-      description: description.trim(),
-      status,
-      categoryId: categoryId || null,
-      brandId: brandId || null,
-    });
+  const restoring =
+    serverProduct?.status === "ARCHIVED" && status !== "ARCHIVED";
 
-  const submitVariants = () =>
-    saveVariants.mutate(
-      rows.map((row) => ({
-        id: row.id,
-        sku: row.sku.trim(),
-        price: toPaisa(row.price) ?? 0,
-        compareAtPrice: toPaisa(row.compareAtPrice),
-        costPrice: toPaisa(row.costPrice),
-        stock: Number(row.stock) || 0,
-      })),
+  const submitDetails = () => {
+    const restoredRows = withRestoredSkus(rows);
+    const skusArchived = rows.some((row) => isArchivedIdentifier(row.sku));
+    saveDetails.mutate(
+      {
+        name: name.trim(),
+        slug: restoring ? withoutArchivedEnding(slug.trim()) : slug.trim(),
+        description: description.trim(),
+        status,
+        categoryId: categoryId || null,
+        brandId: brandId || null,
+      },
+      {
+        onSuccess: () => {
+          if (!restoring || !skusArchived) return;
+          setRows(restoredRows);
+          saveVariants.mutate(toVariantUpdates(restoredRows));
+        },
+      },
     );
+  };
+
+  const submitVariants = () => saveVariants.mutate(toVariantUpdates(rows));
 
   if (isPending) return <LoadingState variant="form" />;
   if (!product) {
@@ -256,9 +282,8 @@ export function ProductEditRoute() {
             label="Status"
             containerClassName="w-48"
             value={status}
-            onChange={(event) =>
-              setStatus(event.target.value as ProductStatus)
-            }
+            onChange={(event) => setStatus(event.target.value as ProductStatus)}
+            hint={statusHint(product.status, status)}
             options={[
               { value: "DRAFT", label: "Draft" },
               { value: "ACTIVE", label: "Active" },

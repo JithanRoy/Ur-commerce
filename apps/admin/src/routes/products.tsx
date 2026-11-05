@@ -43,12 +43,6 @@ export function ProductsRoute() {
     { page, search, status },
     {
       placeholderData: keepPreviousData,
-      select: (page) => ({
-        ...page,
-        items: page.items.filter(
-          (product) => !product.slug.includes("__archived_"),
-        ),
-      }),
     },
   );
 

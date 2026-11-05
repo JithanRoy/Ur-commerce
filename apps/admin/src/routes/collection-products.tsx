@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowUp,
-  Plus,
-  Search,
-  X,
-} from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Plus, Search, X } from "lucide-react";
 import { isApiError } from "@urcommerce/api-client";
 import type { AdminProduct } from "@urcommerce/api-client";
 import { useCollectionCatalogue } from "@/api/products";
@@ -38,9 +31,7 @@ export function CollectionProductsRoute() {
 
   const catalogue = useCollectionCatalogue({
     select: (page) =>
-      page.items.filter(
-        (product) => !product.slug.includes("__archived_"),
-      ),
+      page.items.filter((product) => product.status !== "ARCHIVED"),
   });
 
   useEffect(() => {
@@ -84,13 +75,12 @@ export function CollectionProductsRoute() {
     },
     onError: (cause) =>
       setError(
-        isApiError(cause)
-          ? cause.message
-          : "Could not save the collection.",
+        isApiError(cause) ? cause.message : "Could not save the collection.",
       ),
   });
 
-  if (collection.isPending || catalogue.isPending) return <LoadingState variant="panels" />;
+  if (collection.isPending || catalogue.isPending)
+    return <LoadingState variant="panels" />;
   if (collection.isError || !collection.data) {
     return <ErrorState message="Could not load that collection." />;
   }
@@ -118,7 +108,10 @@ export function CollectionProductsRoute() {
         <Button
           onClick={() =>
             save.mutate(
-              chosen.map((productId, index) => ({ productId, position: index })),
+              chosen.map((productId, index) => ({
+                productId,
+                position: index,
+              })),
             )
           }
           disabled={!isDirty}
@@ -171,7 +164,7 @@ export function CollectionProductsRoute() {
                         <span className="text-xs text-warning">
                           {product?.status === "DRAFT"
                             ? "Draft — hidden from shoppers"
-                            : product?.status ?? ""}
+                            : (product?.status ?? "")}
                         </span>
                       ) : null}
                     </span>
@@ -179,9 +172,7 @@ export function CollectionProductsRoute() {
                       label={`Move ${product?.name ?? "product"} up`}
                       variant="outline"
                       size="icon-sm"
-                      onClick={() =>
-                        setSelectedIds(moveId(chosen, id, -1))
-                      }
+                      onClick={() => setSelectedIds(moveId(chosen, id, -1))}
                       disabled={index === 0}
                       className="disabled:opacity-30"
                     >
@@ -229,7 +220,9 @@ export function CollectionProductsRoute() {
           <ul className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto pr-1">
             {available.length === 0 ? (
               <li className="px-1 py-6 text-center text-sm text-muted-foreground">
-                {search ? "No matches." : "Everything is already in the collection."}
+                {search
+                  ? "No matches."
+                  : "Everything is already in the collection."}
               </li>
             ) : (
               available.map((product) => (
