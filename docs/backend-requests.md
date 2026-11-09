@@ -124,6 +124,36 @@ development, would make that visible.
 
 ---
 
+## 10. 🟠 Rate limits see the frontend server's IP, not the shopper's
+
+Since `99e4590` sign-in routes are rate-limited by `req.ip` with
+`TRUST_PROXY_HOPS` (1 in production). In production the storefront and the
+admin never call the API from the browser: their servers forward every
+request (they have to, to send `X-Tenant-Host` + `X-Internal-Key`). The chain
+is shopper → Vercel function → Render proxy → API, so with one trusted hop
+`req.ip` is the **Vercel function's egress address**, shared by every shopper
+it serves.
+
+- `POST /auth/register` (20 / hour, keyed on IP only) is the one that
+  breaks: a busy hour of sign-ups through the storefront exhausts it for
+  everyone on that Vercel address.
+- `POST /auth/login` (IP + email) still works per account, but its IP part
+  stops meaning anything.
+- Raising `TRUST_PROXY_HOPS` to 2 is not the fix: direct callers (the
+  platform console, anyone hitting the API) could then choose their own IP.
+
+Both proxies already forward the shopper's address in `X-Forwarded-For`
+(Vercel sets it to the client IP). Request: when a request carries a valid
+`X-Internal-Key`, take the client IP from the first `X-Forwarded-For` entry
+(or a dedicated `X-Client-IP` the proxies would send — say which), and keep
+`trust proxy` for everyone else.
+
+Also worth checking: responses from the hosted API carry `cf-ray`, so there
+may be a Cloudflare hop in front of Render's proxy, which would make even the
+direct-caller IP one hop off with `TRUST_PROXY_HOPS=1`.
+
+---
+
 ## Delivered since the last version of this doc — thank you
 
 - **Archiving frees the slug and SKUs** (#3, backend `3faf523`) — `DELETE`
