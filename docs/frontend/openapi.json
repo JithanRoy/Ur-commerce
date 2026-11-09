@@ -1,9 +1,490 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/health": {
+    "/api/v1/admin/settings": {
       "get": {
-        "operationId": "HealthController_check",
+        "operationId": "StoreSettingsAdminController_find",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`theme.onPrimary`/`onAccent` are derived, not stored — they say whether light or dark text is readable on each colour."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read this store's branding",
+        "tags": [
+          "Admin · Store settings"
+        ]
+      },
+      "patch": {
+        "description": "Partial update — omitted fields are left alone. Send an explicit null to clear an optional field. Colours are six-digit hex.",
+        "operationId": "StoreSettingsAdminController_update",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStoreSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated settings"
+          },
+          "400": {
+            "description": "Invalid colour, URL or email"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update this store's branding",
+        "tags": [
+          "Admin · Store settings"
+        ]
+      }
+    },
+    "/api/v1/store": {
+      "get": {
+        "description": "Public and cached. Fetch once per page load and drive CSS custom properties from it; contact details are absent when unset.",
+        "operationId": "StoreSettingsStorefrontController_find",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Name, logo, colours and contact details"
+          }
+        },
+        "summary": "Branding for the current store",
+        "tags": [
+          "Storefront · Store"
+        ]
+      }
+    },
+    "/api/v1/platform/tenants": {
+      "post": {
+        "description": "Creates the tenant and its TENANT_OWNER together — a store with no owner cannot be administered by anyone. There is no invitation email; pass the initial password to the owner out of band.",
+        "operationId": "PlatformTenantController_create",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTenantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Store created, owner can sign in"
+          },
+          "409": {
+            "description": "Subdomain taken or reserved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a store and its first owner",
+        "tags": [
+          "Platform · Stores"
+        ]
+      },
+      "get": {
+        "description": "Tenant-spanning by design. Per-store activity counts are NOT included: RLS hides tenant rows from an unscoped connection, and weakening that to show a dashboard number is the wrong trade.",
+        "operationId": "PlatformTenantController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TRIAL",
+                "ACTIVE",
+                "PAST_DUE",
+                "SUSPENDED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Name or subdomain",
+            "schema": {
+              "example": "rafiq",
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated stores, newest first"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List every store on the platform",
+        "tags": [
+          "Platform · Stores"
+        ]
+      }
+    },
+    "/api/v1/platform/tenants/{id}": {
+      "get": {
+        "operationId": "PlatformTenantController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "No such store"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One store",
+        "tags": [
+          "Platform · Stores"
+        ]
+      },
+      "patch": {
+        "description": "Send only the fields to change. A new subdomain or custom domain takes effect immediately and the old address stops resolving. Branding (logo, colours, tagline, support contacts) is the store owner's, edited through /admin/settings.",
+        "operationId": "PlatformTenantController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Store updated"
+          },
+          "400": {
+            "description": "Invalid field"
+          },
+          "404": {
+            "description": "No such store"
+          },
+          "409": {
+            "description": "Subdomain or domain taken or reserved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a store's name, address, locale or time zone",
+        "tags": [
+          "Platform · Stores"
+        ]
+      }
+    },
+    "/api/v1/platform/tenants/{id}/status": {
+      "patch": {
+        "description": "Guarded transitions. SUSPENDED locks the admin panel and stops checkout while leaving the storefront browsable — the merchant's brand stays online. CANCELLED is terminal and takes the store off the internet.",
+        "operationId": "PlatformTenantController_changeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeTenantStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status changed"
+          },
+          "400": {
+            "description": "That transition is not allowed"
+          },
+          "404": {
+            "description": "No such store"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move a store through its lifecycle",
+        "tags": [
+          "Platform · Stores"
+        ]
+      }
+    },
+    "/api/v1/platform/tenants/{tenantId}/staff": {
+      "get": {
+        "description": "Owners first. Customers are never listed. Use the id with the reset-password route.",
+        "operationId": "PlatformStoreUserController_list",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owners and staff of the store"
+          },
+          "404": {
+            "description": "No such store"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "A store's owners and staff",
+        "tags": [
+          "Platform · Stores"
+        ]
+      }
+    },
+    "/api/v1/platform/tenants/{tenantId}/staff/{userId}/reset-password": {
+      "post": {
+        "description": "For a merchant who is locked out. Signs the account out everywhere: every refresh token is revoked, and an access token already issued expires within 15 minutes. Customers cannot be reset here.",
+        "operationId": "PlatformStoreUserController_resetPassword",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetStoreUserPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password replaced, sessions revoked"
+          },
+          "400": {
+            "description": "Password too short or too long"
+          },
+          "404": {
+            "description": "No such store, or no owner/staff member with that id in it"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set a new password for a store owner or staff member",
+        "tags": [
+          "Platform · Stores"
+        ]
+      }
+    },
+    "/api/v1/admin/hero": {
+      "get": {
+        "operationId": "HeroAdminController_findAll",
         "parameters": [
           {
             "name": "X-Tenant-Host",
@@ -21,7 +502,309 @@
             "description": ""
           }
         },
-        "summary": "Liveness probe",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every hero slide, including inactive and scheduled ones",
+        "tags": [
+          "Admin · Hero"
+        ]
+      }
+    },
+    "/api/v1/admin/hero/slides": {
+      "post": {
+        "description": "Send either `imageUrl` or `imageObjectKey` (from `POST /admin/uploads/images` with `scope=store`), not both. The new slide goes last.",
+        "operationId": "HeroAdminController_create",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHeroSlideDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "No image, both image forms, an unpaired button, or the slide limit is reached"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a slide",
+        "tags": [
+          "Admin · Hero"
+        ]
+      }
+    },
+    "/api/v1/admin/hero/slides/{id}": {
+      "patch": {
+        "operationId": "HeroAdminController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHeroSlideDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "No such slide in this store"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a slide",
+        "tags": [
+          "Admin · Hero"
+        ]
+      },
+      "delete": {
+        "operationId": "HeroAdminController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "No such slide in this store"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a slide",
+        "tags": [
+          "Admin · Hero"
+        ]
+      }
+    },
+    "/api/v1/admin/hero/slides/order": {
+      "put": {
+        "description": "A full ordered replacement. A partial list is refused, because it would silently scramble the slides it omits.",
+        "operationId": "HeroAdminController_reorder",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderHeroSlidesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Partial, duplicated or foreign id set"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reorder every slide",
+        "tags": [
+          "Admin · Hero"
+        ]
+      }
+    },
+    "/api/v1/admin/hero/settings": {
+      "patch": {
+        "operationId": "HeroAdminController_updateSettings",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHeroSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated hero settings"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Autoplay on/off and the slide interval",
+        "tags": [
+          "Admin · Hero"
+        ]
+      }
+    },
+    "/api/v1/hero": {
+      "get": {
+        "description": "Only slides that are active AND inside their campaign window. Cached for 5 minutes; a slide edit invalidates it immediately.",
+        "operationId": "HeroStorefrontController_find",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "The hero carousel for this store",
+        "tags": [
+          "Storefront · Hero"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "description": "Runs a live database query. 200 with status ok (everything up) or degraded (an optional dependency such as the cache is down); 503 when the database is unreachable. Needs no store and no login.",
+        "operationId": "HealthController_check",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API and database are up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true,
+                    "message": "API is healthy",
+                    "data": {
+                      "status": "ok",
+                      "environment": "production",
+                      "version": "1.0.0",
+                      "uptimeSeconds": 5321,
+                      "timestamp": "2026-10-27T06:00:00.000Z",
+                      "checks": {
+                        "database": {
+                          "status": "up",
+                          "latencyMs": 4
+                        },
+                        "cache": {
+                          "status": "disabled"
+                        },
+                        "storage": {
+                          "status": "disabled"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database is not reachable"
+          }
+        },
+        "summary": "Is the API up, and can it reach the database?",
         "tags": [
           "Health"
         ]
@@ -54,8 +837,8 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "429": {
+            "description": "Too many attempts — please wait a few minutes and try again"
           }
         },
         "summary": "Register a customer on the current store",
@@ -107,11 +890,65 @@
           }
         },
         "responses": {
-          "200": {
-            "description": ""
+          "429": {
+            "description": "Too many attempts — please wait a few minutes and try again"
           }
         },
         "summary": "Authenticate against the current store",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/two-factor": {
+      "post": {
+        "description": "Exchange the `challengeToken` from login, plus a 6-digit authenticator code or a XXXXX-XXXXX recovery code, for a real session. The challenge expires in 5 minutes.",
+        "operationId": "AuthController_completeTwoFactor",
+        "parameters": [
+          {
+            "name": "x-cart-session",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Cart-Session",
+            "in": "header",
+            "description": "Merged here too, since login itself issued no session.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "429": {
+            "description": "Too many attempts — please wait a few minutes and try again"
+          }
+        },
+        "summary": "Finish a sign-in that needs two-step verification",
         "tags": [
           "Auth"
         ]
@@ -191,6 +1028,38 @@
         ]
       }
     },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "description": "Signs the account out of every device, including this one. Use it after a suspected compromise. Returns how many sessions were ended. Access tokens already issued remain valid until they expire — up to 15 minutes — because they are stateless.",
+        "operationId": "AuthController_logoutEverywhere",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke every session for the current user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/v1/auth/me": {
       "get": {
         "operationId": "AuthController_me",
@@ -219,6 +1088,310 @@
         "summary": "Current authenticated user",
         "tags": [
           "Auth"
+        ]
+      }
+    },
+    "/api/v1/profile": {
+      "get": {
+        "description": "Includes `completion` (0–100), derived on read, so the storefront can prompt for what is missing without defining completeness itself.",
+        "operationId": "ProfileController_findOne",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The signed-in customer's profile",
+        "tags": [
+          "Storefront · Profile"
+        ]
+      },
+      "patch": {
+        "description": "Send only the fields you are changing. An omitted field keeps its stored value; an explicit null clears it. Email and role are NOT editable here. Changing these contact details does not affect where a past or pending order ships — that is the delivery address.",
+        "operationId": "ProfileController_update",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update the signed-in customer's profile",
+        "tags": [
+          "Storefront · Profile"
+        ]
+      }
+    },
+    "/api/v1/profile/change-password": {
+      "post": {
+        "description": "Requires the current password. Every other session is revoked and the count returned — the refresh token used by this device is revoked too, so sign in again afterwards.",
+        "operationId": "ProfileController_changePassword",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "429": {
+            "description": "Too many attempts — please wait a few minutes and try again"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the signed-in customer's password",
+        "tags": [
+          "Storefront · Profile"
+        ]
+      }
+    },
+    "/api/v1/profile/two-factor": {
+      "get": {
+        "description": "`required` is true for roles that cannot turn it off. `enrolmentPending` means a secret was issued but never confirmed.",
+        "operationId": "TwoFactorController_status",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Whether two-step verification is on for this account",
+        "tags": [
+          "Storefront · Two-step verification"
+        ]
+      }
+    },
+    "/api/v1/profile/two-factor/enrol": {
+      "post": {
+        "description": "Returns a QR code to scan plus the secret to type in manually. Two-step verification is NOT on until you confirm a code — abandoning this step changes nothing.",
+        "operationId": "TwoFactorController_enrol",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start enrolling an authenticator app",
+        "tags": [
+          "Storefront · Two-step verification"
+        ]
+      }
+    },
+    "/api/v1/profile/two-factor/confirm": {
+      "post": {
+        "description": "Returns ten single-use recovery codes. This is the ONLY time they are shown — they are stored hashed. Tell the user to save them.",
+        "operationId": "TwoFactorController_confirm",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm a code and switch two-step verification on",
+        "tags": [
+          "Storefront · Two-step verification"
+        ]
+      }
+    },
+    "/api/v1/profile/two-factor/disable": {
+      "post": {
+        "description": "Requires a live code or a recovery code — a stolen session alone must not be able to strip the second factor. Roles that require two-step verification get 400.",
+        "operationId": "TwoFactorController_disable",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn two-step verification off",
+        "tags": [
+          "Storefront · Two-step verification"
+        ]
+      }
+    },
+    "/api/v1/profile/two-factor/recovery-codes": {
+      "post": {
+        "description": "Every previous code stops working immediately. Requires a live code or an unused recovery code.",
+        "operationId": "TwoFactorController_regenerate",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the recovery codes with a fresh set",
+        "tags": [
+          "Storefront · Two-step verification"
         ]
       }
     },
@@ -473,6 +1646,46 @@
         "summary": "Deactivate a team member",
         "tags": [
           "Admin · Team"
+        ]
+      }
+    },
+    "/api/v1/platform/auth/login": {
+      "post": {
+        "description": "Accepts PLATFORM_OWNER accounts only. Tenant staff and customers sign in at POST /auth/login on their own store's host.",
+        "operationId": "PlatformAuthController_login",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Wrong credentials, or not a platform account"
+          },
+          "429": {
+            "description": "Too many attempts — please wait a few minutes and try again"
+          }
+        },
+        "summary": "Sign in to the platform console",
+        "tags": [
+          "Platform · Auth"
         ]
       }
     },
@@ -1261,7 +2474,36 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "A page of order summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "items": [
+                      {
+                        "id": "18cd8f72-c5e6-4bb8-8ae2-6bba55f636d5",
+                        "orderNumber": "ORD-202609-00024",
+                        "status": "PROCESSING",
+                        "paymentStatus": "PENDING",
+                        "paymentMethod": "CASH_ON_DELIVERY",
+                        "customerName": "Browser Buyer",
+                        "customerPhone": "01712345678",
+                        "grandTotal": 499800,
+                        "currency": "BDT",
+                        "placedAt": "2026-09-30T10:14:56.457Z",
+                        "_count": {
+                          "items": 1
+                        }
+                      }
+                    ],
+                    "total": 24,
+                    "page": 1,
+                    "limit": 20,
+                    "totalPages": 2
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1293,7 +2535,22 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Every status, zeroes included",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "PENDING_PAYMENT": 3,
+                    "CONFIRMED": 5,
+                    "PROCESSING": 2,
+                    "SHIPPED": 7,
+                    "DELIVERED": 6,
+                    "CANCELLED": 1,
+                    "REFUNDED": 0
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1332,6 +2589,96 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "The order, its snapshotted lines, and the admin-only `adminNote` and `statusHistory[]`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "18cd8f72-c5e6-4bb8-8ae2-6bba55f636d5",
+                    "orderNumber": "ORD-202609-00024",
+                    "status": "PROCESSING",
+                    "paymentStatus": "PENDING",
+                    "paymentMethod": "CASH_ON_DELIVERY",
+                    "customerName": "Browser Buyer",
+                    "customerPhone": "01712345678",
+                    "customerEmail": null,
+                    "subtotal": 499800,
+                    "discountTotal": 0,
+                    "shippingTotal": 0,
+                    "grandTotal": 499800,
+                    "currency": "BDT",
+                    "customerNote": null,
+                    "adminNote": "stock verified, packing",
+                    "placedAt": "2026-09-30T10:14:56.457Z",
+                    "confirmedAt": "2026-09-30T11:02:11.004Z",
+                    "shippedAt": null,
+                    "deliveredAt": null,
+                    "cancelledAt": null,
+                    "cancelReason": null,
+                    "shippingAddress": {
+                      "fullName": "Browser Buyer",
+                      "phone": "01712345678",
+                      "alternatePhone": null,
+                      "division": "Dhaka",
+                      "district": "Dhaka",
+                      "thana": "Gulshan",
+                      "area": null,
+                      "addressLine": "House 9, Road 4",
+                      "postCode": null,
+                      "landmark": null
+                    },
+                    "address": {
+                      "fullName": "Browser Buyer",
+                      "phone": "01712345678",
+                      "alternatePhone": null,
+                      "division": "Dhaka",
+                      "district": "Dhaka",
+                      "thana": "Gulshan",
+                      "area": null,
+                      "addressLine": "House 9, Road 4",
+                      "postCode": null,
+                      "landmark": null
+                    },
+                    "items": [
+                      {
+                        "id": "9b794b02-ecb0-445d-8a28-91f9cf01f4f3",
+                        "productName": "Slim Fit Denim Shirt",
+                        "variantSku": "DEN-IND-M",
+                        "optionSummary": "Size: M, Colour: Indigo",
+                        "unitPrice": 249900,
+                        "compareAtPrice": 299900,
+                        "quantity": 2,
+                        "lineTotal": 499800,
+                        "productId": "b9aa2722-e767-4d89-96a1-a69da86a37a1",
+                        "variantId": "be3ce1d7-d393-4ea3-9079-120850d2dc2d"
+                      }
+                    ],
+                    "statusHistory": [
+                      {
+                        "id": "159cefb5-833a-406e-a321-8cb526246839",
+                        "status": "PENDING_PAYMENT",
+                        "note": "Recorded before status history existed",
+                        "byUserId": null,
+                        "byName": null,
+                        "byEmail": null,
+                        "createdAt": "2026-09-30T10:14:56.457Z"
+                      },
+                      {
+                        "id": "ce8c7b22-625a-4b41-bc5b-20c6d96aca25",
+                        "status": "PROCESSING",
+                        "note": "stock verified, packing",
+                        "byUserId": "b634eebf-fb85-4a3a-a1b4-aa9e9cb1897b",
+                        "byName": "Demo Owner",
+                        "byEmail": "admin@demo.local",
+                        "createdAt": "2026-09-30T11:04:02.118Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "No such order in this store"
           }
@@ -1383,7 +2730,94 @@
         },
         "responses": {
           "200": {
-            "description": "The updated order"
+            "description": "The updated order, with the new `statusHistory[]` entry appended — so a timeline needs no second fetch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "18cd8f72-c5e6-4bb8-8ae2-6bba55f636d5",
+                    "orderNumber": "ORD-202609-00024",
+                    "status": "PROCESSING",
+                    "paymentStatus": "PENDING",
+                    "paymentMethod": "CASH_ON_DELIVERY",
+                    "customerName": "Browser Buyer",
+                    "customerPhone": "01712345678",
+                    "customerEmail": null,
+                    "subtotal": 499800,
+                    "discountTotal": 0,
+                    "shippingTotal": 0,
+                    "grandTotal": 499800,
+                    "currency": "BDT",
+                    "customerNote": null,
+                    "adminNote": "stock verified, packing",
+                    "placedAt": "2026-09-30T10:14:56.457Z",
+                    "confirmedAt": "2026-09-30T11:02:11.004Z",
+                    "shippedAt": null,
+                    "deliveredAt": null,
+                    "cancelledAt": null,
+                    "cancelReason": null,
+                    "shippingAddress": {
+                      "fullName": "Browser Buyer",
+                      "phone": "01712345678",
+                      "alternatePhone": null,
+                      "division": "Dhaka",
+                      "district": "Dhaka",
+                      "thana": "Gulshan",
+                      "area": null,
+                      "addressLine": "House 9, Road 4",
+                      "postCode": null,
+                      "landmark": null
+                    },
+                    "address": {
+                      "fullName": "Browser Buyer",
+                      "phone": "01712345678",
+                      "alternatePhone": null,
+                      "division": "Dhaka",
+                      "district": "Dhaka",
+                      "thana": "Gulshan",
+                      "area": null,
+                      "addressLine": "House 9, Road 4",
+                      "postCode": null,
+                      "landmark": null
+                    },
+                    "items": [
+                      {
+                        "id": "9b794b02-ecb0-445d-8a28-91f9cf01f4f3",
+                        "productName": "Slim Fit Denim Shirt",
+                        "variantSku": "DEN-IND-M",
+                        "optionSummary": "Size: M, Colour: Indigo",
+                        "unitPrice": 249900,
+                        "compareAtPrice": 299900,
+                        "quantity": 2,
+                        "lineTotal": 499800,
+                        "productId": "b9aa2722-e767-4d89-96a1-a69da86a37a1",
+                        "variantId": "be3ce1d7-d393-4ea3-9079-120850d2dc2d"
+                      }
+                    ],
+                    "statusHistory": [
+                      {
+                        "id": "159cefb5-833a-406e-a321-8cb526246839",
+                        "status": "PENDING_PAYMENT",
+                        "note": "Recorded before status history existed",
+                        "byUserId": null,
+                        "byName": null,
+                        "byEmail": null,
+                        "createdAt": "2026-09-30T10:14:56.457Z"
+                      },
+                      {
+                        "id": "ce8c7b22-625a-4b41-bc5b-20c6d96aca25",
+                        "status": "PROCESSING",
+                        "note": "stock verified, packing",
+                        "byUserId": "b634eebf-fb85-4a3a-a1b4-aa9e9cb1897b",
+                        "byName": "Demo Owner",
+                        "byEmail": "admin@demo.local",
+                        "createdAt": "2026-09-30T11:04:02.118Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "The transition is not permitted from the current status"
@@ -3221,6 +4655,54 @@
         ]
       }
     },
+    "/api/v1/admin/uploads/images": {
+      "post": {
+        "description": "Same three-step flow as the product route: presign here, PUT the file straight to storage with EXACTLY the headers in `requiredHeaders`, then send the returned `objectKey` to the entity's own PATCH (`logoObjectKey` for a brand, `imageObjectKey` for a category). `scope` becomes a path segment and is re-checked on attach, so a brand upload cannot land on a category.",
+        "operationId": "ProductImageAdminController_createScopedUploadTicket",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScopedUploadTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Upload ticket issued. It expires; upload promptly."
+          },
+          "400": {
+            "description": "Unknown scope, unsupported image type, or a size outside the allowed range"
+          },
+          "503": {
+            "description": "Image storage is not configured on this server"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a one-time URL for uploading a brand, category or product image",
+        "tags": [
+          "Admin · Product images"
+        ]
+      }
+    },
     "/api/v1/admin/uploads/product-images": {
       "post": {
         "description": "The file goes straight to object storage, never through this API. Send it as a PUT to `uploadUrl` with EXACTLY the headers in `requiredHeaders` — both are signed, so an altered or omitted header is rejected by storage. Then attach the returned `objectKey` to a product. This route is not nested under a product because images are usually chosen before the product is saved.",
@@ -3363,6 +4845,65 @@
           }
         ],
         "summary": "Attach an uploaded image to a product",
+        "tags": [
+          "Admin · Product images"
+        ]
+      }
+    },
+    "/api/v1/admin/products/{id}/images/batch": {
+      "post": {
+        "description": "Same checks as the single attach, applied to every image BEFORE any row is written — one bad key rejects the whole batch rather than leaving a half-attached gallery. Images append in the order given. Maximum 20 per call.",
+        "operationId": "ProductImageAdminController_attachMany",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachProductImagesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Images attached, in the order given"
+          },
+          "400": {
+            "description": "A key is already attached or repeated in the batch, a stored file is not an allowed image, or a variant belongs to another product"
+          },
+          "403": {
+            "description": "An upload belongs to another store"
+          },
+          "404": {
+            "description": "No such product, or a file was never uploaded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Attach several uploaded images to a product in one call",
         "tags": [
           "Admin · Product images"
         ]
@@ -4330,7 +5871,8 @@
                 "newest",
                 "price-asc",
                 "price-desc",
-                "discount"
+                "discount",
+                "top-rated"
               ]
             }
           },
@@ -4530,7 +6072,8 @@
                 "newest",
                 "price-asc",
                 "price-desc",
-                "discount"
+                "discount",
+                "top-rated"
               ]
             }
           },
@@ -4834,6 +6377,208 @@
         ]
       }
     },
+    "/api/v1/admin/sections": {
+      "get": {
+        "operationId": "StorefrontSectionAdminController_findAll",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every homepage section, in order, including hidden ones",
+        "tags": [
+          "Admin · Homepage sections"
+        ]
+      },
+      "post": {
+        "description": "The new section goes last. Reorder to move it.",
+        "operationId": "StorefrontSectionAdminController_create",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "A carousel with no source, a source on another kind, or the section limit is reached"
+          },
+          "409": {
+            "description": "This store already has a section of that kind"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a section",
+        "tags": [
+          "Admin · Homepage sections"
+        ]
+      }
+    },
+    "/api/v1/admin/sections/{id}": {
+      "patch": {
+        "operationId": "StorefrontSectionAdminController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "No such section in this store"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename a section, resize it, change its source, or hide it",
+        "tags": [
+          "Admin · Homepage sections"
+        ]
+      },
+      "delete": {
+        "operationId": "StorefrontSectionAdminController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "No such section in this store"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a section",
+        "tags": [
+          "Admin · Homepage sections"
+        ]
+      }
+    },
+    "/api/v1/admin/sections/order": {
+      "put": {
+        "description": "A full ordered replacement. A partial list is refused, because it would silently scramble the sections it omits.",
+        "operationId": "StorefrontSectionAdminController_reorder",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderSectionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Partial, duplicated or foreign id set"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set the homepage order",
+        "tags": [
+          "Admin · Homepage sections"
+        ]
+      }
+    },
     "/api/v1/home": {
       "get": {
         "description": "Returns ordered sections the frontend renders by `type`, so a tenant can reorder them without a deploy. Redis-cached; invalidated on any catalog write.",
@@ -5082,6 +6827,662 @@
           "Storefront · Home"
         ]
       }
+    },
+    "/api/v1/products/{slug}/reviews": {
+      "get": {
+        "description": "`summary` covers every published review — average (one decimal), count and the 1–5 star distribution — regardless of the `rating` filter, so the bars stay put while a shopper filters by stars.",
+        "operationId": "ProductReviewStorefrontController_list",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "newest",
+              "type": "string",
+              "enum": [
+                "newest",
+                "highest",
+                "lowest"
+              ]
+            }
+          },
+          {
+            "name": "rating",
+            "required": false,
+            "in": "query",
+            "description": "Only reviews with exactly this many stars",
+            "schema": {
+              "minimum": 1,
+              "maximum": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Published reviews of a product, with its star summary",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/uploads": {
+      "post": {
+        "description": "PUT the file to `uploadUrl` with exactly `requiredHeaders`, then send the `objectKey` in `imageObjectKeys` when creating or editing the review. Requires a delivered order. Max 5 MB, JPEG/PNG/WebP/AVIF, 5 photos per review. The URL expires — upload straight away.",
+        "operationId": "ReviewStorefrontController_upload",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewImageUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an upload URL for one review photo",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/summary": {
+      "get": {
+        "description": "`awaiting` = delivered products not yet reviewed; `written` = reviews the customer has posted. Use it for a \"My reviews\" entry with a badge.",
+        "operationId": "ReviewStorefrontController_summary",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Review counts for the profile page",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/prompt": {
+      "get": {
+        "description": "Returns `{ prompt: null }` when there is nothing to ask. Starts one day after delivery, at most 3 times per product, 3 days apart, until 30 days after delivery. Calling this does NOT count as showing it — POST `/prompt/:productId/shown` when you actually redirect.",
+        "operationId": "ReviewStorefrontController_prompt",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The product to send this customer to review right now, if any",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/prompt/{productId}/shown": {
+      "post": {
+        "description": "Call once when you redirect to the review page. Starts the 3-day cooldown and counts toward the 3-prompt limit.",
+        "operationId": "ReviewStorefrontController_shown",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record that the review prompt was shown",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/prompt/{productId}/dismiss": {
+      "post": {
+        "description": "The customer is never sent to review this product again. They can still review it from their orders or profile.",
+        "operationId": "ReviewStorefrontController_dismiss",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "\"Don't ask again\" for this product",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/mine": {
+      "get": {
+        "description": "Includes `status`, so a hidden review can be explained.",
+        "operationId": "ReviewStorefrontController_mine",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reviews the signed-in customer has written",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/awaiting": {
+      "get": {
+        "description": "Drives a \"rate your purchase\" prompt. Newest delivery first.",
+        "operationId": "ReviewStorefrontController_awaiting",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delivered products the customer has not reviewed yet",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/eligibility/{productId}": {
+      "get": {
+        "description": "`reason` is null, `NOT_PURCHASED`, `ALREADY_REVIEWED` or `STAFF_ACCOUNT`. When already reviewed, `review` is their review so the page can offer to edit it.",
+        "operationId": "ReviewStorefrontController_eligibility",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Whether the customer may review this product",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews": {
+      "post": {
+        "description": "Requires a DELIVERED order containing the product. One review per product; published immediately with a verified-purchase badge.",
+        "operationId": "ReviewStorefrontController_create",
+        "parameters": [
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Review a product you received",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/{id}": {
+      "patch": {
+        "description": "Send only what changed. `null` clears the title or body; the rating cannot be cleared. A review the store hid stays hidden.",
+        "operationId": "ReviewStorefrontController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit your review",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      },
+      "delete": {
+        "operationId": "ReviewStorefrontController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete your review",
+        "tags": [
+          "Storefront · Reviews"
+        ]
+      }
+    },
+    "/api/v1/admin/reviews": {
+      "get": {
+        "description": "Filter by status, product or star rating.",
+        "operationId": "ReviewAdminController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "productId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "rating",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every review in the store, newest first",
+        "tags": [
+          "Admin · Reviews"
+        ]
+      }
+    },
+    "/api/v1/admin/reviews/{id}/status": {
+      "patch": {
+        "description": "REJECTED removes it from the storefront and from the product's average; APPROVED puts it back. The product's stars update at once.",
+        "operationId": "ReviewAdminController_moderate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Host",
+            "in": "header",
+            "required": false,
+            "description": "Which store to act as, e.g. demo.localhost. Every request resolves a tenant from the host; Swagger cannot set Host itself, so this header overrides it. Dev only — ignored in production.",
+            "schema": {
+              "type": "string",
+              "example": "demo.localhost"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hide or restore a review",
+        "tags": [
+          "Admin · Reviews"
+        ]
+      }
     }
   },
   "info": {
@@ -5090,8 +7491,18 @@
     "version": "1.0",
     "contact": {}
   },
-  "tags": [],
-  "servers": [],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Is the API up, and can it reach the database?"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:3002",
+      "description": "Local Environment"
+    }
+  ],
   "components": {
     "securitySchemes": {
       "bearer": {
@@ -5101,6 +7512,384 @@
       }
     },
     "schemas": {
+      "UpdateStoreSettingsDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "object",
+            "example": "Ur Clothing",
+            "description": "Shown instead of the internal tenant name. Null clears it."
+          },
+          "tagline": {
+            "type": "object",
+            "example": "Everyday wear, made in Bangladesh"
+          },
+          "logoUrl": {
+            "type": "object",
+            "example": "https://cdn.example.com/logo.png",
+            "description": "An https URL you already host. Supply this OR `logoObjectKey`, never both. Null clears it."
+          },
+          "logoObjectKey": {
+            "type": "string",
+            "example": "tenants/5939d547-.../store/2026/09/9a7e...-logo.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=store. Supply this or `logoUrl`, not both."
+          },
+          "faviconUrl": {
+            "type": "object",
+            "example": "https://cdn.example.com/favicon.png"
+          },
+          "faviconObjectKey": {
+            "type": "string",
+            "example": "tenants/5939d547-.../store/2026/09/9a7e...-favicon.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=store. Supply this or `faviconUrl`, not both."
+          },
+          "primaryColor": {
+            "type": "string",
+            "example": "#111827",
+            "description": "Six-digit hex, e.g. #111827. Short form (#FFF) is rejected."
+          },
+          "accentColor": {
+            "type": "string",
+            "example": "#2563EB"
+          },
+          "supportEmail": {
+            "type": "object",
+            "example": "help@urclothing.com"
+          },
+          "supportPhone": {
+            "type": "object",
+            "example": "+8801712345678"
+          },
+          "brandsEnabled": {
+            "type": "boolean",
+            "example": false,
+            "description": "Turn off for a single-brand store. The storefront then shows no brand strip, brand filter or brand list, and product cards carry `brand: null`. Products keep their brand, so turning it back on restores everything."
+          }
+        }
+      },
+      "CreateTenantDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Rafiq Fashion House"
+          },
+          "subdomain": {
+            "type": "string",
+            "example": "rafiq-fashion",
+            "description": "Becomes <subdomain>.yourplatform.com. Lowercase alphanumeric with single hyphens. A short list of infrastructure names is reserved."
+          },
+          "ownerEmail": {
+            "type": "string",
+            "example": "rafiq@example.com"
+          },
+          "ownerName": {
+            "type": "string",
+            "example": "Rafiqul Islam"
+          },
+          "ownerPassword": {
+            "type": "string",
+            "example": "ChangeMe@2026",
+            "description": "The owner's initial password. There is no invitation email — pass it to them out of band and have them change it."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "TRIAL",
+              "ACTIVE",
+              "PAST_DUE",
+              "SUSPENDED",
+              "CANCELLED"
+            ],
+            "default": "TRIAL",
+            "description": "Defaults to TRIAL. Set ACTIVE for a store that has paid."
+          }
+        },
+        "required": [
+          "name",
+          "subdomain",
+          "ownerEmail",
+          "ownerName",
+          "ownerPassword"
+        ]
+      },
+      "UpdateTenantDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Rangdhonu Fashion House"
+          },
+          "subdomain": {
+            "type": "string",
+            "example": "rangdhonu",
+            "description": "Changing it moves the store to a new address immediately; the old address stops working. Same rules as on create."
+          },
+          "customDomain": {
+            "type": "object",
+            "example": "rangdhonu.com",
+            "nullable": true,
+            "description": "The store's own domain, without https:// or a path. null removes it. Its DNS must point at the platform before it works."
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en",
+              "bn"
+            ],
+            "example": "en"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Dhaka",
+            "description": "IANA time zone"
+          }
+        }
+      },
+      "ChangeTenantStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "TRIAL",
+              "ACTIVE",
+              "PAST_DUE",
+              "SUSPENDED",
+              "CANCELLED"
+            ],
+            "example": "SUSPENDED",
+            "description": "SUSPENDED freezes the admin panel and stops checkout, leaving the storefront browsable. CANCELLED takes the store offline and is terminal."
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ResetStoreUserPasswordDto": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "example": "NewStorePass@2026",
+            "description": "The new password. Pass it to the person out of band and have them change it after signing in."
+          }
+        },
+        "required": [
+          "newPassword"
+        ]
+      },
+      "CreateHeroSlideDto": {
+        "type": "object",
+        "properties": {
+          "imageUrl": {
+            "type": "string",
+            "description": "Direct https URL. Send this OR imageObjectKey."
+          },
+          "imageObjectKey": {
+            "type": "string",
+            "description": "Key from POST /admin/uploads/images with scope=store."
+          },
+          "mobileImageUrl": {
+            "type": "object",
+            "description": "Narrower crop for phones; falls back to imageUrl."
+          },
+          "mobileImageObjectKey": {
+            "type": "string",
+            "description": "Key from POST /admin/uploads/images with scope=store, for the phone crop. Send this OR mobileImageUrl."
+          },
+          "alt": {
+            "type": "object",
+            "description": "Alt text. Required for a meaningful image."
+          },
+          "eyebrow": {
+            "type": "object",
+            "example": "UR CLOTHING"
+          },
+          "headline": {
+            "type": "object",
+            "example": "Everyday pieces, made to be worn."
+          },
+          "subheadline": {
+            "type": "object",
+            "example": "Everyday wear, made in Bangladesh"
+          },
+          "primaryLabel": {
+            "type": "object",
+            "example": "Shop the collection"
+          },
+          "primaryUrl": {
+            "type": "object",
+            "example": "/shop"
+          },
+          "secondaryLabel": {
+            "type": "object",
+            "example": "Browse brands"
+          },
+          "secondaryUrl": {
+            "type": "object",
+            "example": "/brands"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          },
+          "startsAt": {
+            "type": "object",
+            "description": "Campaign start, ISO 8601. Inclusive."
+          },
+          "endsAt": {
+            "type": "object",
+            "description": "Campaign end, ISO 8601. Exclusive."
+          }
+        }
+      },
+      "UpdateHeroSlideDto": {
+        "type": "object",
+        "properties": {
+          "imageUrl": {
+            "type": "string",
+            "description": "Direct https URL. Send this OR imageObjectKey."
+          },
+          "imageObjectKey": {
+            "type": "string",
+            "description": "Key from POST /admin/uploads/images with scope=store."
+          },
+          "mobileImageUrl": {
+            "type": "object",
+            "description": "Narrower crop for phones; falls back to imageUrl."
+          },
+          "mobileImageObjectKey": {
+            "type": "string",
+            "description": "Key from POST /admin/uploads/images with scope=store, for the phone crop. Send this OR mobileImageUrl."
+          },
+          "alt": {
+            "type": "object",
+            "description": "Alt text. Required for a meaningful image."
+          },
+          "eyebrow": {
+            "type": "object",
+            "example": "UR CLOTHING"
+          },
+          "headline": {
+            "type": "object",
+            "example": "Everyday pieces, made to be worn."
+          },
+          "subheadline": {
+            "type": "object",
+            "example": "Everyday wear, made in Bangladesh"
+          },
+          "primaryLabel": {
+            "type": "object",
+            "example": "Shop the collection"
+          },
+          "primaryUrl": {
+            "type": "object",
+            "example": "/shop"
+          },
+          "secondaryLabel": {
+            "type": "object",
+            "example": "Browse brands"
+          },
+          "secondaryUrl": {
+            "type": "object",
+            "example": "/brands"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          },
+          "startsAt": {
+            "type": "object",
+            "description": "Campaign start, ISO 8601. Inclusive."
+          },
+          "endsAt": {
+            "type": "object",
+            "description": "Campaign end, ISO 8601. Exclusive."
+          }
+        }
+      },
+      "ReorderHeroSlidesDto": {
+        "type": "object",
+        "properties": {
+          "slideIds": {
+            "description": "Every slide id, in the order they should appear. A partial list is refused — it would scramble the slides it omits.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "slideIds"
+        ]
+      },
+      "UpdateHeroSettingsDto": {
+        "type": "object",
+        "properties": {
+          "heroStyle": {
+            "type": "string",
+            "enum": [
+              "STATIC",
+              "CAROUSEL",
+              "OFF"
+            ],
+            "default": "STATIC",
+            "description": "STATIC renders the headline/buttons/badges below. CAROUSEL renders the uploaded slides. OFF renders no hero at all. CAROUSEL with no visible slides falls back to STATIC rather than blanking the page."
+          },
+          "heroHeadline": {
+            "type": "object",
+            "example": "Everyday pieces, made to be worn."
+          },
+          "heroPrimaryLabel": {
+            "type": "object",
+            "example": "Shop the collection"
+          },
+          "heroPrimaryUrl": {
+            "type": "object",
+            "example": "/shop"
+          },
+          "heroSecondaryLabel": {
+            "type": "object",
+            "example": "Browse brands"
+          },
+          "heroSecondaryUrl": {
+            "type": "object",
+            "example": "/brands"
+          },
+          "heroImageUrl": {
+            "type": "object",
+            "description": "Optional artwork beside the static hero copy."
+          },
+          "heroImageObjectKey": {
+            "type": "string",
+            "description": "Key from POST /admin/uploads/images with scope=store."
+          },
+          "heroBadges": {
+            "example": [
+              "Cash on delivery",
+              "Free over ৳2,000",
+              "7-day exchange"
+            ],
+            "description": "Short reassurances under the hero. At most 4 — a badge strip is a glance, not a list.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "heroAutoplay": {
+            "type": "boolean",
+            "description": "Whether the carousel advances on its own."
+          },
+          "heroIntervalMs": {
+            "type": "number",
+            "minimum": 2000,
+            "maximum": 30000,
+            "default": 5000,
+            "description": "Milliseconds each slide holds before advancing."
+          }
+        }
+      },
       "RegisterDto": {
         "type": "object",
         "properties": {
@@ -5140,6 +7929,24 @@
           "password"
         ]
       },
+      "TwoFactorLoginDto": {
+        "type": "object",
+        "properties": {
+          "challengeToken": {
+            "type": "string",
+            "description": "The `challengeToken` returned by `POST /auth/login` when the account has two-step verification on. Valid for 5 minutes."
+          },
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "A 6-digit authenticator code, or one of the XXXXX-XXXXX recovery codes issued when two-step verification was switched on."
+          }
+        },
+        "required": [
+          "challengeToken",
+          "code"
+        ]
+      },
       "RefreshTokenDto": {
         "type": "object",
         "properties": {
@@ -5151,6 +7958,66 @@
         },
         "required": [
           "refreshToken"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Rafiqul Islam",
+            "maxLength": 120
+          },
+          "phone": {
+            "type": "object",
+            "example": "01712345678",
+            "description": "Accepted as 01XXXXXXXXX, +880…, 880… or the bare subscriber number, and STORED as 01XXXXXXXXX. Send null to clear it. This is a contact number — it does not change where an order ships.",
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "object",
+            "example": "1990-05-01",
+            "description": "ISO date. Send null to clear it.",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "MALE",
+              "FEMALE",
+              "OTHER",
+              "PREFER_NOT_TO_SAY"
+            ],
+            "nullable": true
+          }
+        }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "example": "password123",
+            "description": "The password in use now. Required — without it a stolen access token could change the password and lock the owner out."
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "new-password-456",
+            "minLength": 8
+          }
+        }
+      },
+      "TwoFactorCodeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "A 6-digit code from your authenticator app, or one of your XXXXX-XXXXX recovery codes."
+          }
+        },
+        "required": [
+          "code"
         ]
       },
       "CreateStaffDto": {
@@ -5506,7 +8373,8 @@
           "price": {
             "type": "number",
             "example": 49900,
-            "description": "Price in paisa — 49900 = ৳499"
+            "description": "Price in paisa — 49900 = ৳499. Must be at least 1 paisa.",
+            "minimum": 1
           },
           "compareAtPrice": {
             "type": "number",
@@ -5696,7 +8564,8 @@
           "price": {
             "type": "number",
             "example": 189900,
-            "description": "Price in paisa — 189900 = ৳1899"
+            "description": "Price in paisa — 189900 = ৳1899. Must be at least 1 paisa.",
+            "minimum": 1
           },
           "compareAtPrice": {
             "type": "number",
@@ -5752,7 +8621,8 @@
           "price": {
             "type": "number",
             "example": 189900,
-            "description": "Price in paisa — 189900 = ৳1899"
+            "description": "Price in paisa — 189900 = ৳1899. Must be at least 1 paisa.",
+            "minimum": 1
           },
           "compareAtPrice": {
             "type": "number",
@@ -5804,7 +8674,8 @@
           "price": {
             "type": "number",
             "example": 189900,
-            "description": "Price in paisa — 189900 = ৳1899"
+            "description": "Price in paisa — 189900 = ৳1899. Must be at least 1 paisa.",
+            "minimum": 1
           },
           "compareAtPrice": {
             "type": "number",
@@ -5867,6 +8738,49 @@
           "variants"
         ]
       },
+      "CreateScopedUploadTicketDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "product",
+              "brand",
+              "category",
+              "collection",
+              "store"
+            ],
+            "example": "brand",
+            "description": "What the image belongs to. It becomes a path segment in the stored key and is re-checked on attach, so a brand upload cannot be attached as a category banner."
+          },
+          "fileName": {
+            "type": "string",
+            "example": "aarong-logo.png",
+            "description": "Used only for the stored key's readable suffix. Directory parts are stripped and the extension comes from `contentType`."
+          },
+          "contentType": {
+            "type": "string",
+            "example": "image/png",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "image/avif"
+            ]
+          },
+          "contentLength": {
+            "type": "number",
+            "example": 48211,
+            "description": "Exact byte length. It is signed into the upload URL, so the file you send must match it precisely."
+          }
+        },
+        "required": [
+          "scope",
+          "fileName",
+          "contentType",
+          "contentLength"
+        ]
+      },
       "CreateUploadTicketDto": {
         "type": "object",
         "properties": {
@@ -5919,6 +8833,21 @@
           "objectKey"
         ]
       },
+      "AttachProductImagesDto": {
+        "type": "object",
+        "properties": {
+          "images": {
+            "description": "Attach several uploads in one call. Every image is validated before any row is written, so one bad key rejects the whole batch rather than leaving a half-attached gallery. Order is preserved.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttachProductImageDto"
+            }
+          }
+        },
+        "required": [
+          "images"
+        ]
+      },
       "ReorderProductImagesDto": {
         "type": "object",
         "properties": {
@@ -5968,8 +8897,13 @@
             "type": "string"
           },
           "imageUrl": {
+            "type": "object",
+            "description": "Tile image shown on the storefront category grid. An https URL you already host — supply this OR `imageObjectKey`, never both. Send null to clear."
+          },
+          "imageObjectKey": {
             "type": "string",
-            "description": "Tile image shown on the storefront category grid"
+            "example": "tenants/5939d547-.../categories/2026/09/9a7e...-panjabi.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=category. Supply this or `imageUrl`, not both."
           },
           "metaTitle": {
             "type": "string"
@@ -6012,8 +8946,13 @@
             "type": "string"
           },
           "imageUrl": {
+            "type": "object",
+            "description": "Tile image shown on the storefront category grid. An https URL you already host — supply this OR `imageObjectKey`, never both. Send null to clear."
+          },
+          "imageObjectKey": {
             "type": "string",
-            "description": "Tile image shown on the storefront category grid"
+            "example": "tenants/5939d547-.../categories/2026/09/9a7e...-panjabi.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=category. Supply this or `imageUrl`, not both."
           },
           "metaTitle": {
             "type": "string"
@@ -6044,8 +8983,13 @@
             "example": "aarong"
           },
           "logoUrl": {
+            "type": "object",
+            "description": "Brand logo shown on the /brand index page. An https URL you already host — supply this OR `logoObjectKey`, never both. Send null to clear."
+          },
+          "logoObjectKey": {
             "type": "string",
-            "description": "Brand logo shown on the /brand index page"
+            "example": "tenants/5939d547-.../brands/2026/09/9a7e...-aarong-logo.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=brand. Supply this or `logoUrl`, not both."
           },
           "description": {
             "type": "string"
@@ -6082,8 +9026,13 @@
             "example": "aarong"
           },
           "logoUrl": {
+            "type": "object",
+            "description": "Brand logo shown on the /brand index page. An https URL you already host — supply this OR `logoObjectKey`, never both. Send null to clear."
+          },
+          "logoObjectKey": {
             "type": "string",
-            "description": "Brand logo shown on the /brand index page"
+            "example": "tenants/5939d547-.../brands/2026/09/9a7e...-aarong-logo.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=brand. Supply this or `logoUrl`, not both."
           },
           "description": {
             "type": "string"
@@ -6119,7 +9068,13 @@
             "type": "string"
           },
           "imageUrl": {
-            "type": "string"
+            "type": "object",
+            "description": "Banner shown on the storefront collection page. An https URL you already host — supply this OR `imageObjectKey`, never both. Send null to clear."
+          },
+          "imageObjectKey": {
+            "type": "string",
+            "example": "tenants/5939d547-.../collections/2026/09/9a7e...-eid-sale.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=collection. Supply this or `imageUrl`, not both."
           },
           "metaTitle": {
             "type": "string"
@@ -6156,7 +9111,13 @@
             "type": "string"
           },
           "imageUrl": {
-            "type": "string"
+            "type": "object",
+            "description": "Banner shown on the storefront collection page. An https URL you already host — supply this OR `imageObjectKey`, never both. Send null to clear."
+          },
+          "imageObjectKey": {
+            "type": "string",
+            "example": "tenants/5939d547-.../collections/2026/09/9a7e...-eid-sale.png",
+            "description": "The key returned by POST /admin/uploads/images with scope=collection. Supply this or `imageUrl`, not both."
           },
           "metaTitle": {
             "type": "string"
@@ -6203,6 +9164,198 @@
         },
         "required": [
           "products"
+        ]
+      },
+      "CreateSectionDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "CATEGORY_GRID",
+              "BRAND_STRIP",
+              "PRODUCT_CAROUSEL"
+            ],
+            "description": "CATEGORY_GRID and BRAND_STRIP are limited to one per store. PRODUCT_CAROUSEL may appear several times with different sources."
+          },
+          "title": {
+            "type": "string",
+            "example": "Popular",
+            "description": "Defaults to a sensible name for the kind and source."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "NEWEST",
+              "BEST_SELLERS",
+              "DISCOUNT",
+              "PRICE_ASC",
+              "PRICE_DESC"
+            ],
+            "description": "Which products a PRODUCT_CAROUSEL shows. Required for that kind, refused for the others."
+          },
+          "itemLimit": {
+            "type": "number",
+            "minimum": 4,
+            "maximum": 24,
+            "default": 10
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "UpdateSectionDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Eid Picks"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "NEWEST",
+              "BEST_SELLERS",
+              "DISCOUNT",
+              "PRICE_ASC",
+              "PRICE_DESC"
+            ]
+          },
+          "itemLimit": {
+            "type": "number",
+            "minimum": 4,
+            "maximum": 24
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReorderSectionsDto": {
+        "type": "object",
+        "properties": {
+          "sectionIds": {
+            "description": "Every section id, in the order they should appear on the homepage. A partial list is refused — it would scramble the sections it omits.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "sectionIds"
+        ]
+      },
+      "ReviewImageUploadDto": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "example": "image/jpeg",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "image/avif"
+            ]
+          },
+          "contentLength": {
+            "type": "number",
+            "example": 482133,
+            "description": "Exact file size in bytes; max 5 MB"
+          }
+        },
+        "required": [
+          "contentType",
+          "contentLength"
+        ]
+      },
+      "CreateReviewDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The product's `id`"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          },
+          "title": {
+            "type": "object",
+            "example": "Fits true to size",
+            "maxLength": 120
+          },
+          "body": {
+            "type": "object",
+            "example": "Soft fabric, the colour matches the photos. Ordered my usual M.",
+            "maxLength": 2000,
+            "description": "Plain text. Render it as text, never as HTML."
+          },
+          "imageObjectKeys": {
+            "maxItems": 5,
+            "description": "`objectKey`s from `POST /reviews/uploads`, in display order. On PATCH this REPLACES the review's photos: send the keys to keep plus any new ones, `[]` to remove all, or omit it to leave photos alone.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "productId",
+          "rating"
+        ]
+      },
+      "UpdateReviewDto": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "title": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "imageObjectKeys": {
+            "maxItems": 5,
+            "description": "`objectKey`s from `POST /reviews/uploads`, in display order. On PATCH this REPLACES the review's photos: send the keys to keep plus any new ones, `[]` to remove all, or omit it to leave photos alone.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ModerateReviewDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "APPROVED",
+              "REJECTED"
+            ],
+            "description": "REJECTED hides the review from the storefront and removes it from the product's rating. APPROVED restores it."
+          }
+        },
+        "required": [
+          "status"
         ]
       }
     }

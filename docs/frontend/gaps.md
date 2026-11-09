@@ -37,15 +37,19 @@ cancellation. No courier or tracking fields either.
 
 ## 🟠 Shapes the UI, needed soon
 
-### 4. No tenant settings / branding
+### 4. Store settings — branding done, content not
 
-Store name, logo, theme colours, contact details, social links, shipping
-rates — none are editable or readable. Shipping is a hardcoded pure function
-(free ≥ ৳2,000; ৳60 Dhaka / ৳120 elsewhere).
+**Branding is editable now**: store name, tagline, logo, favicon, two theme
+colours and contact details. See *Store settings* under Fixed.
 
-**Frontend impact:** brand the storefront from config for now, but **route
-every branded value through one theme module** so swapping to an API call is a
-single change.
+Still **not** editable: shipping rates (a hardcoded pure function — free ≥
+৳2,000, ৳60 Dhaka / ৳120 elsewhere), homepage section order, social links, and
+arbitrary copy blocks. There is no key/value content store, so any text beyond
+the fields above is still frontend-owned.
+
+**Frontend impact:** drive colours, logo and store name from `GET /store`.
+Everything else stays in config — but route it through one theme module so it
+becomes an API call later without touching components.
 
 ### 6. Homepage sections are hardcoded
 
@@ -61,14 +65,16 @@ and a sold counter, none of which `Collection` can express.
 shape — it will absorb this with no refactor. Do not hardcode section order in
 the component tree.
 
-### 7. No image upload for brands or categories
+### 7. Images have one size only
 
-`Brand.logoUrl` and `Category.imageUrl` are still bare strings. **Product**
-images do upload — see *Product image upload* under Fixed.
+Product, brand, category and collection images all upload now — see *Image
+upload* under Fixed. What is missing is **`srcset`/thumbnails and
+`width`/`height`**: one full-size URL per image, and no dimensions, so the
+browser cannot reserve space and grids shift as images load.
 
-**Frontend impact:** brand and category forms take a pasted https URL. Build
-the field as a component you can swap, so it becomes an uploader without
-touching those forms.
+**Frontend impact:** put images behind a component you can later point at a
+resizing URL without touching call sites, and give every image slot a fixed
+`aspect-ratio` box.
 
 Also still missing for product images: no `srcset`/thumbnail sizes — one
 full-size URL per image.
@@ -126,10 +132,17 @@ in checkout yet.
 No per-category size chart, no fit feedback on reviews. For apparel this
 matters for return rates — flag it as a product decision, not a frontend one.
 
-### 14. No platform endpoints
+### 14. No platform console UI
 
-`/api/v1/platform/*` has **zero controllers**. Tenants are created by a seed
-script. The platform console cannot be built.
+The **API exists**: `POST /platform/auth/login`, and `GET`/`POST
+/platform/tenants`, `GET`/`PATCH /platform/tenants/:id`, `PATCH
+/platform/tenants/:id/status` (see CLAUDE.md, "Platform console"). Stores
+can be created, listed, edited (name, subdomain, custom domain, locale, time
+zone), suspended and reactivated today, and a merchant's password can be
+reset (`GET /platform/tenants/:id/staff`, `POST
+/platform/tenants/:id/staff/:userId/reset-password`), through Swagger or
+curl. What is missing is a screen for it. Also missing: billing, per-store
+metrics, impersonation, and a 2FA reset for a locked-out merchant.
 
 ### 15. No customer management in admin
 
@@ -139,6 +152,17 @@ exist — see the Fixed section.)
 ---
 
 ## ✅ Fixed — do not re-report
+
+### Realistic seed catalogue
+
+`npm run db:seed-catalog` loads **20 BD clothing products** across Panjabi,
+Saree, Kurti, Shirt, T-Shirts and Pants, under 8 real brands (Aarong, Yellow,
+Richman, Ecstasy, Le Reve, Sailor, Tatlos, Fabrilife). Prices ৳690–4,290,
+roughly half with a `compareAtPrice`, and several variants at zero stock so
+out-of-stock states render. Idempotent — re-running skips what exists.
+
+Grid, 3-page pagination, facets, all four sorts, search and the homepage
+carousels are now all exercisable against real data.
 
 ### Store owners can manage their team
 
@@ -161,9 +185,22 @@ never raw. Access 15m, refresh 7d.
 Build the 401 interceptor against these: refresh once, retry, and only clear
 the session if the refresh itself 401s.
 
-Not yet: logout-everywhere, device/session listing, and reuse detection (the
-`replacedById` chain is recorded, so detecting a replayed token is a later
-addition, not a redesign).
+**Session lifetime now depends on role.** A `CUSTOMER` refresh token lasts
+**7 days**; every staff role (`TENANT_OWNER`, `TENANT_STAFF`) lasts **12
+hours**. So the admin SPA will hit a forced re-login roughly twice a day while
+the storefront stays signed in for a week. Build the 401 interceptor to handle
+a failed refresh gracefully — on the admin side it is a normal daily event,
+not an error worth showing a stack trace for.
+
+**`POST /auth/logout-all`** revokes every session for the signed-in user,
+including the one making the call. Requires a Bearer token, returns
+`{ revokedSessions: <count> }`. Worth exposing in account settings as "sign
+out of all devices"; it is the only remedy if a customer thinks their account
+is compromised.
+
+Not yet: device/session listing, and reuse detection (the `replacedById`
+chain is recorded, so detecting a replayed token is a later addition, not a
+redesign).
 
 ### Admin order management now exists
 
@@ -176,6 +213,38 @@ matrix.
 Two behaviours worth knowing: cancelling **restores stock** unless the order
 has already shipped, and delivering a cash-on-delivery order **settles its
 payment** automatically.
+
+### Store settings — branding
+
+`GET /store` (public, cached) and `GET`/`PATCH /admin/settings` (**owner
+only**). Covers `displayName`, `tagline`, `logoUrl`, `faviconUrl`,
+`primaryColor`, `accentColor`, `supportEmail`, `supportPhone`.
+
+`theme.onPrimary` / `theme.onAccent` come back as `"light"` or `"dark"` — the
+readable text colour for that background at WCAG AA. **Use them rather than
+assuming white**: a mid-tone brand colour like amber needs dark text, and the
+API has already done the contrast maths.
+
+`PATCH` is partial; an explicit `null` clears an optional field. Colours must
+be six-digit hex and are stored upper-cased. A write invalidates the public
+cache immediately.
+
+Full contract in [api-contract.md](api-contract.md) under *Store settings*.
+
+### Brand, category and collection images upload
+
+`POST /admin/uploads/images` with `scope: "product" | "brand" | "category" |
+"collection"`, then `PATCH /admin/brands/:id { logoObjectKey }` or
+`PATCH /admin/categories/:id` / `PATCH /admin/collections/:id`
+`{ imageObjectKey }`. One image each, not a gallery. They surface on
+`GET /brands`, `GET /categories` and `GET /collections` immediately.
+
+`scope` is enforced — a brand key attached to a category returns 403.
+`logoUrl`/`imageUrl` still accept a pasted URL, but it must now be `https`,
+and sending both it and the object key is a 400.
+
+Full walkthrough in
+[product-image-upload.md](product-image-upload.md#brand-logos-and-category-banners).
 
 ### Product image upload
 
@@ -217,9 +286,11 @@ carts failed entirely and every local request failed tenant resolution, while
 curl worked fine. Both header names are now in `allowedHeaders`, verified by an
 `OPTIONS` preflight.
 
-Still worth tightening before production: `origin: true` reflects **any**
-origin. That is fine in development and should become an env-driven allowlist
-when you deploy.
+**Now an env-driven allowlist.** `CORS_ALLOWED_ORIGINS` is a comma-separated
+list; in production the API refuses to boot without it. Leave it empty in
+development and any origin is reflected, exactly as before — so nothing about
+local work changes. When you deploy, your storefront and admin origins must
+both be listed or the browser will block every call.
 
 ---
 
@@ -257,3 +328,4 @@ ever see a bare string in a public response, that is a regression.
 | Admin: orders — list, filter, fulfil | Refunds that move money |
 | Admin: team — staff, roles, access | Invitation emails |
 | Admin: product image upload + gallery | Brand/category image upload, `srcset` |
+| Storefront theming from admin | Editable copy blocks, shipping rates |

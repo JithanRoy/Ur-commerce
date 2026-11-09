@@ -93,6 +93,20 @@ check failed. **400** — missing or malformed token.
 Refresh on a 401 from any endpoint, then retry once. If the refresh itself
 401s, clear the session and send the user to login.
 
+**Refresh lifetime depends on the signed-in role**, and the admin SPA must
+expect the shorter one:
+
+| Role | Refresh token lasts |
+|---|---|
+| `CUSTOMER` | **7 days** |
+| `TENANT_OWNER`, `TENANT_STAFF` | **12 hours** |
+
+Access tokens are 15 minutes for everyone. So a shopper stays signed in for a
+week, while an admin is signed out roughly twice a day — that is deliberate,
+not a bug to work around. Do not treat a failed admin refresh as an error
+state worth surfacing loudly; route to login the same way as any other
+expiry.
+
 ### `POST /auth/logout` 🌐
 
 ```jsonc
@@ -108,6 +122,26 @@ expires — up to 15 minutes** — because it is stateless; clear it client-side
 too. Returns 200 even for an unknown or already-revoked token, so logout is
 idempotent and never leaves the user stuck.
 
+### `POST /auth/logout-all` 👤(JWT only)
+
+```jsonc
+// no request body
+
+// 200 data
+{ "revokedSessions": 1 }
+```
+
+Revokes **every** refresh token for the signed-in user, including the session
+making the call, and returns how many were ended. Requires a Bearer token; no
+body. The count is informational — show it as *"Signed out of N devices."*
+
+Use it for a "sign out of all devices" control in account settings. It is the
+only remedy available to a customer who thinks their account is compromised,
+since there is no session list yet.
+
+Same 15-minute caveat as `logout`: access tokens already issued stay valid
+until they expire, because they are stateless.
+
 ### `GET /auth/me` 👤(JWT only)
 
 ```jsonc
@@ -116,11 +150,178 @@ idempotent and never leaves the user stuck.
   "id": "…uuid…",
   "name": "Rafiqul Islam",
   "email": "rafiq@example.com",
+  "phone": "01712345678",
+  "dateOfBirth": "1990-05-01T00:00:00.000Z",
+  "gender": "MALE",
+  "avatarUrl": null,
   "role": "CUSTOMER",
   "tenantId": "…uuid…",
-  "createdAt": "2026-09-11T07:22:10.000Z"
+  "createdAt": "2026-09-11T07:22:10.000Z",
+  "completion": 100
 }
 ```
+
+`tenantId` is kept for compatibility — it was already published here. New
+clients should not depend on it; `GET /profile` omits it.
+
+---
+
+## Storefront — profile
+
+Full guide: [customer-profile.md](customer-profile.md).
+
+### `GET /profile` 👤
+
+```jsonc
+// 200 data — a freshly registered account
+{
+  "id": "b65586cf-d41b-49ad-b424-d3c4c6fda319",
+  "name": "Rafiqul Islam",
+  "email": "rafiq@example.com",
+  "phone": null,
+  "dateOfBirth": null,
+  "gender": null,
+  "avatarUrl": null,
+  "role": "CUSTOMER",
+  "createdAt": "2026-10-03T10:08:38.992Z",
+  "updatedAt": "2026-10-03T10:08:38.992Z",
+  "passwordChangedAt": null,
+  "completion": 25
+}
+```
+
+`completion` is 0–100 over `name`/`phone`/`dateOfBirth`/`gender`, derived on
+read. `email` is excluded — it is mandatory at registration.
+
+### `PATCH /profile` 👤
+
+Send only what changed: an omitted key keeps its stored value, an explicit
+`null` clears it.
+
+```jsonc
+// request
+{ "phone": "+8801712345678", "dateOfBirth": "1990-05-01", "gender": "MALE" }
+
+// 200 data (abridged)
+{ "phone": "01712345678", "dateOfBirth": "1990-05-01T00:00:00.000Z",
+  "gender": "MALE", "completion": 100, "updatedAt": "2026-10-03T10:08:46.281Z" }
+```
+
+A phone sent as `+880…`, `880…` or a bare subscriber number is **stored and
+returned as `01XXXXXXXXX`**. `email` and `role` are rejected with 400.
+
+### `POST /profile/change-password` 👤
+
+```jsonc
+// request
+{ "currentPassword": "password123", "newPassword": "a-brand-new-one" }
+
+// 200 data
+{ "passwordChanged": true, "revokedSessions": 1 }
+```
+
+Revokes **every** session including the caller's — treat 200 as a logout.
+
+---
+
+## Storefront — reviews
+
+Full guide: [reviews.md](reviews.md).
+
+| Route | Auth | Returns |
+|---|---|---|
+| `GET /products/:slug/reviews` | 🌐 | `{ summary: { average, count, distribution }, items, total, page, limit, totalPages }` |
+| `GET /reviews/eligibility/:productId` | 👤 | `{ canReview, reason, review }` |
+| `GET /reviews/awaiting` | 👤 | delivered products not yet reviewed |
+| `GET /reviews/mine` | 👤 | paginated, includes `status` |
+| `GET /reviews/summary` | 👤 | `{ awaiting, written }` for the profile |
+| `GET /reviews/prompt` | 👤 | `{ prompt: { product, order } \| null }`, read-only |
+| `POST /reviews/prompt/:productId/shown` · `/dismiss` | 👤 | record a redirect / "don't ask again" |
+| `POST /reviews/uploads` | 👤 | presigned PUT for one photo (5 MB, delivered order required) |
+| `POST /reviews` | 👤 | `{ productId, rating 1–5, title?, body? }` → 201 |
+| `PATCH /reviews/:id` · `DELETE /reviews/:id` | 👤 author | |
+| `GET /admin/reviews` · `PATCH /admin/reviews/:id/status` | staff | moderation |
+
+Public review items: `id, authorName, rating, title, body,
+isVerifiedPurchase, createdAt, updatedAt, images[{url, position}]`, with no
+user or order id. `POST`/`PATCH /reviews` accept `imageObjectKeys` (max 5;
+on PATCH it replaces the set).
+
+`GET /orders` and `GET /orders/:id`: every line carries
+`review: { state: NOT_DELIVERED | AVAILABLE | REVIEWED | UNAVAILABLE, … }` and
+every order `reviewableCount`.
+Only customers with a **DELIVERED** order containing the product may review.
+`GET /products?sort=top-rated` orders by `avgRating`, then `ratingCount`.
+
+---
+
+## Storefront — two-step verification
+
+Full guide: [two-step-verification.md](two-step-verification.md).
+
+### `GET /profile/two-factor` 👤
+
+```jsonc
+// 200 data
+{ "enabled": false, "required": false,
+  "enrolmentPending": false, "recoveryCodesRemaining": 0 }
+```
+
+`required` is true for `TENANT_OWNER`/`PLATFORM_OWNER`, who cannot turn it off.
+
+### `POST /profile/two-factor/enrol` 👤
+
+```jsonc
+// 200 data
+{ "secret": "Z2XJZYHQD6HHZDABKCQZE7IPJT6OFJYT",
+  "otpauthUri": "otpauth://totp/Demo%20Store:shopper%40demo.local?secret=…",
+  "qrCodeDataUrl": "data:image/png;base64,iVBORw0KGgoAAA…" }
+```
+
+Does **not** enable anything — `confirm` does.
+
+### `POST /profile/two-factor/confirm` 👤
+
+```jsonc
+// request
+{ "code": "123456" }
+
+// 200 data
+{ "enabled": true,
+  "recoveryCodes": ["SMGZ6-E2SUS", "EHRE4-A8X7G", "…10 total…"] }
+```
+
+The only time the recovery codes are ever shown; they are stored hashed.
+
+### `POST /profile/two-factor/disable` 👤 · `POST /profile/two-factor/recovery-codes` 👤
+
+Both take `{ "code": "…" }` — a live authenticator code or a recovery code.
+A session alone is not enough. Disable returns 400 for a role that requires 2FA.
+
+### `POST /auth/two-factor` 🌐
+
+Once 2FA is on, `POST /auth/login` returns a challenge instead of tokens:
+
+```jsonc
+// login 200 data
+{ "twoFactorRequired": true, "challengeToken": "eyJhbGciOi…" }
+```
+
+The challenge is **not** a session — using it as a Bearer token is 401 on
+every route. It lives 5 minutes. Exchange it:
+
+```jsonc
+// POST /auth/two-factor
+{ "challengeToken": "eyJhbGciOi…", "code": "123456" }
+
+// 200 data
+{ "accessToken": "…", "refreshToken": "…", "role": "CUSTOMER" }
+```
+
+`code` accepts a 6-digit TOTP code **or** a `XXXXX-XXXXX` recovery code.
+Send `X-Cart-Session` here, not on `/auth/login`.
+
+A TOTP code works **once** — replaying it inside its 30-second window is 401.
 
 ---
 
@@ -727,6 +928,102 @@ variant and leave shared shots `null`. The variant must belong to this product
 hours later, so deletion never waits on storage. An upload that is never
 attached is collected the same way.
 
+## Store settings — branding
+
+### `GET /store` 🌐 — what the storefront renders with
+
+Public, cached 10 minutes. Fetch once per page load and drive CSS custom
+properties from it.
+
+```jsonc
+// 200 — captured from a live server
+{
+  "success": true,
+  "message": "Store fetched successfully",
+  "data": {
+    "storeName": "Ur Clothing",
+    "tagline": "Everyday wear, made in Bangladesh",
+    "logoUrl": null,
+    "faviconUrl": null,
+    "currency": "BDT",
+    "locale": "en",
+    "supportEmail": "help@urclothing.test",
+    "supportPhone": "+8801712345678",
+    "brandsEnabled": true,
+    "theme": {
+      "primaryColor": "#0F766E",
+      "accentColor": "#F59E0B",
+      "onPrimary": "light",
+      "onAccent": "dark"
+    }
+  }
+}
+```
+
+**`onPrimary` and `onAccent` are derived, not stored.** They are `"light"` or
+`"dark"` and say which text colour stays readable on that background at WCAG
+AA (4.5:1). A store owner picks a brand colour, not a text colour — amber
+`#F59E0B` above gets `"dark"` because white text on it is unreadable. Use
+them; do not recompute contrast client-side, and do not assume white always
+works.
+
+`storeName` falls back to the internal tenant name until the owner sets a
+display name, so it is never null. `tagline`, `logoUrl`, `faviconUrl`,
+`supportEmail` and `supportPhone` **are** nullable — render nothing, not an
+empty box.
+
+**`brandsEnabled`** is `false` for a single-brand store. When it is false,
+hide every brand UI: the brand filter, brand pages, "Shop by Brand" and brand
+names on cards. The API already enforces this: `/home` omits `BRAND_STRIP`,
+`GET /brands` returns `[]`, `/products/facets` returns `brands: []`, the
+`?brands=` filter is ignored, and every product card and detail carries
+`brand: null`. Categories are unaffected.
+
+### `GET /admin/settings` 🔐👑 — owner only
+
+Same payload as `GET /store`, uncached.
+
+### `PATCH /admin/settings` 🔐👑 — owner only
+
+**Partial update.** Omitted fields are left alone; send an explicit `null` to
+clear an optional one.
+
+```jsonc
+// request — every field optional
+{
+  "displayName": "Ur Clothing",
+  "tagline": "Everyday wear, made in Bangladesh",
+  "logoUrl": "https://cdn.example.com/logo.png",
+  "faviconUrl": "https://cdn.example.com/favicon.png",
+  "primaryColor": "#0F766E",
+  "accentColor": "#F59E0B",
+  "supportEmail": "help@urclothing.test",
+  "supportPhone": "+8801712345678",
+  "brandsEnabled": false
+}
+```
+
+Returns the updated settings in the `GET /store` shape, and invalidates the
+public cache immediately — verified: a `PATCH` is visible on `GET /store` on
+the next request, with no TTL wait.
+
+Colours are stored upper-cased, so `#0f766e` comes back as `#0F766E`.
+
+| Status | Cause |
+|---|---|
+| 400 | Colour is not six-digit hex — `#FFF`, `red` and any CSS payload are refused |
+| 400 | `logoUrl`/`faviconUrl` is not an **https** URL |
+| 400 | `supportEmail` is not an email |
+| 400 | Unknown field in the body |
+| 403 | `TENANT_STAFF` — **owner only**, like team management |
+
+**Colour validation is strict on purpose.** These values reach the browser
+inside a style attribute, so anything but exactly `#RRGGBB` is rejected —
+verified against `#fff;background:url(x)` and `</style><script>`.
+
+**Not yet configurable:** homepage section order, arbitrary copy blocks, and
+per-page text. Only the fields above exist. See [gaps.md](gaps.md) §4.
+
 ## Admin — orders 🔐
 
 ### `GET /admin/orders`
@@ -778,9 +1075,45 @@ Zeroes are always included, so a dashboard can render a stable set of tiles.
 
 ### `GET /admin/orders/:id`
 
-Returns the **same order shape** as the customer endpoint — see
-[Storefront — orders](#storefront--orders-). Render `items[].unitPrice` and
+Returns the customer order shape — see
+[Storefront — orders](#storefront--orders-) — **plus two admin-only fields**,
+`adminNote` and `statusHistory[]`. Render `items[].unitPrice` and
 `shippingAddress`, never the live variant price or address.
+
+```jsonc
+// statusHistory, transcribed from a real response
+"statusHistory": [
+  {
+    "id": "159cefb5-833a-406e-a321-8cb526246839",
+    "status": "PENDING_PAYMENT",
+    "note": "Recorded before status history existed",
+    "byUserId": null,
+    "byName": null,
+    "byEmail": null,
+    "createdAt": "2026-09-27T08:52:21.589Z"
+  },
+  {
+    "id": "ce8c7b22-625a-4b41-bc5b-20c6d96aca25",
+    "status": "PROCESSING",
+    "note": "packing now",
+    "byUserId": "b634eebf-fb85-4a3a-a1b4-aa9e9cb1897b",
+    "byName": "Demo Owner",
+    "byEmail": "admin@demo.local",
+    "createdAt": "2026-09-30T06:50:11.074Z"
+  }
+]
+```
+
+- **Oldest first**, so a timeline renders top to bottom as-is.
+- `note` is the `adminNote` sent with that change, or the `cancelReason` when
+  cancelling.
+- The actor may be **null** — orders backfilled when this shipped, or a future
+  webhook. Render `byName`, fall back to `byEmail`, then to "System".
+- `byName`/`byEmail` are **snapshots**, so the trail still names who acted
+  after that staff member is renamed or removed.
+- **Both fields are admin-only.** They are absent from `GET /orders` and
+  `GET /orders/:id`; the customer surface must never show internal notes or
+  staff identities.
 
 **404** — no such order in this store.
 
@@ -818,7 +1151,12 @@ Three behaviours the UI must account for, all verified end-to-end:
   collects on handover. Gateway methods are untouched — they settle via their
   own webhook.
 - **Timestamps are stamped automatically**: `confirmedAt`, `shippedAt`,
-  `deliveredAt`, `cancelledAt`.
+  `deliveredAt`, `cancelledAt`. `PROCESSING` and `REFUNDED` have no column of
+  their own — read `statusHistory[]` for those, which also records who made
+  every change.
+- **Every change appends a `statusHistory` entry** in the same transaction,
+  and the response returns the updated history, so the timeline needs no
+  second fetch.
 
 Errors: **400** `"Cannot change an order from DELIVERED to SHIPPED"`,
 **400** `"Order is already SHIPPED"` (no-op), **404** not in this store.

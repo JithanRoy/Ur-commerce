@@ -25,6 +25,69 @@ surprise.
 
 ---
 
+## 2026-10-06 — Review prompts, photos, and review state on orders
+
+**Added** — `GET /reviews/prompt` returns the one delivered product the
+storefront should send the customer to review, or `null`. Report the redirect
+with `POST /reviews/prompt/:productId/shown`; `…/dismiss` stops it for good.
+Starts 1 day after delivery, max 3 asks, 3 days apart, stops at 30 days.
+
+**Added** — `GET /reviews/summary` → `{ awaiting, written }` for a "My
+reviews" profile entry.
+
+**Added** — review photos: `POST /reviews/uploads`, then `imageObjectKeys` on
+`POST`/`PATCH /reviews`. Reviews gain `images[]`.
+
+**Added** — customer order lines carry `review.state` and orders carry
+`reviewableCount`, so the orders page can show "Write a review" or the stars
+already given. Additive; existing fields are unchanged.
+
+---
+
+## 2026-10-05 — Brands can be switched off; product reviews
+
+**Added** — `brandsEnabled` on `GET /store`, `GET /admin/settings` and
+`PATCH /admin/settings` (owner only). `false` is for a single-brand store:
+`/home` drops `BRAND_STRIP`, `GET /brands` returns `[]`, facets return
+`brands: []`, `?brands=` is ignored, and product cards and details carry
+`brand: null`. Defaults to `true`, so no store changes until its owner
+switches it. A product's brand was already optional; this is the store-wide
+switch.
+
+**Added** — product reviews and star ratings. Customers with a delivered
+order review a product 1–5 stars. `GET /products/:slug/reviews`,
+`/reviews/*` and `/admin/reviews`. See [reviews.md](reviews.md).
+`avgRating`/`ratingCount` on products are now live, and
+`GET /products?sort=top-rated` exists.
+
+---
+
+## 2026-09-23 — Store branding
+
+**Added** — `GET /api/v1/store` (public, cached 10 min) returns the store's
+name, tagline, logo, favicon, currency, locale, contact details and theme.
+
+**Added** — `GET`/`PATCH /api/v1/admin/settings`, **owner only** (`TENANT_STAFF`
+gets 403). `PATCH` is partial; an explicit `null` clears an optional field.
+
+Editable: `displayName`, `tagline`, `logoUrl`, `faviconUrl`, `primaryColor`,
+`accentColor`, `supportEmail`, `supportPhone`.
+
+`theme.onPrimary` and `theme.onAccent` are **derived, not stored** — `"light"`
+or `"dark"`, whichever stays readable on that colour at WCAG AA 4.5:1. Amber
+`#F59E0B` yields `"dark"`. Use them instead of assuming white text.
+
+Colours must be exactly six-digit hex and are stored upper-cased (`#0f766e` →
+`#0F766E`). `#FFF`, named colours and any CSS payload are 400 — these values
+land in a style attribute. Logo and favicon must be **https**.
+
+A `PATCH` invalidates the public cache immediately, so `GET /store` reflects it
+on the next request.
+
+**Not** added: editable copy blocks, homepage section order, shipping rates.
+
+---
+
 ## 2026-09-22 — Product image upload
 
 **Added** — six routes. The file **never passes through this API**; the browser
