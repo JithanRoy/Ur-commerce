@@ -14,18 +14,13 @@ import {
   useListParams,
 } from "@/lib/list-params";
 import { useProducts, usePrefetchProductDetail } from "@/api/products";
+import { ProductStatusBadge } from "@/features/products/product-status-badge";
 
 const PRODUCT_STATUSES: readonly ProductStatus[] = [
   "ACTIVE",
   "DRAFT",
   "ARCHIVED",
 ];
-
-const statusStyles: Record<ProductStatus, string> = {
-  ACTIVE: "bg-success/10 text-success",
-  DRAFT: "bg-muted text-muted-foreground",
-  ARCHIVED: "bg-destructive/10 text-destructive",
-};
 
 function priceLabel(product: AdminProduct): string {
   if (product.minPrice === null || product.maxPrice === null) return "—";
@@ -175,14 +170,7 @@ export function ProductsRoute() {
                       </Link>
                     </td>
                     <td className="px-4 py-2.5">
-                      <span
-                        className={cn(
-                          "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                          statusStyles[product.status],
-                        )}
-                      >
-                        {product.status}
-                      </span>
+                      <ProductStatusBadge status={product.status} />
                     </td>
                     <td className="hidden px-4 py-2.5 text-muted-foreground md:table-cell">
                       {product.category?.name ?? "—"}

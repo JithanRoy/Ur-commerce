@@ -59,7 +59,7 @@ const targetBrand = (await brandSelect.locator("option").allTextContents())
 
 await categorySelect.selectOption({ label: targetCategory });
 await brandSelect.selectOption({ label: targetBrand });
-await page.click('button:has-text("Save details")');
+await page.click('button:has-text("Save changes")');
 await page.waitForTimeout(2500);
 
 body = await page.textContent("body");
@@ -88,7 +88,7 @@ await page
   .filter({ hasText: "Uncategorised" })
   .first()
   .selectOption({ label: "Uncategorised" });
-await page.click('button:has-text("Save details")');
+await page.click('button:has-text("Save changes")');
 await page.waitForTimeout(2500);
 await page.reload({ waitUntil: "domcontentloaded" });
 await page.waitForTimeout(3000);

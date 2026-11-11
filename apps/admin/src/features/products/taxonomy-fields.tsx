@@ -180,17 +180,19 @@ export function TaxonomyFields({
   onCategoryChange,
   onBrandChange,
   disabled,
+  className = "grid gap-4 sm:grid-cols-2",
 }: {
   categoryId: string;
   brandId: string;
   onCategoryChange: (value: string) => void;
   onBrandChange: (value: string) => void;
   disabled?: boolean;
+  className?: string;
 }) {
   const { categoryOptions, brandOptions, isPending } = useTaxonomy();
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className={className}>
       <TaxonomyPicker
         label="Category"
         hint="Shoppers browse by category, so an uncategorised product is harder to find."

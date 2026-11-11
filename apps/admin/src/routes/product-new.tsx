@@ -5,8 +5,12 @@ import { isApiError, takaToPaisa } from "@urcommerce/api-client";
 import type { CreateProductInput, ProductStatus } from "@urcommerce/api-client";
 import { useCreateProduct } from "@/api/products";
 import { Button } from "@/components/ui/button";
+import { SectionCard } from "@/components/ui/section-card";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
-import { ImageDropzone, type UploadedImage } from "@/components/ui/image-dropzone";
+import {
+  ImageDropzone,
+  type UploadedImage,
+} from "@/components/ui/image-dropzone";
 import { OptionsEditor } from "@/features/products/options-editor";
 import { VariantTable } from "@/features/products/variant-table";
 import { TaxonomyFields } from "@/features/products/taxonomy-fields";
@@ -35,33 +39,6 @@ function toPaisaOrUndefined(value: string): number | undefined {
   const parsed = Number(trimmed);
   if (!Number.isFinite(parsed)) return undefined;
   return takaToPaisa(parsed);
-}
-
-function FormSection({
-  icon: Icon,
-  title,
-  description,
-  children,
-}: {
-  icon: typeof Boxes;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
-      <div className="mb-5 flex items-start gap-3">
-        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-          <Icon className="size-4.5" aria-hidden />
-        </span>
-        <div>
-          <h2 className="font-medium leading-tight">{title}</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      {children}
-    </section>
-  );
 }
 
 export function ProductNewRoute() {
@@ -161,7 +138,7 @@ export function ProductNewRoute() {
       </div>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-5">
-        <FormSection
+        <SectionCard
           icon={Boxes}
           title="Basics"
           description="Name, description and where the product lives in your catalogue."
@@ -220,9 +197,9 @@ export function ProductNewRoute() {
               ]}
             />
           </div>
-        </FormSection>
+        </SectionCard>
 
-        <FormSection
+        <SectionCard
           icon={ImageIcon}
           title="Images"
           description="Drag files in or browse. The first image is what shoppers see in the grid."
@@ -233,17 +210,17 @@ export function ProductNewRoute() {
             onChange={setImages}
             disabled={mutation.isPending}
           />
-        </FormSection>
+        </SectionCard>
 
-        <FormSection
+        <SectionCard
           icon={Layers}
           title="Options"
           description="Add Size or Colour to generate a variant per combination."
         >
           <OptionsEditor options={options} onChange={setOptions} />
-        </FormSection>
+        </SectionCard>
 
-        <FormSection
+        <SectionCard
           icon={Boxes}
           title={`Variants (${variants.length})`}
           description="Prices in taka, stored as paisa. SKUs fill in automatically — edit any you want to override."
@@ -254,7 +231,7 @@ export function ProductNewRoute() {
             onChange={setVariants}
             productName={name}
           />
-        </FormSection>
+        </SectionCard>
 
         {formError ? (
           <div

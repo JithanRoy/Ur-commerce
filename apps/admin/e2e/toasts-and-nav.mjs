@@ -58,9 +58,11 @@ ok(bodyText.includes("Category") || (await page.locator("th", { hasText: "Catego
 // --- product-edit save toast ---
 await page.locator("tbody tr a").first().click();
 await page.waitForTimeout(2500);
-const saveDetails = page.getByRole("button", { name: /Save details/i });
-if ((await saveDetails.count()) > 0) {
-  await saveDetails.click();
+const saveChanges = page.getByRole("button", { name: /Save changes/i });
+if ((await saveChanges.count()) > 0) {
+  const description = page.locator("#description");
+  await description.fill(`${await description.inputValue()} `);
+  await saveChanges.click();
   const saw = await page
     .waitForFunction(
       () =>
@@ -74,7 +76,7 @@ if ((await saveDetails.count()) > 0) {
     .catch(() => false);
   ok(saw, "product save shows a toast");
 } else {
-  ok(false, "Save details button found");
+  ok(false, "Save changes button found");
 }
 
 await browser.close();

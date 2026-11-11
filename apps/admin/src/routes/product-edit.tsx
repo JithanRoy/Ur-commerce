@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Boxes,
+  Check,
+  Eye,
+  FileText,
+  FolderTree,
+  Image as ImageIcon,
+} from "lucide-react";
 import { isApiError, paisaToTakaInput } from "@urcommerce/api-client";
 import type {
   AdminProduct,
@@ -16,6 +25,7 @@ import {
   useUpdateVariants,
 } from "@/api/products";
 import { Button } from "@/components/ui/button";
+import { SectionCard, SectionDivider } from "@/components/ui/section-card";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import {
@@ -31,6 +41,7 @@ import {
   withoutArchivedEnding,
 } from "@/features/products/archive";
 import { TaxonomyFields } from "@/features/products/taxonomy-fields";
+import { ProductStatusBadge } from "@/features/products/product-status-badge";
 
 function toVariantRow(variant: AdminVariant): VariantEdit {
   return {
@@ -73,6 +84,27 @@ function toVariantUpdates(rows: VariantEdit[]) {
 
 function withRestoredSkus(rows: VariantEdit[]): VariantEdit[] {
   return rows.map((row) => ({ ...row, sku: withoutArchivedEnding(row.sku) }));
+}
+
+function rowsChanged(rows: VariantEdit[], product: AdminProduct): boolean {
+  const saved = new Map(
+    product.variants.map((variant) => [variant.id, toVariantRow(variant)]),
+  );
+  return rows.some((row) => {
+    const original = saved.get(row.id);
+    return (
+      original !== undefined &&
+      (original.sku !== row.sku ||
+        original.price !== row.price ||
+        original.compareAtPrice !== row.compareAtPrice ||
+        original.costPrice !== row.costPrice ||
+        original.stock !== row.stock)
+    );
+  });
+}
+
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 export function ProductEditRoute() {
@@ -161,9 +193,21 @@ export function ProductEditRoute() {
   const restoring =
     serverProduct?.status === "ARCHIVED" && status !== "ARCHIVED";
 
-  const submitDetails = () => {
-    const restoredRows = withRestoredSkus(rows);
-    const skusArchived = rows.some((row) => isArchivedIdentifier(row.sku));
+  const detailsDirty =
+    serverProduct !== undefined &&
+    (name !== serverProduct.name ||
+      slug !== serverProduct.slug ||
+      description !== (serverProduct.description ?? "") ||
+      status !== serverProduct.status ||
+      categoryId !== (serverProduct.categoryId ?? "") ||
+      brandId !== (serverProduct.brandId ?? ""));
+
+  const variantsDirty =
+    serverProduct !== undefined && rowsChanged(rows, serverProduct);
+
+  const saving = saveDetails.isPending || saveVariants.isPending;
+
+  const saveDetailsNow = (after?: () => void) =>
     saveDetails.mutate(
       {
         name: name.trim(),
@@ -173,17 +217,38 @@ export function ProductEditRoute() {
         categoryId: categoryId || null,
         brandId: brandId || null,
       },
-      {
-        onSuccess: () => {
-          if (!restoring || !skusArchived) return;
-          setRows(restoredRows);
-          saveVariants.mutate(toVariantUpdates(restoredRows));
-        },
-      },
+      { onSuccess: () => after?.() },
     );
+
+  const saveVariantsNow = (source: VariantEdit[], after?: () => void) =>
+    saveVariants.mutate(toVariantUpdates(source), {
+      onSuccess: () => after?.(),
+    });
+
+  const saveChanges = () => {
+    if (restoring) {
+      const restoredRows = withRestoredSkus(rows);
+      const skusArchived = rows.some((row) => isArchivedIdentifier(row.sku));
+      saveDetailsNow(() => {
+        if (!skusArchived && !variantsDirty) return;
+        setRows(restoredRows);
+        saveVariantsNow(restoredRows);
+      });
+      return;
+    }
+    if (variantsDirty) {
+      saveVariantsNow(rows, detailsDirty ? () => saveDetailsNow() : undefined);
+      return;
+    }
+    saveDetailsNow();
   };
 
-  const submitVariants = () => saveVariants.mutate(toVariantUpdates(rows));
+  const discardChanges = () => {
+    if (!serverProduct) return;
+    seedDetails(serverProduct);
+    setRows(toRow(serverProduct));
+    setError(null);
+  };
 
   if (isPending) return <LoadingState variant="form" />;
   if (!product) {
@@ -201,7 +266,7 @@ export function ProductEditRoute() {
   const backLink = (
     <Link
       to={backToList}
-      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
     >
       <ArrowLeft className="size-4" />
       Products
@@ -210,13 +275,13 @@ export function ProductEditRoute() {
 
   if (seededFor !== product.id) {
     return (
-      <>
+      <main className="mx-auto max-w-6xl">
         {backLink}
-        <h1 className="mt-4 mb-8 text-xl font-semibold tracking-tight">
+        <h1 className="mt-4 mb-8 text-2xl font-semibold tracking-tight">
           {product.name}
         </h1>
         <LoadingState variant="form" label="Loading product" />
-      </>
+      </main>
     );
   }
 
@@ -226,135 +291,200 @@ export function ProductEditRoute() {
       optionSummary(variant, product),
     ]),
   );
+  const totalStock = product.variants.reduce(
+    (sum, variant) => sum + variant.stock,
+    0,
+  );
+  const dirty = detailsDirty || variantsDirty;
 
   return (
-    <>
+    <main className="mx-auto max-w-6xl">
       {backLink}
 
-      <h1 className="mt-4 text-xl font-semibold tracking-tight">
-        {product.name}
-      </h1>
+      <header className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="min-w-0 truncate text-2xl font-semibold tracking-tight">
+          {product.name}
+        </h1>
+        <ProductStatusBadge status={product.status} />
+      </header>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {plural(product.variants.length, "variant")} ·{" "}
+        {plural(totalStock, "unit")} in stock
+      </p>
+
       {error ? (
         <p
           role="alert"
-          className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 text-sm text-destructive"
+          className="mt-5 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
         >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
           {error}
         </p>
       ) : null}
 
-      <section className="mt-8">
-        <h2 className="mb-4 font-medium">Details</h2>
-        <div className="grid max-w-2xl gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              id="name"
-              label="Name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-            <TextField
-              id="slug"
-              label="Slug"
-              value={slug}
-              onChange={(event) => setSlug(event.target.value)}
-            />
-          </div>
-
-          <TextareaField
-            id="description"
-            label="Description"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            rows={3}
-          />
-
-          <TaxonomyFields
-            categoryId={categoryId}
-            brandId={brandId}
-            onCategoryChange={setCategoryId}
-            onBrandChange={setBrandId}
-            disabled={saveDetails.isPending}
-          />
-
-          <SelectField
-            id="status"
-            label="Status"
-            containerClassName="w-48"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as ProductStatus)}
-            hint={statusHint(product.status, status)}
-            options={[
-              { value: "DRAFT", label: "Draft" },
-              { value: "ACTIVE", label: "Active" },
-              { value: "ARCHIVED", label: "Archived" },
-            ]}
-          />
-
-          <div>
-            <Button
-              onClick={submitDetails}
-              loading={saveDetails.isPending}
-              loadingText="Saving…"
-              className="px-5"
-            >
-              Save details
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-10">
-        <ImageManager productId={product.id} variants={product.variants} />
-      </section>
-
-      <section className="mt-10">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-medium">Variants</h2>
-            <p className="text-sm text-muted-foreground">
-              Prices in taka. Stored as paisa.
-            </p>
-          </div>
-          <Button
-            onClick={submitVariants}
-            disabled={rows.length === 0}
-            loading={saveVariants.isPending}
-            loadingText="Saving…"
-            className="h-9"
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-5">
+          <SectionCard
+            icon={FileText}
+            title="Details"
+            description="The name and description shoppers read on the product page."
           >
-            Save variants
+            <div className="space-y-4">
+              <TextField
+                id="name"
+                label="Name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+              <TextField
+                id="slug"
+                label="Slug"
+                hint="Part of the product's web address."
+                value={slug}
+                onChange={(event) => setSlug(event.target.value)}
+              />
+              <TextareaField
+                id="description"
+                label="Description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={5}
+              />
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            icon={ImageIcon}
+            title="Images"
+            description="Drag to reorder. The first image is the one shoppers see first."
+          >
+            <ImageManager productId={product.id} variants={product.variants} />
+          </SectionCard>
+
+          <SectionCard
+            icon={Boxes}
+            title={`Variants (${rows.length})`}
+            description="Prices in taka. Cost price is never shown to shoppers."
+            action={variantsDirty ? <UnsavedPill /> : null}
+          >
+            <EditVariantTable
+              rows={rows}
+              labels={labels}
+              canRemove={rows.length > 1}
+              onChange={setRows}
+              onRemove={(variantId) => {
+                setRemovingId(variantId);
+                removeVariant.mutate(variantId);
+              }}
+              removingId={removingId}
+            />
+
+            {rows.length === 1 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                A product must keep at least one variant. Archive the product
+                instead of removing it.
+              </p>
+            ) : null}
+
+            <SectionDivider
+              title="Add a variant"
+              description="It is saved straight away, separately from the changes above."
+            >
+              <AddVariantForm
+                product={product}
+                onAdd={(input) => addVariant.mutate(input)}
+                isPending={addVariant.isPending}
+              />
+            </SectionDivider>
+          </SectionCard>
+        </div>
+
+        <aside className="space-y-5 lg:sticky lg:top-6">
+          <SectionCard
+            icon={Eye}
+            title="Status"
+            description="Only active products appear in the shop."
+          >
+            <SelectField
+              id="status"
+              label="Status"
+              hideLabel
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value as ProductStatus)
+              }
+              hint={statusHint(product.status, status)}
+              options={[
+                { value: "DRAFT", label: "Draft — hidden" },
+                { value: "ACTIVE", label: "Active — in the shop" },
+                { value: "ARCHIVED", label: "Archived" },
+              ]}
+            />
+          </SectionCard>
+
+          <SectionCard
+            icon={FolderTree}
+            title="Organisation"
+            description="Where shoppers find it."
+          >
+            <TaxonomyFields
+              categoryId={categoryId}
+              brandId={brandId}
+              onCategoryChange={setCategoryId}
+              onBrandChange={setBrandId}
+              disabled={saveDetails.isPending}
+              className="grid gap-4"
+            />
+          </SectionCard>
+        </aside>
+      </div>
+
+      <div className="sticky bottom-0 z-10 mt-6 -mx-1 flex flex-wrap items-center gap-3 rounded-xl border bg-card/95 p-4 shadow-lg backdrop-blur-sm">
+        <p
+          role="status"
+          className="flex items-center gap-2 text-sm text-muted-foreground"
+        >
+          {dirty ? (
+            <>
+              <span aria-hidden className="size-2 rounded-full bg-amber-500" />
+              Unsaved changes
+            </>
+          ) : (
+            <>
+              <Check className="size-4 text-success" aria-hidden />
+              All changes saved
+            </>
+          )}
+        </p>
+        <div className="ml-auto flex gap-2">
+          <Button
+            variant="outline"
+            onClick={discardChanges}
+            disabled={!dirty || saving}
+            className="px-4"
+          >
+            Discard
+          </Button>
+          <Button
+            onClick={saveChanges}
+            disabled={!dirty}
+            loading={saving}
+            loadingText="Saving…"
+            className="px-5"
+          >
+            Save changes
           </Button>
         </div>
+      </div>
+    </main>
+  );
+}
 
-        <EditVariantTable
-          rows={rows}
-          labels={labels}
-          canRemove={rows.length > 1}
-          onChange={setRows}
-          onRemove={(variantId) => {
-            setRemovingId(variantId);
-            removeVariant.mutate(variantId);
-          }}
-          removingId={removingId}
-        />
-
-        {rows.length === 1 ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            A product must keep at least one variant. Archive the product
-            instead of removing it.
-          </p>
-        ) : null}
-
-        <div className="mt-6 rounded-lg border p-4">
-          <h3 className="mb-3 text-sm font-medium">Add a variant</h3>
-          <AddVariantForm
-            product={product}
-            onAdd={(input) => addVariant.mutate(input)}
-            isPending={addVariant.isPending}
-          />
-        </div>
-      </section>
-    </>
+function UnsavedPill() {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/12 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+      <span aria-hidden className="size-1.5 rounded-full bg-current" />
+      Unsaved
+    </span>
   );
 }

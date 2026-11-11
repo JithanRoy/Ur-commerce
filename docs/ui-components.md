@@ -26,6 +26,7 @@ apps/<app>/src/
 │   │   ├── field-context.ts    Wires label/hint/error aria into controls
 │   │   ├── image-field.tsx     (admin) single-image upload tile
 │   │   ├── image-dropzone.tsx  (admin) multi-image drag-and-drop uploader
+│   │   ├── section-card.tsx    (admin) SectionCard, SectionDivider: titled form sections
 │   │   └── …
 │   ├── layout/        App shell: header, sidebar, topbar
 │   └── product/       (storefront) ProductCard, which every grid reuses
@@ -141,6 +142,15 @@ the real `<input type="file">` visually hidden but focusable. Props: `accept`,
 `multiple`, `disabled`, `label` (the input's accessible name), `onFiles`.
 Style it through `className`; the input value is reset after each pick so the
 same file can be chosen again.
+
+## Section cards (admin)
+
+`SectionCard` groups one part of a long form: an optional icon, a title, a
+one-line description, an optional `action` on the right (a badge or button),
+then its content. `SectionDivider` splits a card into a second titled part,
+such as "Add a variant" under the variant table. The new-product and
+edit-product pages are built from these; use them for any long admin form
+instead of headings separated by margins.
 
 ## Image upload (admin)
 

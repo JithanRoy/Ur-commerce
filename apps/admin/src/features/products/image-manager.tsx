@@ -66,7 +66,10 @@ function variantLabel(
 }
 
 function altFromFileName(name: string): string {
-  return name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+  return name
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .trim();
 }
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -170,7 +173,10 @@ export function ImageManager({
     if (rejected.length > 0) setError(rejected.join(" · "));
     if (accepted.length === 0) return;
 
-    setPending((current) => [...current, ...accepted.map((item) => item.entry)]);
+    setPending((current) => [
+      ...current,
+      ...accepted.map((item) => item.entry),
+    ]);
 
     const results = await Promise.allSettled(
       accepted.map(({ file, entry }) => stageOne(file, entry.id)),
@@ -253,33 +259,22 @@ export function ImageManager({
 
   if (unavailable) {
     return (
-      <div>
-        <h2 className="font-medium">Images</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Image upload is not configured on this server yet.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Image upload is not configured on this server yet.
+      </p>
     );
   }
 
   return (
     <div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-medium">Images</h2>
-        {ordered.length > 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Drag to reorder · the first image is the one shoppers see first
-          </p>
-        ) : null}
-      </div>
-
       <div
         onDragEnter={(event) => {
           if (!event.dataTransfer.types.includes("Files")) return;
           setDragDepth((depth) => depth + 1);
         }}
         onDragOver={(event) => {
-          if (event.dataTransfer.types.includes("Files")) event.preventDefault();
+          if (event.dataTransfer.types.includes("Files"))
+            event.preventDefault();
         }}
         onDragLeave={() => setDragDepth((depth) => Math.max(0, depth - 1))}
         onDrop={(event) => {
@@ -289,7 +284,7 @@ export function ImageManager({
           void acceptFiles(Array.from(event.dataTransfer.files));
         }}
         className={cn(
-          "mt-3 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors",
+          "rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors",
           dragDepth > 0
             ? "border-primary bg-primary/5"
             : "border-border hover:border-foreground/25",
@@ -355,7 +350,7 @@ export function ImageManager({
       ) : null}
 
       {ordered.length > 0 || pending.length > 0 ? (
-        <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           {ordered.map((image, index) => (
             <li
               key={image.id}

@@ -26,14 +26,14 @@ ok(/^\d+(\.\d+)?$/.test(priceValue) && Number(priceValue) < 10000, `price prefil
 
 // edit a price and save
 await priceInput.fill("1950");
-await page.click('button:has-text("Save variants")');
+await page.click('button:has-text("Save changes")');
 await page.waitForTimeout(2500);
 body = await page.textContent("body");
 ok(body.includes("Variants saved"), "variant save succeeded");
 
 // edit scalars
 await page.fill("#description", "Edited in the browser.");
-await page.click('button:has-text("Save details")');
+await page.click('button:has-text("Save changes")');
 await page.waitForTimeout(2000);
 ok((await page.textContent("body")).includes("Details saved"), "details save succeeded");
 

@@ -74,7 +74,9 @@ export function EditVariantTable({
               <td className="px-3 py-2">
                 <Input
                   value={row.sku}
-                  onChange={(event) => update(index, { sku: event.target.value })}
+                  onChange={(event) =>
+                    update(index, { sku: event.target.value })
+                  }
                   aria-label={`SKU for ${labels[row.id] ?? row.id}`}
                   className="h-9 w-36 px-2"
                 />
@@ -87,7 +89,7 @@ export function EditVariantTable({
                     update(index, { price: event.target.value })
                   }
                   aria-label={`Price for ${labels[row.id] ?? row.id}`}
-                  className="h-9 px-2 tabular-nums"
+                  className="h-9 min-w-24 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
@@ -98,7 +100,7 @@ export function EditVariantTable({
                     update(index, { compareAtPrice: event.target.value })
                   }
                   aria-label={`Compare at price for ${labels[row.id] ?? row.id}`}
-                  className="h-9 px-2 tabular-nums"
+                  className="h-9 min-w-24 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
@@ -109,7 +111,7 @@ export function EditVariantTable({
                     update(index, { costPrice: event.target.value })
                   }
                   aria-label={`Cost price for ${labels[row.id] ?? row.id}`}
-                  className="h-9 px-2 tabular-nums"
+                  className="h-9 min-w-24 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
@@ -120,7 +122,7 @@ export function EditVariantTable({
                     update(index, { stock: event.target.value })
                   }
                   aria-label={`Stock for ${labels[row.id] ?? row.id}`}
-                  className="h-9 px-2 tabular-nums"
+                  className="h-9 min-w-24 px-2 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2">
