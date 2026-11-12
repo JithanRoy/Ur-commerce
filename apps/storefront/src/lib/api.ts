@@ -13,6 +13,7 @@ export async function shopperTenantHeaders(): Promise<Record<string, string>> {
   const host = (await headers()).get("host");
 
   if (process.env.NODE_ENV !== "production") {
+    reportRemoteApiInDevelopment();
     const devHost =
       localStoreHost(host) ?? process.env.NEXT_PUBLIC_DEV_TENANT_HOST;
     return devHost ? { "X-Tenant-Host": devHost } : {};
@@ -25,6 +26,26 @@ export async function shopperTenantHeaders(): Promise<Record<string, string>> {
   }
   if (!host) return {};
   return { "X-Tenant-Host": host, "X-Internal-Key": internalKey };
+}
+
+let remoteApiReported = false;
+
+function isLocalAddress(url: string): boolean {
+  const { hostname } = new URL(url);
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.endsWith(".localhost")
+  );
+}
+
+function reportRemoteApiInDevelopment() {
+  if (remoteApiReported || !URL.canParse(apiBaseUrl)) return;
+  remoteApiReported = true;
+  if (isLocalAddress(apiBaseUrl)) return;
+  console.warn(
+    `NEXT_PUBLIC_API_URL points at ${apiBaseUrl}, not your local API. A hosted API ignores the development store header, so every request answers "Store not found for this domain". For local work set NEXT_PUBLIC_API_URL=http://localhost:3002/api/v1 in apps/storefront/.env.local and restart pnpm dev.`,
+  );
 }
 
 let missingKeyReported = false;

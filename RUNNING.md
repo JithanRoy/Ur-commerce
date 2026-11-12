@@ -110,6 +110,13 @@ exists — `apps/storefront/src/lib/theme.ts`.
 
 ## Troubleshooting
 
+**"Store not found for this domain" on `localhost`** — the app's `.env.local`
+points at the hosted API. A hosted API only accepts the store header together
+with the internal key, which development never sends. Set
+`NEXT_PUBLIC_API_URL` (storefront) or `VITE_API_URL` (admin, platform) to
+`http://localhost:3002/api/v1` and restart `pnpm dev`. The storefront prints a
+warning in its terminal when this happens.
+
 **Ports are pinned deliberately.** The storefront uses **3100** and the admin
 **5273**, not the framework defaults (3000 / 5173), because other projects on
 this machine already use those. If you open 3000 expecting this storefront you

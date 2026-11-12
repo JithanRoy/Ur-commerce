@@ -4,7 +4,7 @@ The backend lives in a separate repo and is changed by its own sessions. This
 file records which backend commit the frontend has been built against, so
 new backend work is never missed.
 
-Last synced backend commit: `9084b38`
+Last synced backend commit: `1477f98`
 
 ## How a sync works
 
@@ -49,3 +49,4 @@ every Claude session in this repo.
 | 2026-11-09 | `99a0388` | `99e4590` rate-limits sign-in, 2FA, register and password change (429 + `Retry-After`, wrapped message "Too many attempts — please wait a few minutes and try again"). Verified live: 10× 401 then 429. Every form involved (storefront and admin sign-in, 2FA, register, change password; platform sign-in) already shows the server's message, so no UI change. Request #10 logged: behind the Vercel proxies the limit sees Vercel's IP, so register (IP-only) is shared by all shoppers. `34d850b` serves images from a private bucket at `GET /api/v1/media/<key>` (verified: 200 image with `Cross-Origin-Resource-Policy: cross-origin`, traversal 404). Image URLs stay absolute and come from the API, so nothing changes in the apps; the storefront's `next/image` allowlist now includes `http://localhost:3002/api/v1/media/**` for local runs. `99a0388` is env only. |
 | 2026-11-10 | `f45d483` | `f03c88c` adds `npm run db:move-images` (copy images between storage providers and rewrite stored URLs); `f45d483` accepts `REDIS_URL`. Both are backend operations, no API change, no frontend work. Found while checking: the production database's product images still point at `http://localhost:9100` (the dev MinIO), so no visitor's browser and no Vercel server can load them; only the owner's own machine can. Fix is `db:move-images` from the dev MinIO to production storage. |
 | 2026-11-10 | `9084b38` | `037b609` drops the R2 lines from the backend's production env example; `9084b38` makes Swagger's server `/` instead of `http://localhost:<port>`, so "Try it out" works on the hosted API. Neither changes the API, so no frontend work. |
+| 2026-11-11 | `1477f98` | The startup log now prints `PUBLIC_API_URL` or `RENDER_EXTERNAL_URL` instead of always `http://localhost:<port>`. Log text only, no API change, no frontend work. |
